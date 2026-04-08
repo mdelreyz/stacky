@@ -17,6 +17,7 @@ from app.schemas.supplement import (
     UserSupplementUpdate,
 )
 from app.services.ai_onboarding import resolve_ai_status
+from app.services.daily_plan import resolve_user_date
 
 router = APIRouter(prefix="/users/me/supplements", tags=["user-supplements"])
 
@@ -177,5 +178,7 @@ async def remove_user_supplement(
     if not user_supplement:
         raise HTTPException(status_code=404, detail="User supplement not found")
 
-    await session.delete(user_supplement)
+    ended_at, _user_tz = resolve_user_date(None, current_user.timezone)
+    user_supplement.is_active = False
+    user_supplement.ended_at = user_supplement.ended_at or ended_at
     await session.commit()

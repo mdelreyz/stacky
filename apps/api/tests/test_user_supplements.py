@@ -55,3 +55,35 @@ def test_add_user_supplement_rejects_duplicate_active_entry(client):
     second_response = client.post("/api/v1/users/me/supplements", json=payload, headers=headers)
     assert second_response.status_code == 409
     assert second_response.json()["detail"] == "Supplement already active in your protocol"
+
+
+def test_remove_user_supplement_soft_deactivates_entry(client):
+    headers = auth_headers(client)
+    supplement_id = create_supplement("B12")
+
+    create_response = client.post(
+        "/api/v1/users/me/supplements",
+        json={
+          "supplement_id": str(supplement_id),
+          "dosage_amount": 1,
+          "dosage_unit": "tablet",
+          "frequency": "daily",
+          "take_window": "morning_with_food",
+          "with_food": True,
+          "started_at": "2026-04-08",
+        },
+        headers=headers,
+    )
+    user_supplement_id = create_response.json()["id"]
+
+    delete_response = client.delete(f"/api/v1/users/me/supplements/{user_supplement_id}", headers=headers)
+    assert delete_response.status_code == 204
+
+    active_list_response = client.get("/api/v1/users/me/supplements?active_only=true", headers=headers)
+    assert active_list_response.status_code == 200
+    assert active_list_response.json()["items"] == []
+
+    get_response = client.get(f"/api/v1/users/me/supplements/{user_supplement_id}", headers=headers)
+    assert get_response.status_code == 200
+    assert get_response.json()["is_active"] is False
+    assert get_response.json()["ended_at"] is not None
