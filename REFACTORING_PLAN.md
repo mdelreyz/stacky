@@ -11,6 +11,7 @@ Last updated: 2026-04-08
   - mobile API contracts now reuse shared domain types instead of redefining protocol and daily-plan shapes locally
   - user-supplement serialization is shared between regimen and protocol routes
   - cross-platform `showError` alert handling is centralized in one helper
+  - modal create/edit flows now share a reusable header/back-button component
 
 ## Open findings
 
@@ -25,13 +26,6 @@ Last updated: 2026-04-08
 2. Split the mobile transport layer by resource before it becomes a catch-all file.
    - [apps/mobile/lib/api.ts](apps/mobile/lib/api.ts)
    - It now handles auth, daily plan, protocols, supplements, and user supplements. Extracting per-resource modules behind a shared request helper will keep future flows isolated and easier to test.
-
-3. Extract the repeated modal screen shell used by create/edit flows.
-   - [apps/mobile/app/supplement/[id]/schedule.tsx](apps/mobile/app/supplement/[id]/schedule.tsx)
-   - [apps/mobile/app/user-supplement/[id].tsx](apps/mobile/app/user-supplement/[id].tsx)
-   - [apps/mobile/app/protocol/add.tsx](apps/mobile/app/protocol/add.tsx)
-   - [apps/mobile/app/protocol/[id].tsx](apps/mobile/app/protocol/[id].tsx)
-   - The header/back-button layout is still duplicated even after the shared error helper extraction.
 
 ### Low
 

@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import {
   SupplementScheduleForm,
   SupplementScheduleState,
@@ -114,15 +113,10 @@ export default function ScheduleSupplementScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <FontAwesome name="arrow-left" size={18} color="#495057" />
-        </Pressable>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Start Taking</Text>
-          <Text style={styles.subtitle}>{supplement.name}</Text>
-        </View>
-      </View>
+      <FlowScreenHeader
+        title="Start Taking"
+        subtitle={supplement.name}
+      />
 
       <SupplementScheduleForm
         state={formState}
@@ -140,14 +134,4 @@ export default function ScheduleSupplementScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 20,
-    paddingTop: 10,
-    gap: 12,
-  },
-  backButton: { padding: 8 },
-  title: { fontSize: 24, fontWeight: "700", color: "#212529" },
-  subtitle: { fontSize: 14, color: "#868e96", marginTop: 2 },
 });
