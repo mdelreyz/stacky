@@ -22,19 +22,15 @@ Last updated: 2026-04-08
    - [apps/mobile/app/(tabs)/protocols.tsx](apps/mobile/app/(tabs)/protocols.tsx)
    - These are still healthy, but should be split further if another major feature lands there.
 
-2. Split the mobile transport layer by resource before it becomes a catch-all file.
-   - [apps/mobile/lib/api.ts](apps/mobile/lib/api.ts)
-   - It now handles auth, daily plan, protocols, supplements, and user supplements. Extracting per-resource modules behind a shared request helper will keep future flows isolated and easier to test.
-
 ### Low
 
 1. Align backend pagination response typing between mobile and shared client code.
-   - [apps/mobile/lib/api.ts](apps/mobile/lib/api.ts)
+   - [apps/mobile/lib/api/core.ts](apps/mobile/lib/api/core.ts)
    - [packages/api-client/src/client.ts](packages/api-client/src/client.ts)
    - Both clients still define their own small paginated response shapes. It is low risk today, but worth centralizing if another client surface is added.
 
 ## Next refactor slice
 
-1. Split `apps/mobile/lib/api.ts` into a shared request helper plus `auth`, `dailyPlan`, `protocols`, and `supplements` modules.
-2. Extract the supplement detail screen into smaller profile/status sections before adding more onboarding or evidence UI there.
-3. Add light frontend coverage around date navigation and adherence refresh behavior once a test harness is introduced.
+1. Extract the supplement detail screen into smaller profile/status sections before adding more onboarding or evidence UI there.
+2. Add light frontend coverage around date navigation and adherence refresh behavior once a test harness is introduced.
+3. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.
