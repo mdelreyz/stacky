@@ -18,7 +18,6 @@ Last updated: 2026-04-08
 ### Medium
 
 1. Watch the largest UI files before the next feature round.
-   - [apps/mobile/app/supplement/[id].tsx](apps/mobile/app/supplement/[id].tsx)
    - [apps/mobile/app/(tabs)/protocols.tsx](apps/mobile/app/(tabs)/protocols.tsx)
    - These are still healthy, but should be split further if another major feature lands there.
 
@@ -31,6 +30,6 @@ Last updated: 2026-04-08
 
 ## Next refactor slice
 
-1. Extract the supplement detail screen into smaller profile/status sections before adding more onboarding or evidence UI there.
-2. Add light frontend coverage around date navigation and adherence refresh behavior once a test harness is introduced.
-3. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.
+1. Add light frontend coverage around date navigation and adherence refresh behavior once a test harness is introduced.
+2. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.
+3. Split the Protocols tab into smaller list sections before therapy support or richer stack operations land there.
