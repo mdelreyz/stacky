@@ -71,6 +71,10 @@ function RootLayoutNav() {
           name="supplement/[id]"
           options={{ headerShown: false }}
         />
+        <Stack.Screen
+          name="supplement/[id]/schedule"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
       </Stack>
     </ThemeProvider>
   );

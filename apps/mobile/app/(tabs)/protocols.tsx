@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,7 @@ import {
   TextInput,
   RefreshControl,
 } from "react-native";
-import { Link } from "expo-router";
+import { Link, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { supplements as supplementsApi, userSupplements as userSupApi } from "@/lib/api";
 import type { Supplement, UserSupplement } from "@/lib/api";
@@ -37,9 +37,11 @@ export default function ProtocolsScreen() {
     }
   }, [search]);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  useFocusEffect(
+    useCallback(() => {
+      void fetchData();
+    }, [fetchData])
+  );
 
   const onRefresh = () => {
     setRefreshing(true);

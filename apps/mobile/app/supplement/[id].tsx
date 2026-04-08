@@ -127,6 +127,14 @@ export default function SupplementDetailScreen() {
         <Text style={styles.description}>{supplement.description}</Text>
       )}
 
+      <Pressable
+        style={styles.primaryAction}
+        onPress={() => router.push(`/supplement/${supplement.id}/schedule`)}
+      >
+        <FontAwesome name="plus-circle" size={16} color="#fff" />
+        <Text style={styles.primaryActionText}>Add to My Protocol</Text>
+      </Pressable>
+
       {ai ? (
         <>
           {/* Mechanism */}
@@ -366,6 +374,22 @@ const styles = StyleSheet.create({
     lineHeight: 22,
     paddingHorizontal: 20,
     marginBottom: 16,
+  },
+  primaryAction: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: "#228be6",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    paddingVertical: 14,
+    borderRadius: 12,
+  },
+  primaryActionText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "700",
   },
   section: {
     backgroundColor: "#fff",

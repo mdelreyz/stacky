@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
@@ -9,6 +9,7 @@ import {
   View,
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useFocusEffect } from "expo-router";
 
 import { dailyPlan as dailyPlanApi } from "@/lib/api";
 import type { DailyPlan, DailyPlanItem, InteractionWarning } from "@/lib/api";
@@ -37,9 +38,11 @@ export default function TodayScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    void loadPlan();
-  }, [loadPlan]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadPlan();
+    }, [loadPlan])
+  );
 
   if (loading) {
     return (
