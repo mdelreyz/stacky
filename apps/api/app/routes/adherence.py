@@ -159,7 +159,7 @@ async def upsert_therapy_adherence(
     ):
         raise HTTPException(status_code=400, detail="This therapy is not scheduled for that date")
 
-    return await _upsert_adherence(
+    response = await _upsert_adherence(
         item_type="therapy",
         item_id=user_therapy.id,
         take_window=user_therapy.take_window,
@@ -174,6 +174,12 @@ async def upsert_therapy_adherence(
         data=data,
         session=session,
     )
+    if data.status == "taken" and response.taken_at is not None:
+        next_settings = dict(user_therapy.settings or {})
+        next_settings["last_completed_at"] = response.taken_at.isoformat()
+        user_therapy.settings = next_settings
+        await session.commit()
+    return response
 
 
 @router.post("/medications/{user_medication_id}", response_model=AdherenceResponse)

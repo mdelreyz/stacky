@@ -6,7 +6,7 @@ import { ProtocolScheduleSection } from "@/components/protocols/ProtocolSchedule
 import type { UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
 import type { ProtocolFormState } from "@/lib/protocol-schedule";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
-import { readTherapySettings } from "@/lib/therapy-settings";
+import { describeTherapySettings } from "@/lib/therapy-settings";
 
 export type { ProtocolFormState } from "@/lib/protocol-schedule";
 
@@ -183,8 +183,7 @@ export function ProtocolForm({
           {therapies.map((therapy) => {
             const selected = state.selectedUserTherapyIds.includes(therapy.id);
             const lockedInactive = !therapy.is_active && !selected;
-            const settingsState = readTherapySettings(therapy.settings);
-            const detail = settingsState.sessionDetails || settingsState.lastSessionDetails;
+            const detail = describeTherapySettings(therapy.settings);
             return (
               <Pressable
                 key={therapy.id}

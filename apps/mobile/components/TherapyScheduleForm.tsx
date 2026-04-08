@@ -17,6 +17,10 @@ export interface TherapyScheduleState {
   takeWindow: ScheduleTakeWindow;
   sessionDetails: string;
   lastSessionDetails: string;
+  lastSessionPattern: string;
+  lastSessionVolume: string;
+  lastSessionResponse: string;
+  lastCompletedAt: string;
   notes: string;
 }
 
@@ -99,6 +103,33 @@ export function TherapyScheduleForm({
           placeholder="Last volume, response, pattern followed, or notes from the previous session"
           placeholderTextColor="#adb5bd"
         />
+        <TextInput
+          style={[styles.input, styles.spacedInput]}
+          value={state.lastSessionPattern}
+          onChangeText={(value) => setState((current) => ({ ...current, lastSessionPattern: value }))}
+          placeholder="Pattern followed, routine version, splits, intervals, or progression"
+          placeholderTextColor="#adb5bd"
+        />
+        <TextInput
+          style={[styles.input, styles.spacedInput]}
+          value={state.lastSessionVolume}
+          onChangeText={(value) => setState((current) => ({ ...current, lastSessionVolume: value }))}
+          placeholder="Volume, load, reps, minutes, distance, or dose used"
+          placeholderTextColor="#adb5bd"
+        />
+        <TextInput
+          style={[styles.input, styles.spacedInput]}
+          value={state.lastSessionResponse}
+          onChangeText={(value) => setState((current) => ({ ...current, lastSessionResponse: value }))}
+          placeholder="Response, perceived effort, soreness, HRV note, or observed effect"
+          placeholderTextColor="#adb5bd"
+        />
+        {state.lastCompletedAt ? (
+          <View style={styles.readonlyCard}>
+            <Text style={styles.readonlyLabel}>Last completed</Text>
+            <Text style={styles.readonlyValue}>{state.lastCompletedAt}</Text>
+          </View>
+        ) : null}
       </View>
 
       <View style={styles.card}>
@@ -218,6 +249,28 @@ const styles = StyleSheet.create({
   notesInput: {
     minHeight: 96,
     textAlignVertical: "top",
+  },
+  spacedInput: {
+    marginTop: 12,
+  },
+  readonlyCard: {
+    marginTop: 12,
+    borderRadius: 10,
+    padding: 12,
+    backgroundColor: "#f8f9fa",
+    borderWidth: 1,
+    borderColor: "#e9ecef",
+  },
+  readonlyLabel: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#6c757d",
+    marginBottom: 6,
+  },
+  readonlyValue: {
+    fontSize: 14,
+    color: "#212529",
+    fontWeight: "600",
   },
   optionGrid: {
     flexDirection: "row",

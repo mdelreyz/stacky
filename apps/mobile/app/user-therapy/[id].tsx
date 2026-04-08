@@ -6,7 +6,11 @@ import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { TherapyScheduleForm, type TherapyScheduleState } from "@/components/TherapyScheduleForm";
 import { userTherapies as userTherapiesApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
-import { readTherapySettings, buildTherapySettings } from "@/lib/therapy-settings";
+import {
+  buildTherapySettings,
+  formatLastCompletedAt,
+  readTherapySettings,
+} from "@/lib/therapy-settings";
 import type { UserTherapy } from "@/lib/api";
 
 export default function ManageUserTherapyScreen() {
@@ -20,6 +24,10 @@ export default function ManageUserTherapyScreen() {
     takeWindow: "morning_with_food",
     sessionDetails: "",
     lastSessionDetails: "",
+    lastSessionPattern: "",
+    lastSessionVolume: "",
+    lastSessionResponse: "",
+    lastCompletedAt: "",
     notes: "",
   });
 
@@ -39,6 +47,10 @@ export default function ManageUserTherapyScreen() {
           takeWindow: nextUserTherapy.take_window,
           sessionDetails: settingsState.sessionDetails,
           lastSessionDetails: settingsState.lastSessionDetails,
+          lastSessionPattern: settingsState.lastSessionPattern,
+          lastSessionVolume: settingsState.lastSessionVolume,
+          lastSessionResponse: settingsState.lastSessionResponse,
+          lastCompletedAt: formatLastCompletedAt(settingsState.lastCompletedAt) || "",
           notes: nextUserTherapy.notes || "",
         });
       })
@@ -74,6 +86,12 @@ export default function ManageUserTherapyScreen() {
         settings: buildTherapySettings({
           sessionDetails: formState.sessionDetails,
           lastSessionDetails: formState.lastSessionDetails,
+          lastSessionPattern: formState.lastSessionPattern,
+          lastSessionVolume: formState.lastSessionVolume,
+          lastSessionResponse: formState.lastSessionResponse,
+          lastCompletedAt: userTherapy.settings && typeof userTherapy.settings["last_completed_at"] === "string"
+            ? (userTherapy.settings["last_completed_at"] as string)
+            : "",
         }) ?? null,
         notes: formState.notes.trim() || null,
       });

@@ -31,6 +31,10 @@ export default function ScheduleTherapyScreen() {
     takeWindow: "morning_with_food",
     sessionDetails: "",
     lastSessionDetails: "",
+    lastSessionPattern: "",
+    lastSessionVolume: "",
+    lastSessionResponse: "",
+    lastCompletedAt: "",
     notes: "",
   });
 
@@ -53,6 +57,10 @@ export default function ScheduleTherapyScreen() {
           takeWindow: isScheduleTakeWindow(aiWindow) ? aiWindow : "morning_with_food",
           sessionDetails: readDefaultSessionDetails(aiProfile),
           lastSessionDetails: "",
+          lastSessionPattern: "",
+          lastSessionVolume: "",
+          lastSessionResponse: "",
+          lastCompletedAt: "",
           notes: "",
         });
       })
@@ -89,6 +97,10 @@ export default function ScheduleTherapyScreen() {
         settings: buildTherapySettings({
           sessionDetails: formState.sessionDetails,
           lastSessionDetails: formState.lastSessionDetails,
+          lastSessionPattern: formState.lastSessionPattern,
+          lastSessionVolume: formState.lastSessionVolume,
+          lastSessionResponse: formState.lastSessionResponse,
+          lastCompletedAt: formState.lastCompletedAt,
         }),
         notes: formState.notes.trim() || undefined,
         started_at: new Date().toISOString().slice(0, 10),

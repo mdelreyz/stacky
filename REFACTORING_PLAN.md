@@ -37,6 +37,9 @@ Last updated: 2026-04-08
 - The seventh pass landed with tracking hardening:
   - adherence events now snapshot item/regime context so recent history does not drift when names or memberships change later
   - tracking can now be filtered by supplements, medications, or modalities instead of forcing one blended analytics view
+- The eighth pass landed with richer modality session state:
+  - modality/training settings now carry structured last-session fields instead of one overloaded note
+  - therapy completion now stamps the last-completed timestamp automatically so the manage flows do not depend on manual date recall
 
 ## Open findings
 
@@ -91,4 +94,5 @@ Last updated: 2026-04-08
 3. Extract a reusable multi-phase nutrition editor if nutrition plans need more than one phase in the UI.
 4. Add light frontend coverage around Today refresh behavior, regime scheduling, UV guidance, and tracking navigation once a test harness is introduced.
 5. Decide whether adherence events should snapshot dosage/session settings before biomarker-driven optimization work begins.
+6. Split modality settings into reusable subcomponents if therapy/training forms gain another domain-specific section.
 6. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.

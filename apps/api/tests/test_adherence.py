@@ -164,6 +164,15 @@ def fetch_logs():
     return asyncio.run(_fetch())
 
 
+def fetch_user_therapy(user_therapy_id):
+    async def _fetch():
+        async with async_session_factory() as session:
+            result = await session.execute(select(UserTherapy).where(UserTherapy.id == user_therapy_id))
+            return result.scalar_one()
+
+    return asyncio.run(_fetch())
+
+
 def test_mark_supplement_taken_then_skipped_updates_existing_log(client):
     headers, user_id = signup(client)
     supplement_id = create_supplement("Vitamin C")
@@ -292,6 +301,9 @@ def test_mark_therapy_taken_updates_daily_plan(client):
     windows = {window["window"]: window for window in plan_response.json()["windows"]}
     assert windows["afternoon"]["items"][0]["type"] == "therapy"
     assert windows["afternoon"]["items"][0]["adherence_status"] == "taken"
+    refreshed_user_therapy = fetch_user_therapy(user_therapy_id)
+    assert isinstance(refreshed_user_therapy.settings, dict)
+    assert "last_completed_at" in refreshed_user_therapy.settings
 
 
 def test_mark_medication_taken_updates_daily_plan(client):

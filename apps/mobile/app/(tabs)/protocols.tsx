@@ -17,7 +17,7 @@ import {
   userTherapies as userTherapiesApi,
 } from "@/lib/api";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
-import { readTherapySettings } from "@/lib/therapy-settings";
+import { describeTherapySettings, formatLastCompletedAt, readTherapySettings } from "@/lib/therapy-settings";
 import type {
   Medication,
   Protocol,
@@ -163,11 +163,14 @@ export default function ProtocolsScreen() {
         emptyHint="Browse the protocol catalog below to schedule therapies, meditation, recovery, training, or device sessions."
         items={myTherapies.map((item) => {
           const settings = readTherapySettings(item.settings);
+          const lastCompletedAt = formatLastCompletedAt(settings.lastCompletedAt);
           return {
             id: item.id,
             name: item.therapy.name,
             meta: `${item.duration_minutes ? `${item.duration_minutes} min · ` : ""}${getFrequencyLabel(item.frequency)} · ${getTakeWindowLabel(item.take_window)}`,
-            detail: settings.sessionDetails || settings.lastSessionDetails || undefined,
+            detail: lastCompletedAt
+              ? `${describeTherapySettings(item.settings) ?? "Session tracked"} · Last done ${lastCompletedAt}`
+              : describeTherapySettings(item.settings),
             href: `/user-therapy/${item.id}`,
           };
         })}
