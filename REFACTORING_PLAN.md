@@ -19,9 +19,8 @@ Last updated: 2026-04-08
 
 1. Watch the largest UI files before the next feature round.
    - [apps/mobile/app/supplement/[id].tsx](apps/mobile/app/supplement/[id].tsx)
-   - [apps/mobile/app/(tabs)/index.tsx](apps/mobile/app/(tabs)/index.tsx)
    - [apps/mobile/app/(tabs)/protocols.tsx](apps/mobile/app/(tabs)/protocols.tsx)
-   - These are still healthy, but each is now carrying multiple UI states and should be split into smaller presentational components before another major feature lands there.
+   - These are still healthy, but should be split further if another major feature lands there.
 
 2. Split the mobile transport layer by resource before it becomes a catch-all file.
    - [apps/mobile/lib/api.ts](apps/mobile/lib/api.ts)
@@ -36,6 +35,6 @@ Last updated: 2026-04-08
 
 ## Next refactor slice
 
-1. Extract Today-tab cards and adherence actions into dedicated components before adding date navigation or therapy support.
-2. Split `apps/mobile/lib/api.ts` into a shared request helper plus `auth`, `dailyPlan`, `protocols`, and `supplements` modules.
-3. Introduce a reusable mobile flow header component for the create/edit modals.
+1. Split `apps/mobile/lib/api.ts` into a shared request helper plus `auth`, `dailyPlan`, `protocols`, and `supplements` modules.
+2. Extract the supplement detail screen into smaller profile/status sections before adding more onboarding or evidence UI there.
+3. Add light frontend coverage around date navigation and adherence refresh behavior once a test harness is introduced.

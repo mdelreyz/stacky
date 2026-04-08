@@ -8,6 +8,7 @@ import type {
   Supplement,
   SupplementAdherenceResult,
   TakeWindow,
+  TakeWindowPlan,
   UserSupplement,
 } from "@protocols/domain";
 
@@ -222,5 +223,6 @@ export type {
   Supplement,
   SupplementAdherenceResult,
   TakeWindow,
+  TakeWindowPlan,
   UserSupplement,
 };

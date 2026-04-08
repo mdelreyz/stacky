@@ -1,26 +1,28 @@
 import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
-  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useFocusEffect } from "expo-router";
 
 import { dailyPlan as dailyPlanApi } from "@/lib/api";
-import type { DailyPlan, DailyPlanItem, InteractionWarning } from "@/lib/api";
+import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
+import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
+import { TodayDateHeader } from "@/components/today/TodayDateHeader";
+import { getTodayIsoDate, shiftIsoDate } from "@/lib/date";
+import type { DailyPlan } from "@/lib/api";
 
 export default function TodayScreen() {
+  const [selectedDate, setSelectedDate] = useState(getTodayIsoDate);
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingActionItemId, setPendingActionItemId] = useState<string | null>(null);
 
-  const loadPlan = useCallback(async (refresh = false) => {
+  const loadPlan = useCallback(async (date: string, refresh = false) => {
     if (refresh) {
       setRefreshing(true);
     } else {
@@ -28,7 +30,7 @@ export default function TodayScreen() {
     }
 
     try {
-      const nextPlan = await dailyPlanApi.get();
+      const nextPlan = await dailyPlanApi.get(date);
       setPlan(nextPlan);
     } catch (error) {
       console.error("Failed to load daily plan", error);
@@ -40,8 +42,8 @@ export default function TodayScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      void loadPlan();
-    }, [loadPlan])
+      void loadPlan(selectedDate);
+    }, [loadPlan, selectedDate])
   );
 
   if (loading) {
@@ -59,147 +61,39 @@ export default function TodayScreen() {
     <ScrollView
       style={styles.container}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={() => void loadPlan(true)} />
+        <RefreshControl refreshing={refreshing} onRefresh={() => void loadPlan(selectedDate, true)} />
       }
     >
-      <View style={styles.header}>
-        <Text style={styles.date}>
-          {new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            month: "long",
-            day: "numeric",
-          })}
-        </Text>
-        <Text style={styles.title}>Your Protocol</Text>
-      </View>
+      <TodayDateHeader
+        selectedDate={selectedDate}
+        onChangeDay={(delta) => setSelectedDate((current) => shiftIsoDate(current, delta))}
+        onJumpToToday={() => setSelectedDate(getTodayIsoDate())}
+      />
 
-      {interactionWarnings.length > 0 ? (
-        <View style={styles.warningCard}>
-          <View style={styles.warningHeader}>
-            <FontAwesome name="exclamation-triangle" size={16} color="#c92a2a" />
-            <Text style={styles.warningTitle}>Interaction Warnings</Text>
-          </View>
-          {interactionWarnings.map((warning, index) => (
-            <InteractionRow key={`${warning.supplement_a}-${warning.supplement_b}-${index}`} warning={warning} />
-          ))}
-        </View>
-      ) : null}
+      <InteractionWarningsCard warnings={interactionWarnings} />
 
       {windows.map((windowPlan) => (
-        <View key={windowPlan.window} style={styles.section}>
-          <Text style={styles.sectionTitle}>{windowPlan.display_time}</Text>
-          {windowPlan.items.length > 0 ? (
-            windowPlan.items.map((item) => (
-              <View key={item.id} style={styles.itemCard}>
-                <View style={styles.itemHeader}>
-                  <Text style={styles.itemName}>{item.name}</Text>
-                  <StatusPill status={item.adherence_status} />
-                </View>
-                <Text style={styles.itemDosage}>{item.dosage}</Text>
-                <Text style={styles.itemInstructions}>{item.instructions}</Text>
-                {item.type === "supplement" ? (
-                  <AdherenceActions
-                    item={item}
-                    loading={pendingActionItemId === item.id}
-                    onUpdate={async (status) => {
-                      setPendingActionItemId(item.id);
-                      try {
-                        await dailyPlanApi.updateSupplementAdherence(item.id, { status });
-                        await loadPlan(true);
-                      } catch (error) {
-                        console.error("Failed to update supplement adherence", error);
-                      } finally {
-                        setPendingActionItemId((current) => (current === item.id ? null : current));
-                      }
-                    }}
-                  />
-                ) : null}
-              </View>
-            ))
-          ) : (
-            <>
-              <Text style={styles.placeholder}>Nothing scheduled in this window.</Text>
-              {windowPlan.window === "morning_fasted" ? (
-                <Text style={styles.hint}>
-                  Add supplements in the Protocols tab to populate your day.
-                </Text>
-              ) : null}
-            </>
-          )}
-        </View>
+        <DailyPlanWindowCard
+          key={windowPlan.window}
+          windowPlan={windowPlan}
+          pendingActionItemId={pendingActionItemId}
+          onUpdateSupplementAdherence={async (itemId, status) => {
+            setPendingActionItemId(itemId);
+            try {
+              await dailyPlanApi.updateSupplementAdherence(itemId, {
+                status,
+                date: selectedDate,
+              });
+              await loadPlan(selectedDate, true);
+            } catch (error) {
+              console.error("Failed to update supplement adherence", error);
+            } finally {
+              setPendingActionItemId((current) => (current === itemId ? null : current));
+            }
+          }}
+        />
       ))}
     </ScrollView>
-  );
-}
-
-function InteractionRow({ warning }: { warning: InteractionWarning }) {
-  return (
-    <View style={styles.warningRow}>
-      <Text style={styles.warningPair}>
-        {warning.supplement_a} + {warning.supplement_b}
-      </Text>
-      <Text style={styles.warningText}>{warning.description}</Text>
-    </View>
-  );
-}
-
-function AdherenceActions({
-  item,
-  loading,
-  onUpdate,
-}: {
-  item: DailyPlanItem;
-  loading: boolean;
-  onUpdate: (status: "taken" | "skipped") => Promise<void>;
-}) {
-  const primaryAction = item.adherence_status === "skipped" ? "taken" : "taken";
-  const secondaryAction = item.adherence_status === "taken" ? "skipped" : "skipped";
-
-  return (
-    <View style={styles.actionsRow}>
-      <Pressable
-        style={[
-          styles.actionButton,
-          styles.takeButton,
-          loading && styles.actionButtonDisabled,
-          item.adherence_status === "taken" && styles.actionButtonActive,
-        ]}
-        onPress={() => void onUpdate(primaryAction)}
-        disabled={loading}
-      >
-        <Text style={styles.takeButtonText}>
-          {loading && item.adherence_status !== "taken" ? "Saving..." : "Take"}
-        </Text>
-      </Pressable>
-      <Pressable
-        style={[
-          styles.actionButton,
-          styles.skipButton,
-          loading && styles.actionButtonDisabled,
-          item.adherence_status === "skipped" && styles.skipButtonActive,
-        ]}
-        onPress={() => void onUpdate(secondaryAction)}
-        disabled={loading}
-      >
-        <Text style={styles.skipButtonText}>Skip</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-function StatusPill({ status }: { status: "pending" | "taken" | "skipped" }) {
-  const stylesByStatus = {
-    pending: { backgroundColor: "#e7f5ff", color: "#1c7ed6", label: "Pending" },
-    taken: { backgroundColor: "#ebfbee", color: "#2b8a3e", label: "Taken" },
-    skipped: { backgroundColor: "#fff5f5", color: "#c92a2a", label: "Skipped" },
-  }[status];
-
-  return (
-    <View style={[styles.statusPill, { backgroundColor: stylesByStatus.backgroundColor }]}>
-      <Text style={[styles.statusText, { color: stylesByStatus.color }]}>
-        {stylesByStatus.label}
-      </Text>
-    </View>
   );
 }
 
@@ -209,157 +103,4 @@ const styles = StyleSheet.create({
     backgroundColor: "#f8f9fa",
   },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: {
-    padding: 20,
-    paddingTop: 10,
-  },
-  date: {
-    fontSize: 14,
-    color: "#6c757d",
-    marginBottom: 4,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "700",
-    color: "#212529",
-  },
-  warningCard: {
-    backgroundColor: "#fff5f5",
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#ffe3e3",
-  },
-  warningHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 8,
-    marginBottom: 10,
-  },
-  warningTitle: {
-    fontSize: 15,
-    fontWeight: "700",
-    color: "#c92a2a",
-  },
-  warningRow: {
-    marginTop: 8,
-  },
-  warningPair: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: "#862e2e",
-  },
-  warningText: {
-    fontSize: 13,
-    color: "#a61e4d",
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  section: {
-    backgroundColor: "#ffffff",
-    marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#495057",
-    marginBottom: 8,
-  },
-  placeholder: {
-    fontSize: 14,
-    color: "#adb5bd",
-  },
-  hint: {
-    fontSize: 13,
-    color: "#868e96",
-    marginTop: 8,
-    fontStyle: "italic",
-  },
-  itemCard: {
-    paddingTop: 10,
-    paddingBottom: 8,
-    borderTopWidth: 1,
-    borderTopColor: "#f1f3f5",
-  },
-  itemHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: 12,
-  },
-  itemName: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#212529",
-  },
-  itemDosage: {
-    fontSize: 13,
-    color: "#1c7ed6",
-    marginTop: 4,
-    fontWeight: "600",
-  },
-  itemInstructions: {
-    fontSize: 13,
-    color: "#495057",
-    marginTop: 4,
-    lineHeight: 18,
-  },
-  actionsRow: {
-    flexDirection: "row",
-    gap: 10,
-    marginTop: 12,
-  },
-  actionButton: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    alignItems: "center",
-  },
-  actionButtonDisabled: {
-    opacity: 0.6,
-  },
-  actionButtonActive: {
-    borderWidth: 1,
-    borderColor: "#2b8a3e",
-  },
-  takeButton: {
-    backgroundColor: "#ebfbee",
-  },
-  takeButtonText: {
-    color: "#2b8a3e",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  skipButton: {
-    backgroundColor: "#fff5f5",
-  },
-  skipButtonActive: {
-    borderWidth: 1,
-    borderColor: "#c92a2a",
-  },
-  skipButtonText: {
-    color: "#c92a2a",
-    fontSize: 13,
-    fontWeight: "700",
-  },
-  statusPill: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 999,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: "700",
-  },
 });
