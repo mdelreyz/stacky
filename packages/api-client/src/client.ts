@@ -96,6 +96,26 @@ export class ProtocolsAPI {
     return this.request(`/api/v1/users/me/daily-plan${qs ? `?${qs}` : ""}`);
   }
 
+  async updateSupplementAdherence(
+    itemId: string,
+    data: {
+      status: "taken" | "skipped";
+      date?: string;
+      skip_reason?: string;
+    }
+  ): Promise<{
+    item_id: string;
+    status: "taken" | "skipped";
+    scheduled_at: string;
+    taken_at: string | null;
+    skip_reason: string | null;
+  }> {
+    return this.request(`/api/v1/users/me/adherence/supplements/${itemId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   // Supplements catalog
   async listSupplements(params?: {
     page?: number;

@@ -79,6 +79,15 @@ export const dailyPlan = {
     const qs = date ? `?date=${encodeURIComponent(date)}` : "";
     return request<DailyPlan>(`/api/v1/users/me/daily-plan${qs}`);
   },
+
+  updateSupplementAdherence: (
+    itemId: string,
+    data: { status: "taken" | "skipped"; date?: string; skip_reason?: string }
+  ) =>
+    request<SupplementAdherenceResult>(`/api/v1/users/me/adherence/supplements/${itemId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };
 
 // Supplements catalog
@@ -213,4 +222,12 @@ export interface InteractionWarning {
   type: "contraindication" | "caution";
   severity: "critical" | "major" | "moderate" | "minor";
   description: string;
+}
+
+export interface SupplementAdherenceResult {
+  item_id: string;
+  status: "taken" | "skipped";
+  scheduled_at: string;
+  taken_at: string | null;
+  skip_reason: string | null;
 }

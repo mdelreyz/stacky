@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -10,12 +11,13 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { dailyPlan as dailyPlanApi } from "@/lib/api";
-import type { DailyPlan, InteractionWarning } from "@/lib/api";
+import type { DailyPlan, DailyPlanItem, InteractionWarning } from "@/lib/api";
 
 export default function TodayScreen() {
   const [plan, setPlan] = useState<DailyPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingActionItemId, setPendingActionItemId] = useState<string | null>(null);
 
   const loadPlan = useCallback(async (refresh = false) => {
     if (refresh) {
@@ -92,6 +94,23 @@ export default function TodayScreen() {
                 </View>
                 <Text style={styles.itemDosage}>{item.dosage}</Text>
                 <Text style={styles.itemInstructions}>{item.instructions}</Text>
+                {item.type === "supplement" ? (
+                  <AdherenceActions
+                    item={item}
+                    loading={pendingActionItemId === item.id}
+                    onUpdate={async (status) => {
+                      setPendingActionItemId(item.id);
+                      try {
+                        await dailyPlanApi.updateSupplementAdherence(item.id, { status });
+                        await loadPlan(true);
+                      } catch (error) {
+                        console.error("Failed to update supplement adherence", error);
+                      } finally {
+                        setPendingActionItemId((current) => (current === item.id ? null : current));
+                      }
+                    }}
+                  />
+                ) : null}
               </View>
             ))
           ) : (
@@ -117,6 +136,50 @@ function InteractionRow({ warning }: { warning: InteractionWarning }) {
         {warning.supplement_a} + {warning.supplement_b}
       </Text>
       <Text style={styles.warningText}>{warning.description}</Text>
+    </View>
+  );
+}
+
+function AdherenceActions({
+  item,
+  loading,
+  onUpdate,
+}: {
+  item: DailyPlanItem;
+  loading: boolean;
+  onUpdate: (status: "taken" | "skipped") => Promise<void>;
+}) {
+  const primaryAction = item.adherence_status === "skipped" ? "taken" : "taken";
+  const secondaryAction = item.adherence_status === "taken" ? "skipped" : "skipped";
+
+  return (
+    <View style={styles.actionsRow}>
+      <Pressable
+        style={[
+          styles.actionButton,
+          styles.takeButton,
+          loading && styles.actionButtonDisabled,
+          item.adherence_status === "taken" && styles.actionButtonActive,
+        ]}
+        onPress={() => void onUpdate(primaryAction)}
+        disabled={loading}
+      >
+        <Text style={styles.takeButtonText}>
+          {loading && item.adherence_status !== "taken" ? "Saving..." : "Take"}
+        </Text>
+      </Pressable>
+      <Pressable
+        style={[
+          styles.actionButton,
+          styles.skipButton,
+          loading && styles.actionButtonDisabled,
+          item.adherence_status === "skipped" && styles.skipButtonActive,
+        ]}
+        onPress={() => void onUpdate(secondaryAction)}
+        disabled={loading}
+      >
+        <Text style={styles.skipButtonText}>Skip</Text>
+      </Pressable>
     </View>
   );
 }
@@ -248,6 +311,44 @@ const styles = StyleSheet.create({
     color: "#495057",
     marginTop: 4,
     lineHeight: 18,
+  },
+  actionsRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginTop: 12,
+  },
+  actionButton: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  actionButtonDisabled: {
+    opacity: 0.6,
+  },
+  actionButtonActive: {
+    borderWidth: 1,
+    borderColor: "#2b8a3e",
+  },
+  takeButton: {
+    backgroundColor: "#ebfbee",
+  },
+  takeButtonText: {
+    color: "#2b8a3e",
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  skipButton: {
+    backgroundColor: "#fff5f5",
+  },
+  skipButtonActive: {
+    borderWidth: 1,
+    borderColor: "#c92a2a",
+  },
+  skipButtonText: {
+    color: "#c92a2a",
+    fontSize: 13,
+    fontWeight: "700",
   },
   statusPill: {
     paddingHorizontal: 8,

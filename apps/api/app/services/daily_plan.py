@@ -29,6 +29,15 @@ WINDOW_LABELS = {
     TakeWindow.bedtime: "Bedtime",
 }
 
+WINDOW_TIMES = {
+    TakeWindow.morning_fasted: time(7, 0),
+    TakeWindow.morning_with_food: time(8, 0),
+    TakeWindow.midday: time(12, 30),
+    TakeWindow.afternoon: time(15, 0),
+    TakeWindow.evening: time(19, 0),
+    TakeWindow.bedtime: time(22, 0),
+}
+
 SEVERITY_ORDER = {
     "critical": 4,
     "major": 3,
@@ -126,10 +135,7 @@ def _adherence_status_for_logs(logs: Iterable[AdherenceLog]) -> str:
 
 
 async def _adherence_index(user: User, target_date: date, user_tz: ZoneInfo) -> dict[tuple[str, str], list[AdherenceLog]]:
-    day_start_local = datetime.combine(target_date, time.min, tzinfo=user_tz)
-    day_end_local = day_start_local + timedelta(days=1)
-    day_start_utc = day_start_local.astimezone(timezone.utc)
-    day_end_utc = day_end_local.astimezone(timezone.utc)
+    day_start_utc, day_end_utc = adherence_day_bounds(target_date, user_tz)
 
     async with async_session_factory() as session:
         result = await session.execute(
@@ -145,6 +151,17 @@ async def _adherence_index(user: User, target_date: date, user_tz: ZoneInfo) -> 
     for log in logs:
         indexed.setdefault((log.item_type, str(log.item_id)), []).append(log)
     return indexed
+
+
+def scheduled_datetime_for_window(target_date: date, take_window: TakeWindow, user_tz: ZoneInfo) -> datetime:
+    local_dt = datetime.combine(target_date, WINDOW_TIMES[take_window], tzinfo=user_tz)
+    return local_dt.astimezone(timezone.utc)
+
+
+def adherence_day_bounds(target_date: date, user_tz: ZoneInfo) -> tuple[datetime, datetime]:
+    day_start_local = datetime.combine(target_date, time.min, tzinfo=user_tz)
+    day_end_local = day_start_local + timedelta(days=1)
+    return day_start_local.astimezone(timezone.utc), day_end_local.astimezone(timezone.utc)
 
 
 def _interaction_warnings(due_items: list[UserSupplement]) -> list[dict]:
