@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,12 +11,12 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router, useLocalSearchParams } from "expo-router";
 
 import {
-  ScheduleFrequency,
-  ScheduleTakeWindow,
   SupplementScheduleForm,
   SupplementScheduleState,
 } from "@/components/SupplementScheduleForm";
 import { supplements as supplementsApi, userSupplements as userSupplementsApi } from "@/lib/api";
+import { showError } from "@/lib/errors";
+import { isScheduleFrequency, isScheduleTakeWindow } from "@/lib/schedule";
 import type { Supplement } from "@/lib/api";
 
 export default function ScheduleSupplementScreen() {
@@ -47,8 +45,8 @@ export default function ScheduleSupplementScreen() {
 
         const ai = nextSupplement.ai_profile as Record<string, any> | null;
         const firstDosage = ai?.typical_dosages?.[0];
-        const aiFrequency = firstDosage?.frequency;
-        const aiWindow = ai?.timing_recommendations?.preferred_windows?.[0];
+        const aiFrequency = String(firstDosage?.frequency || "");
+        const aiWindow = String(ai?.timing_recommendations?.preferred_windows?.[0] || "");
         const aiWithFood = Boolean(ai?.timing_recommendations?.with_food);
 
         setFormState({
@@ -137,22 +135,6 @@ export default function ScheduleSupplementScreen() {
       <View style={{ height: 32 }} />
     </ScrollView>
   );
-}
-
-function showError(message: string) {
-  if (Platform.OS === "web") {
-    window.alert(message);
-  } else {
-    Alert.alert("Error", message);
-  }
-}
-
-function isScheduleFrequency(value: string): value is ScheduleFrequency {
-  return ["daily", "twice_daily", "three_times_daily", "weekly", "every_other_day"].includes(value);
-}
-
-function isScheduleTakeWindow(value: string): value is ScheduleTakeWindow {
-  return ["morning_fasted", "morning_with_food", "midday", "afternoon", "evening", "bedtime"].includes(value);
 }
 
 const styles = StyleSheet.create({

@@ -2,8 +2,10 @@ import type {
   AIProfileStatus,
   AuthResponse,
   DailyPlan,
+  Protocol,
   Supplement,
   SupplementAIProfile,
+  SupplementAdherenceResult,
   User,
   UserSupplement,
 } from "@protocols/domain";
@@ -103,16 +105,57 @@ export class ProtocolsAPI {
       date?: string;
       skip_reason?: string;
     }
-  ): Promise<{
-    item_id: string;
-    status: "taken" | "skipped";
-    scheduled_at: string;
-    taken_at: string | null;
-    skip_reason: string | null;
-  }> {
+  ): Promise<SupplementAdherenceResult> {
     return this.request(`/api/v1/users/me/adherence/supplements/${itemId}`, {
       method: "POST",
       body: JSON.stringify(data),
+    });
+  }
+
+  async listProtocols(params?: {
+    page?: number;
+    active_only?: boolean;
+  }): Promise<PaginatedResponse<Protocol>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.active_only !== undefined) query.set("active_only", String(params.active_only));
+    const qs = query.toString();
+    return this.request(`/api/v1/users/me/protocols${qs ? `?${qs}` : ""}`);
+  }
+
+  async getProtocol(id: string): Promise<Protocol> {
+    return this.request(`/api/v1/users/me/protocols/${id}`);
+  }
+
+  async createProtocol(data: {
+    name: string;
+    description?: string | null;
+    user_supplement_ids: string[];
+  }): Promise<Protocol> {
+    return this.request("/api/v1/users/me/protocols", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateProtocol(
+    id: string,
+    data: {
+      name?: string;
+      description?: string | null;
+      is_active?: boolean;
+      user_supplement_ids?: string[];
+    }
+  ): Promise<Protocol> {
+    return this.request(`/api/v1/users/me/protocols/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeProtocol(id: string): Promise<void> {
+    return this.request(`/api/v1/users/me/protocols/${id}`, {
+      method: "DELETE",
     });
   }
 

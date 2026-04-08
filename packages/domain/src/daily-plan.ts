@@ -38,3 +38,11 @@ export interface InteractionWarning {
   severity: "critical" | "major" | "moderate" | "minor";
   description: string;
 }
+
+export interface SupplementAdherenceResult {
+  item_id: string;
+  status: "taken" | "skipped";
+  scheduled_at: string;
+  taken_at: string | null;
+  skip_reason: string | null;
+}

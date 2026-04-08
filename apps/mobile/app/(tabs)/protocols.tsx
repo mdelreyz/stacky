@@ -11,10 +11,15 @@ import {
 } from "react-native";
 import { Link, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { supplements as supplementsApi, userSupplements as userSupApi } from "@/lib/api";
-import type { Supplement, UserSupplement } from "@/lib/api";
+import {
+  protocols as protocolsApi,
+  supplements as supplementsApi,
+  userSupplements as userSupApi,
+} from "@/lib/api";
+import type { Protocol, Supplement, UserSupplement } from "@/lib/api";
 
 export default function ProtocolsScreen() {
+  const [stacks, setStacks] = useState<Protocol[]>([]);
   const [catalog, setCatalog] = useState<Supplement[]>([]);
   const [mySupplements, setMySupplements] = useState<UserSupplement[]>([]);
   const [search, setSearch] = useState("");
@@ -23,10 +28,12 @@ export default function ProtocolsScreen() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [catalogRes, myRes] = await Promise.all([
+      const [stacksRes, catalogRes, myRes] = await Promise.all([
+        protocolsApi.list(),
         supplementsApi.list({ search: search || undefined }),
         userSupApi.list(),
       ]);
+      setStacks(stacksRes.items);
       setCatalog(catalogRes.items);
       setMySupplements(myRes.items);
     } catch (e) {
@@ -69,6 +76,49 @@ export default function ProtocolsScreen() {
           Supplements, therapies, and stacks
         </Text>
       </View>
+
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Stacks ({stacks.length})</Text>
+        <Link href="/protocol/add" asChild>
+          <Pressable style={styles.addButton}>
+            <FontAwesome name="plus" size={14} color="#fff" />
+            <Text style={styles.addButtonText}>New Stack</Text>
+          </Pressable>
+        </Link>
+      </View>
+
+      {stacks.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <FontAwesome name="cubes" size={40} color="#dee2e6" style={{ marginBottom: 12 }} />
+          <Text style={styles.emptyText}>No stacks yet</Text>
+          <Text style={styles.emptyHint}>
+            Bundle active supplements into named routines like Morning Stack or Sleep Stack.
+          </Text>
+        </View>
+      ) : (
+        stacks.map((stack) => {
+          const names = stack.items
+            .map((item) => item.user_supplement?.supplement.name)
+            .filter((name): name is string => Boolean(name));
+          return (
+            <Link key={stack.id} href={`/protocol/${stack.id}`} asChild>
+              <Pressable style={styles.stackCard}>
+                <View style={styles.stackInfo}>
+                  <Text style={styles.stackName}>{stack.name}</Text>
+                  <Text style={styles.stackMeta}>
+                    {stack.items.length} items
+                    {names.length > 0 ? ` · ${names.slice(0, 3).join(", ")}` : ""}
+                  </Text>
+                  {stack.description ? (
+                    <Text style={styles.stackDescription}>{stack.description}</Text>
+                  ) : null}
+                </View>
+                <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+              </Pressable>
+            </Link>
+          );
+        })
+      )}
 
       {/* My Active Supplements */}
       <View style={styles.sectionHeader}>
@@ -207,6 +257,24 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 1,
   },
+  stackCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 8,
+    borderRadius: 10,
+    padding: 14,
+    flexDirection: "row",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  stackInfo: { flex: 1 },
+  stackName: { fontSize: 16, fontWeight: "700", color: "#212529" },
+  stackMeta: { fontSize: 12, color: "#495057", marginTop: 2 },
+  stackDescription: { fontSize: 13, color: "#868e96", marginTop: 6, lineHeight: 18 },
   supplementInfo: { flex: 1 },
   supplementName: { fontSize: 16, fontWeight: "600", color: "#212529" },
   supplementMeta: { fontSize: 13, color: "#868e96", marginTop: 2 },

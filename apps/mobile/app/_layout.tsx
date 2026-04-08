@@ -79,6 +79,14 @@ function RootLayoutNav() {
           name="user-supplement/[id]"
           options={{ headerShown: false, presentation: "modal" }}
         />
+        <Stack.Screen
+          name="protocol/add"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="protocol/[id]"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
       </Stack>
     </ThemeProvider>
   );

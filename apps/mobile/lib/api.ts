@@ -1,3 +1,16 @@
+import type {
+  DailyPlan,
+  DailyPlanItem,
+  Frequency,
+  InteractionWarning,
+  Protocol,
+  ProtocolItem,
+  Supplement,
+  SupplementAdherenceResult,
+  TakeWindow,
+  UserSupplement,
+} from "@protocols/domain";
+
 const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
 
 let _token: string | null = null;
@@ -90,6 +103,46 @@ export const dailyPlan = {
     }),
 };
 
+export const protocols = {
+  list: (activeOnly = true) => {
+    const qs = activeOnly ? "?active_only=true" : "";
+    return request<{
+      items: Protocol[];
+      total: number;
+      has_more: boolean;
+    }>(`/api/v1/users/me/protocols${qs}`);
+  },
+
+  get: (id: string) => request<Protocol>(`/api/v1/users/me/protocols/${id}`),
+
+  create: (data: {
+    name: string;
+    description?: string;
+    user_supplement_ids: string[];
+  }) =>
+    request<Protocol>("/api/v1/users/me/protocols", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  update: (
+    id: string,
+    data: {
+      name?: string;
+      description?: string | null;
+      is_active?: boolean;
+      user_supplement_ids?: string[];
+    }
+  ) =>
+    request<Protocol>(`/api/v1/users/me/protocols/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    }),
+
+  remove: (id: string) =>
+    request<void>(`/api/v1/users/me/protocols/${id}`, { method: "DELETE" }),
+};
+
 // Supplements catalog
 export const supplements = {
   list: (params?: { search?: string; category?: string; page?: number }) => {
@@ -159,77 +212,15 @@ export const userSupplements = {
     request<void>(`/api/v1/users/me/supplements/${id}`, { method: "DELETE" }),
 };
 
-// Types
-export interface Supplement {
-  id: string;
-  name: string;
-  category: string;
-  form: string | null;
-  description: string | null;
-  ai_profile: Record<string, unknown> | null;
-  ai_status: "ready" | "generating" | "failed";
-  ai_error: string | null;
-  ai_generated_at: string | null;
-  is_verified: boolean;
-}
-
-export interface UserSupplement {
-  id: string;
-  supplement: Supplement;
-  dosage_amount: number;
-  dosage_unit: string;
-  frequency: string;
-  take_window: string;
-  with_food: boolean;
-  notes: string | null;
-  is_active: boolean;
-  started_at: string;
-  ended_at: string | null;
-  created_at: string;
-}
-
-export interface DailyPlan {
-  date: string;
-  windows: TakeWindowPlan[];
-  nutrition_phase: string | null;
-  cycle_alerts: CycleAlert[];
-  interactions: InteractionWarning[];
-}
-
-export interface TakeWindowPlan {
-  window: string;
-  display_time: string;
-  items: DailyPlanItem[];
-}
-
-export interface DailyPlanItem {
-  id: string;
-  name: string;
-  type: "supplement" | "therapy";
-  dosage: string;
-  instructions: string;
-  is_on_cycle: boolean;
-  adherence_status: "pending" | "taken" | "skipped";
-}
-
-export interface CycleAlert {
-  item_name: string;
-  message: string;
-  days_until_transition: number;
-}
-
-export interface InteractionWarning {
-  supplement_a: string;
-  supplement_b: string;
-  type: "contraindication" | "caution";
-  severity: "critical" | "major" | "moderate" | "minor";
-  description: string;
-}
-
-export interface SupplementAdherenceResult {
-  item_id: string;
-  status: "taken" | "skipped";
-  scheduled_at: string;
-  taken_at: string | null;
-  skip_reason: string | null;
-}
+export type {
+  DailyPlan,
+  DailyPlanItem,
+  Frequency,
+  InteractionWarning,
+  Protocol,
+  ProtocolItem,
+  Supplement,
+  SupplementAdherenceResult,
+  TakeWindow,
+  UserSupplement,
+};

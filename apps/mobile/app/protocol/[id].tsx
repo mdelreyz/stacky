@@ -10,45 +10,38 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router, useLocalSearchParams } from "expo-router";
 
-import {
-  SupplementScheduleForm,
-  SupplementScheduleState,
-} from "@/components/SupplementScheduleForm";
-import { userSupplements as userSupplementsApi } from "@/lib/api";
+import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
+import { protocols as protocolsApi, userSupplements as userSupplementsApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
-import { type ScheduleFrequency, type ScheduleTakeWindow } from "@/lib/schedule";
-import type { UserSupplement } from "@/lib/api";
+import type { Protocol, UserSupplement } from "@/lib/api";
 
-export default function ManageUserSupplementScreen() {
+export default function ManageProtocolScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [userSupplement, setUserSupplement] = useState<UserSupplement | null>(null);
+  const [protocol, setProtocol] = useState<Protocol | null>(null);
+  const [supplements, setSupplements] = useState<UserSupplement[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formState, setFormState] = useState<SupplementScheduleState>({
-    dosageAmount: "",
-    dosageUnit: "capsule",
-    frequency: "daily",
-    takeWindow: "morning_with_food",
-    withFood: false,
-    notes: "",
+  const [formState, setFormState] = useState<ProtocolFormState>({
+    name: "",
+    description: "",
+    selectedUserSupplementIds: [],
   });
 
   useEffect(() => {
     if (!id) return;
 
     let cancelled = false;
-    userSupplementsApi
-      .get(id)
-      .then((nextUserSupplement) => {
+    Promise.all([protocolsApi.get(id), userSupplementsApi.list(false)])
+      .then(([nextProtocol, supplementsResponse]) => {
         if (cancelled) return;
-        setUserSupplement(nextUserSupplement);
+        setProtocol(nextProtocol);
+        setSupplements(supplementsResponse.items);
         setFormState({
-          dosageAmount: String(nextUserSupplement.dosage_amount),
-          dosageUnit: nextUserSupplement.dosage_unit,
-          frequency: nextUserSupplement.frequency as ScheduleFrequency,
-          takeWindow: nextUserSupplement.take_window as ScheduleTakeWindow,
-          withFood: nextUserSupplement.with_food,
-          notes: nextUserSupplement.notes || "",
+          name: nextProtocol.name,
+          description: nextProtocol.description || "",
+          selectedUserSupplementIds: nextProtocol.items
+            .map((item) => item.user_supplement?.id)
+            .filter((itemId): itemId is string => Boolean(itemId)),
         });
       })
       .catch(console.error)
@@ -62,39 +55,39 @@ export default function ManageUserSupplementScreen() {
   }, [id]);
 
   const handleSave = async () => {
-    if (!userSupplement) return;
-    const parsedAmount = Number(formState.dosageAmount);
-    if (!parsedAmount || parsedAmount <= 0) {
-      showError("Enter a valid dosage amount.");
+    if (!protocol) return;
+    if (!formState.name.trim()) {
+      showError("Enter a stack name.");
+      return;
+    }
+    if (formState.selectedUserSupplementIds.length === 0) {
+      showError("Stacks need at least one supplement. Delete the stack if you no longer need it.");
       return;
     }
 
     setSaving(true);
     try {
-      await userSupplementsApi.update(userSupplement.id, {
-        dosage_amount: parsedAmount,
-        dosage_unit: formState.dosageUnit.trim() || "capsule",
-        frequency: formState.frequency,
-        take_window: formState.takeWindow,
-        with_food: formState.withFood,
-        notes: formState.notes.trim() || null,
+      await protocolsApi.update(protocol.id, {
+        name: formState.name.trim(),
+        description: formState.description.trim() || null,
+        user_supplement_ids: formState.selectedUserSupplementIds,
       });
       router.replace("/(tabs)/protocols");
     } catch (error: any) {
-      showError(error.message || "Failed to update supplement");
-    } finally {
+      showError(error.message || "Failed to update stack");
       setSaving(false);
     }
   };
 
-  const handleRemove = async () => {
-    if (!userSupplement) return;
+  const handleDelete = async () => {
+    if (!protocol) return;
+
     setSaving(true);
     try {
-      await userSupplementsApi.remove(userSupplement.id);
+      await protocolsApi.remove(protocol.id);
       router.replace("/(tabs)/protocols");
     } catch (error: any) {
-      showError(error.message || "Failed to remove supplement");
+      showError(error.message || "Failed to delete stack");
       setSaving(false);
     }
   };
@@ -107,10 +100,10 @@ export default function ManageUserSupplementScreen() {
     );
   }
 
-  if (!userSupplement) {
+  if (!protocol) {
     return (
       <View style={styles.centered}>
-        <Text>Supplement not found</Text>
+        <Text>Stack not found</Text>
       </View>
     );
   }
@@ -122,19 +115,20 @@ export default function ManageUserSupplementScreen() {
           <FontAwesome name="arrow-left" size={18} color="#495057" />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Manage Schedule</Text>
-          <Text style={styles.subtitle}>{userSupplement.supplement.name}</Text>
+          <Text style={styles.title}>Manage Stack</Text>
+          <Text style={styles.subtitle}>{protocol.name}</Text>
         </View>
       </View>
 
-      <SupplementScheduleForm
+      <ProtocolForm
         state={formState}
         setState={setFormState}
+        supplements={supplements}
         saving={saving}
-        primaryLabel="Save Changes"
+        primaryLabel="Save Stack"
         onSubmit={handleSave}
-        secondaryLabel="Stop Taking"
-        onSecondaryAction={handleRemove}
+        secondaryLabel="Delete Stack"
+        onSecondaryAction={handleDelete}
       />
 
       <View style={{ height: 32 }} />

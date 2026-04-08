@@ -2,25 +2,14 @@ import type { Dispatch, SetStateAction } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-export const FREQUENCIES = [
-  { value: "daily", label: "Daily" },
-  { value: "twice_daily", label: "Twice Daily" },
-  { value: "three_times_daily", label: "3x Daily" },
-  { value: "weekly", label: "Weekly" },
-  { value: "every_other_day", label: "Every Other Day" },
-] as const;
-
-export const TAKE_WINDOWS = [
-  { value: "morning_fasted", label: "Morning Fasted" },
-  { value: "morning_with_food", label: "Morning With Food" },
-  { value: "midday", label: "Midday" },
-  { value: "afternoon", label: "Afternoon" },
-  { value: "evening", label: "Evening" },
-  { value: "bedtime", label: "Bedtime" },
-] as const;
-
-export type ScheduleFrequency = (typeof FREQUENCIES)[number]["value"];
-export type ScheduleTakeWindow = (typeof TAKE_WINDOWS)[number]["value"];
+import {
+  AVAILABLE_SCHEDULE_FREQUENCIES,
+  AVAILABLE_SCHEDULE_WINDOWS,
+  FREQUENCY_OPTIONS,
+  TAKE_WINDOW_OPTIONS,
+  type ScheduleFrequency,
+  type ScheduleTakeWindow,
+} from "@/lib/schedule";
 
 export interface SupplementScheduleState {
   dosageAmount: string;
@@ -74,7 +63,9 @@ export function SupplementScheduleForm({
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Frequency</Text>
         <OptionGrid
-          options={FREQUENCIES}
+          options={FREQUENCY_OPTIONS.filter((option) =>
+            AVAILABLE_SCHEDULE_FREQUENCIES.includes(option.value)
+          )}
           selected={state.frequency}
           onSelect={(value) => setState((current) => ({ ...current, frequency: value as ScheduleFrequency }))}
         />
@@ -83,7 +74,9 @@ export function SupplementScheduleForm({
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Take Window</Text>
         <OptionGrid
-          options={TAKE_WINDOWS}
+          options={TAKE_WINDOW_OPTIONS.filter((option) =>
+            AVAILABLE_SCHEDULE_WINDOWS.includes(option.value)
+          )}
           selected={state.takeWindow}
           onSelect={(value) =>
             setState((current) => ({ ...current, takeWindow: value as ScheduleTakeWindow }))
