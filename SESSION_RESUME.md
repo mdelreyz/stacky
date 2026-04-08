@@ -1,38 +1,30 @@
 # Session Resume
 
 ## What was worked on
-Built the complete Phase 1 foundation for Stacky (Protocols) — a cross-platform health protocol management app. Created a pnpm monorepo with FastAPI backend, Expo (React Native) frontend, shared TypeScript packages, and Docker infrastructure. Seeded 10 supplements with comprehensive AI profiles. All endpoints tested end-to-end.
+Built the product far beyond the initial supplement-only foundation. Recent milestones added AI onboarding, supplement scheduling and adherence, regimen management, protocol stacks, medication and modality flows, nutrition cycles, UV/skincare guidance, supplement refill workflows, scheduled regime activation, tracking analytics, adherence context snapshots, and richer modality session state.
 
 ## Current state
 
 ### Done
-- Monorepo scaffold (pnpm + Turborepo)
-- FastAPI backend with JWT auth, 10 domain models, supplement CRUD, user supplement CRUD
-- SQLite local dev setup (no Docker required)
-- 10 seeded supplements with full AI profiles (Vitamin D3, Magnesium, Ashwagandha, Omega-3, Zinc, Creatine, NAC, K2, Curcumin, Probiotics)
-- Expo app with 14 web routes: auth (login/signup), 4 tabs (Today, Protocols, Nutrition, Profile), supplement detail with AI profile rendering, supplement onboarding screen
-- Shared TypeScript domain types (`packages/domain/`) and typed API client (`packages/api-client/`)
-- Docker Compose config (PostgreSQL, Redis, API, Worker)
-- Celery worker stub
-- CLAUDE.md with conventions, noomix lifecycle rules
+- AI onboarding with shared supplement profiles and status lifecycle
+- Today execution loop with date navigation, adherence writes, interaction warnings, and active regime labels
+- User flows for supplements, medications, modalities/therapies, protocols, and nutrition
+- Protocol stacks with manual and calendarized activation rules
+- Tracking overview with recent events, streaks, family filters, and schedule-fit suggestions
+- UV guidance and supplement refill tracking, including generated reorder/prescription text
+- Historical adherence snapshots for future analytics stability
+- Modality session metadata with last pattern, volume, response, and completion timestamp
 
 ### In progress
-- GitHub push to mdelreyz/stacky (needs `gh auth login` or SSH key setup)
+- Broader domain expansion for activities, training structures, skincare procedures, hair/grey-hair protocols, and additional catalog depth
+- Continued refactor and hardening work to keep forms, API seams, and seed data modular as the domain grows
 
 ## Immediate next steps
-1. **Push to GitHub**: Run `gh auth login` then `git push -u origin main` (or set SSH remote)
-2. **Phase 2 — AI Onboarding**: Wire Celery + Claude Sonnet API to auto-generate supplement profiles on onboard
-3. **Phase 2 — Daily Plan**: Build the daily plan computation service and "Today" tab with take-window grouping
-4. **UX refinement**: Run the web app (`cd apps/mobile && npx expo start --web`) and iterate on design
+1. Expand the seeded catalog and session schemas for activities, training, skincare, hair, and other protocol families the user listed
+2. Decide whether adherence events should also snapshot dosage/session settings before future PEMPTA-style outcome analysis
+3. Continue refactoring large forms and seed scripts so new domain families do not reintroduce hardcoded lists
+4. Add more test coverage around tracking, regime scheduling, and richer modality/session details
 
-## How to run
-```bash
-# Backend
-cd apps/api && source .venv/bin/activate && uvicorn app.main:app --reload --port 8000
-
-# Frontend (web)
-cd apps/mobile && npx expo start --web
-```
-
-## Open questions
-- None blocking. User wants web-first development, core features before Pempta integration.
+## Open questions or blockers
+- `main` has no upstream configured, so pushes are currently skipped
+- PEMPTA integration is still future work; keep current APIs neutral and history-preserving rather than speculative

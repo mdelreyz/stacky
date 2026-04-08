@@ -23,3 +23,11 @@ The user's sibling project Pempta (../vitalsync) is a wearable health data platf
 ## 6. Interaction engine = AI breadth + hard-coded safety rules (2026-04-08)
 
 **Decision, not yet implemented.** Interactions will come from two sources: (a) AI-generated `known_interactions` in each supplement's profile (broad coverage, may miss edge cases), and (b) a hard-coded rules engine for critical safety interactions (e.g., warfarin + vitamin K, nitroglycerin + NAC). The rules engine is the safety net — it overrides AI confidence for known dangerous combinations. **Status**: designed, implementation in Phase 3.
+
+## 7. Regimes and tracking are cross-domain, not supplement-only (2026-04-08)
+
+Named protocol stacks now act as reusable regimes that can be switched manually or activated by schedule rules such as date ranges and week-of-month windows. Daily plan generation and adherence writes both resolve against the same schedule engine so supplements, medications, and modalities only appear when their active regime is in effect. Execution tracking is now a first-class loop: users get a daily checklist, completion time is captured on action, and the tracking read model summarizes taken/skipped/pending counts, streaks, recent events, and suggestions.
+
+## 8. Current architecture preserves future analysis seams (2026-04-08)
+
+Recent work intentionally favors stable historical context over convenience joins. Adherence events now snapshot item/regime context so later renames or schedule changes do not rewrite history, and modality settings carry richer session-state fields such as last pattern, volume, response, and last completed timestamp. Operational loops were also expanded with UV-driven skincare guidance via weather data and supplement refill tracking that can generate prescription/reorder text. The user also wants their product directions broadly captured in noomix, not only narrow code decisions.
