@@ -18,7 +18,7 @@ export interface TakeWindowPlan {
 export interface DailyPlanItem {
   id: string;
   name: string;
-  type: "supplement" | "therapy";
+  type: "supplement" | "medication" | "therapy";
   details: string | null;
   instructions: string;
   is_on_cycle: boolean;
@@ -32,8 +32,8 @@ export interface CycleAlert {
 }
 
 export interface InteractionWarning {
-  supplement_a: string;
-  supplement_b: string;
+  item_a: string;
+  item_b: string;
   type: "contraindication" | "caution";
   severity: "critical" | "major" | "moderate" | "minor";
   description: string;

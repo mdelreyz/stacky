@@ -2,8 +2,10 @@ from datetime import date, datetime, timezone
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
+from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.therapy import Therapy, TherapyCategory
+from app.models.user_medication import UserMedication
 from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
 from app.models.user_therapy import UserTherapy
 
@@ -58,6 +60,26 @@ def create_therapy(name: str, category: TherapyCategory = TherapyCategory.other)
     return asyncio.run(_create())
 
 
+def create_medication(name: str, ai_profile=None):
+    async def _create():
+        async with async_session_factory() as session:
+            medication = Medication(
+                name=name,
+                category=MedicationCategory.prescription,
+                form="tablet",
+                ai_profile=ai_profile,
+                is_verified=True,
+            )
+            session.add(medication)
+            await session.commit()
+            await session.refresh(medication)
+            return medication.id
+
+    import asyncio
+
+    return asyncio.run(_create())
+
+
 def create_user_supplement(
     user_id: str,
     supplement_id,
@@ -85,6 +107,39 @@ def create_user_supplement(
             await session.commit()
             await session.refresh(user_supplement)
             return user_supplement.id
+
+    import asyncio
+
+    return asyncio.run(_create())
+
+
+def create_user_medication(
+    user_id: str,
+    medication_id,
+    *,
+    frequency: Frequency = Frequency.daily,
+    take_window: TakeWindow = TakeWindow.evening,
+    started_at: date = date(2026, 4, 1),
+    dosage_amount: float = 1,
+    dosage_unit: str = "tablet",
+    with_food: bool = False,
+):
+    async def _create():
+        async with async_session_factory() as session:
+            user_medication = UserMedication(
+                user_id=user_id,
+                medication_id=medication_id,
+                dosage_amount=dosage_amount,
+                dosage_unit=dosage_unit,
+                frequency=frequency,
+                take_window=take_window,
+                with_food=with_food,
+                started_at=started_at,
+            )
+            session.add(user_medication)
+            await session.commit()
+            await session.refresh(user_medication)
+            return user_medication.id
 
     import asyncio
 
@@ -195,6 +250,14 @@ def test_daily_plan_groups_due_items_by_take_window(client):
         notes="Rotate body sides evenly",
         session_details="4 min per side",
     )
+    finasteride_id = create_medication("Finasteride")
+    create_user_medication(
+        user_id,
+        finasteride_id,
+        take_window=TakeWindow.evening,
+        dosage_amount=1,
+        dosage_unit="mg",
+    )
 
     response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
 
@@ -225,6 +288,8 @@ def test_daily_plan_groups_due_items_by_take_window(client):
         "adherence_status": "pending",
     }
     assert windows["bedtime"]["items"][0]["name"] == "Melatonin"
+    assert windows["evening"]["items"][0]["name"] == "Finasteride"
+    assert windows["evening"]["items"][0]["type"] == "medication"
 
     scheduled_names = [
         item["name"]
@@ -244,10 +309,10 @@ def test_daily_plan_surfaces_interactions_and_adherence(client):
             "common_names": ["Vitamin D3"],
             "known_interactions": [
                 {
-                    "substance": "magnesium_glycinate",
+                    "substance": "finasteride",
                     "type": "caution",
                     "severity": "moderate",
-                    "description": "May require coordinated dosing.",
+                    "description": "Review combined use and monitor for overlapping effects.",
                 }
             ],
         },
@@ -255,6 +320,10 @@ def test_daily_plan_surfaces_interactions_and_adherence(client):
     magnesium_id = create_supplement(
         "Magnesium Glycinate",
         ai_profile={"common_names": ["Magnesium Glycinate"], "known_interactions": []},
+    )
+    finasteride_id = create_medication(
+        "Finasteride",
+        ai_profile={"common_names": ["Finasteride"], "known_interactions": []},
     )
 
     vitamin_user_item_id = create_user_supplement(
@@ -275,6 +344,13 @@ def test_daily_plan_surfaces_interactions_and_adherence(client):
         magnesium_id,
         take_window=TakeWindow.evening,
     )
+    create_user_medication(
+        user_id,
+        finasteride_id,
+        take_window=TakeWindow.midday,
+        dosage_amount=1,
+        dosage_unit="mg",
+    )
     create_adherence_log(user_id, vitamin_user_item_id)
     create_adherence_log(user_id, breathwork_user_item_id, item_type="therapy")
 
@@ -284,11 +360,11 @@ def test_daily_plan_surfaces_interactions_and_adherence(client):
     body = response.json()
     assert body["interactions"] == [
         {
-            "supplement_a": "Vitamin D3",
-            "supplement_b": "Magnesium Glycinate",
+            "item_a": "Vitamin D3",
+            "item_b": "Finasteride",
             "type": "caution",
             "severity": "moderate",
-            "description": "May require coordinated dosing.",
+            "description": "Review combined use and monitor for overlapping effects.",
         }
     ]
 

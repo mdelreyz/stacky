@@ -20,11 +20,11 @@ export function InteractionWarningsCard({
       </View>
       {warnings.map((warning, index) => (
         <View
-          key={`${warning.supplement_a}-${warning.supplement_b}-${index}`}
+          key={`${warning.item_a}-${warning.item_b}-${index}`}
           style={styles.warningRow}
         >
           <Text style={styles.warningPair}>
-            {warning.supplement_a} + {warning.supplement_b}
+            {warning.item_a} + {warning.item_b}
           </Text>
           <Text style={styles.warningText}>{warning.description}</Text>
         </View>

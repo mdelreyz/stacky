@@ -84,7 +84,9 @@ export default function TodayScreen() {
               const updateAdherence =
                 item.type === "supplement"
                   ? dailyPlanApi.updateSupplementAdherence
-                  : dailyPlanApi.updateTherapyAdherence;
+                  : item.type === "medication"
+                    ? dailyPlanApi.updateMedicationAdherence
+                    : dailyPlanApi.updateTherapyAdherence;
               await updateAdherence(item.id, {
                 status,
                 date: selectedDate,

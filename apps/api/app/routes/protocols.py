@@ -9,10 +9,12 @@ from app.auth import get_current_user
 from app.database import get_session
 from app.models.protocol import Protocol, ProtocolItem
 from app.models.user import User
+from app.models.user_medication import UserMedication
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.schemas.common import PaginatedResponse
 from app.schemas.protocol import ProtocolCreate, ProtocolItemResponse, ProtocolResponse, ProtocolUpdate
+from app.services.user_medication_serialization import serialize_user_medication
 from app.services.user_supplement_serialization import serialize_user_supplement
 from app.services.user_therapy_serialization import serialize_user_therapy
 
@@ -38,6 +40,7 @@ async def _serialize_protocol(protocol: Protocol) -> ProtocolResponse:
                 id=item.id,
                 item_type=item.item_type,
                 user_supplement=await serialize_user_supplement(item.user_supplement),
+                user_medication=await serialize_user_medication(item.user_medication),
                 user_therapy=await serialize_user_therapy(item.user_therapy),
                 sort_order=item.sort_order,
             )
@@ -61,6 +64,9 @@ def _protocol_query_for_user(user_id: uuid.UUID):
             selectinload(Protocol.items)
             .selectinload(ProtocolItem.user_supplement)
             .selectinload(UserSupplement.supplement),
+            selectinload(Protocol.items)
+            .selectinload(ProtocolItem.user_medication)
+            .selectinload(UserMedication.medication),
             selectinload(Protocol.items)
             .selectinload(ProtocolItem.user_therapy)
             .selectinload(UserTherapy.therapy),
@@ -89,7 +95,7 @@ async def _resolve_user_supplements(
     if missing_ids:
         raise HTTPException(
             status_code=400,
-            detail="Protocol items must reference supplements or therapies in your account",
+            detail="Protocol items must reference supplements, medications, or therapies in your account",
         )
 
     return [supplements_by_id[item_id] for item_id in ordered_ids]
@@ -122,14 +128,43 @@ async def _resolve_user_therapies(
     return [therapies_by_id[item_id] for item_id in ordered_ids]
 
 
+async def _resolve_user_medications(
+    session: AsyncSession,
+    current_user: User,
+    user_medication_ids: list[uuid.UUID],
+) -> list[UserMedication]:
+    ordered_ids = _dedupe_ids(user_medication_ids, "medications")
+    result = await session.execute(
+        select(UserMedication)
+        .where(
+            UserMedication.user_id == current_user.id,
+            UserMedication.id.in_(ordered_ids),
+        )
+        .options(selectinload(UserMedication.medication))
+    )
+    user_medications = list(result.scalars().all())
+    medications_by_id = {user_medication.id: user_medication for user_medication in user_medications}
+
+    missing_ids = [item_id for item_id in ordered_ids if item_id not in medications_by_id]
+    if missing_ids:
+        raise HTTPException(
+            status_code=400,
+            detail="Protocol items must reference supplements, medications, or therapies in your account",
+        )
+
+    return [medications_by_id[item_id] for item_id in ordered_ids]
+
+
 async def _replace_protocol_items(
     session: AsyncSession,
     protocol: Protocol,
     user_supplement_ids: list[uuid.UUID],
+    user_medication_ids: list[uuid.UUID],
     user_therapy_ids: list[uuid.UUID],
     current_user: User,
 ) -> None:
     user_supplements = await _resolve_user_supplements(session, current_user, user_supplement_ids)
+    user_medications = await _resolve_user_medications(session, current_user, user_medication_ids)
     user_therapies = await _resolve_user_therapies(session, current_user, user_therapy_ids)
 
     await session.execute(delete(ProtocolItem).where(ProtocolItem.protocol_id == protocol.id))
@@ -143,7 +178,16 @@ async def _replace_protocol_items(
                 sort_order=index,
             )
         )
-    for index, user_therapy in enumerate(user_therapies, start=len(user_supplements)):
+    for index, user_medication in enumerate(user_medications, start=len(user_supplements)):
+        session.add(
+            ProtocolItem(
+                protocol_id=protocol.id,
+                item_type="medication",
+                user_medication_id=user_medication.id,
+                sort_order=index,
+            )
+        )
+    for index, user_therapy in enumerate(user_therapies, start=len(user_supplements) + len(user_medications)):
         session.add(
             ProtocolItem(
                 protocol_id=protocol.id,
@@ -203,7 +247,7 @@ async def create_protocol(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    if not data.user_supplement_ids and not data.user_therapy_ids:
+    if not data.user_supplement_ids and not data.user_medication_ids and not data.user_therapy_ids:
         raise HTTPException(status_code=400, detail="Protocol must contain at least one item")
 
     protocol = Protocol(
@@ -213,7 +257,14 @@ async def create_protocol(
     )
     session.add(protocol)
     await session.flush()
-    await _replace_protocol_items(session, protocol, data.user_supplement_ids, data.user_therapy_ids, current_user)
+    await _replace_protocol_items(
+        session,
+        protocol,
+        data.user_supplement_ids,
+        data.user_medication_ids,
+        data.user_therapy_ids,
+        current_user,
+    )
     await session.commit()
 
     result = await session.execute(
@@ -239,17 +290,25 @@ async def update_protocol(
 
     update_data = data.model_dump(exclude_unset=True)
     user_supplement_ids = update_data.pop("user_supplement_ids", None)
+    user_medication_ids = update_data.pop("user_medication_ids", None)
     user_therapy_ids = update_data.pop("user_therapy_ids", None)
     for key, value in update_data.items():
         setattr(protocol, key, value)
 
-    if user_supplement_ids is not None or user_therapy_ids is not None:
+    if user_supplement_ids is not None or user_medication_ids is not None or user_therapy_ids is not None:
         resolved_user_supplement_ids = user_supplement_ids
         if resolved_user_supplement_ids is None:
             resolved_user_supplement_ids = [
                 item.user_supplement_id
                 for item in protocol.items
                 if item.item_type == "supplement" and item.user_supplement_id is not None
+            ]
+        resolved_user_medication_ids = user_medication_ids
+        if resolved_user_medication_ids is None:
+            resolved_user_medication_ids = [
+                item.user_medication_id
+                for item in protocol.items
+                if item.item_type == "medication" and item.user_medication_id is not None
             ]
         resolved_user_therapy_ids = user_therapy_ids
         if resolved_user_therapy_ids is None:
@@ -258,12 +317,13 @@ async def update_protocol(
                 for item in protocol.items
                 if item.item_type == "therapy" and item.user_therapy_id is not None
             ]
-        if not resolved_user_supplement_ids and not resolved_user_therapy_ids:
+        if not resolved_user_supplement_ids and not resolved_user_medication_ids and not resolved_user_therapy_ids:
             raise HTTPException(status_code=400, detail="Protocol must contain at least one item")
         await _replace_protocol_items(
             session,
             protocol,
             resolved_user_supplement_ids,
+            resolved_user_medication_ids,
             resolved_user_therapy_ids,
             current_user,
         )

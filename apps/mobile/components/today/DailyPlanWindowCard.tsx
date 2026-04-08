@@ -68,9 +68,9 @@ function AdherenceActions({
         <Text style={styles.takeButtonText}>
           {loading && item.adherence_status !== "taken"
             ? "Saving..."
-            : item.type === "supplement"
-              ? "Take"
-              : "Complete"}
+            : item.type === "therapy"
+              ? "Complete"
+              : "Take"}
         </Text>
       </Pressable>
       <Pressable

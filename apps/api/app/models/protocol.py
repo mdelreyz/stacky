@@ -8,7 +8,7 @@ from app.database import UUID, Base
 
 
 class Protocol(Base):
-    """Named group of supplements + therapies (e.g., 'Morning Stack', 'Sleep Protocol')."""
+    """Named group of regimen items (e.g., 'Morning Stack', 'Hair Protocol')."""
 
     __tablename__ = "protocols"
 
@@ -30,7 +30,7 @@ class Protocol(Base):
 
 
 class ProtocolItem(Base):
-    """Links a protocol to a user_supplement or user_therapy."""
+    """Links a protocol to a user_supplement, user_medication, or user_therapy."""
 
     __tablename__ = "protocol_items"
 
@@ -38,9 +38,12 @@ class ProtocolItem(Base):
     protocol_id: Mapped[uuid.UUID] = mapped_column(
         UUID(), ForeignKey("protocols.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    item_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "supplement" or "therapy"
+    item_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "supplement", "medication", or "therapy"
     user_supplement_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(), ForeignKey("user_supplements.id", ondelete="CASCADE"), nullable=True
+    )
+    user_medication_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(), ForeignKey("user_medications.id", ondelete="CASCADE"), nullable=True
     )
     user_therapy_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(), ForeignKey("user_therapies.id", ondelete="CASCADE"), nullable=True
@@ -51,4 +54,5 @@ class ProtocolItem(Base):
     # Relationships
     protocol = relationship("Protocol", back_populates="items")
     user_supplement = relationship("UserSupplement", lazy="selectin")
+    user_medication = relationship("UserMedication", lazy="selectin")
     user_therapy = relationship("UserTherapy", lazy="selectin")

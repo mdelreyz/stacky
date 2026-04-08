@@ -1,6 +1,7 @@
 export type { AIProfileStatus, Supplement, SupplementCategory, SupplementAIProfile } from "./supplement";
+export type { Medication, MedicationAIProfile, MedicationCategory } from "./medication";
 export type { Therapy, TherapyCategory } from "./therapy";
-export type { UserSupplement, UserTherapy, Frequency, TakeWindow } from "./user-items";
+export type { UserMedication, UserSupplement, UserTherapy, Frequency, TakeWindow } from "./user-items";
 export { FREQUENCY_VALUES, TAKE_WINDOW_VALUES, isFrequency, isTakeWindow } from "./user-items";
 export type { Protocol, ProtocolItem } from "./protocol";
 export type { CyclingSchedule, CycleType, CyclePhase } from "./cycling";

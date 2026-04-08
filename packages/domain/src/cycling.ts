@@ -3,7 +3,7 @@ export type CyclePhase = "on" | "off" | "taper_up" | "taper_down";
 
 export interface CyclingSchedule {
   id: string;
-  item_type: "supplement" | "therapy" | "nutrition";
+  item_type: "supplement" | "medication" | "therapy" | "nutrition";
   item_id: string;
   cycle_type: CycleType;
   on_duration_days: number;

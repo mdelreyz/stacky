@@ -11,6 +11,7 @@ from sqlalchemy import func, select
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.database import Base, async_session_factory, engine
+from app.models.medication import Medication
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
 
@@ -533,6 +534,96 @@ THERAPIES = [
     },
 ]
 
+MEDICATIONS = [
+    {
+        "name": "Finasteride",
+        "category": "prescription",
+        "form": "tablet",
+        "description": "Oral 5-alpha-reductase inhibitor commonly used for hair-loss protocols.",
+        "ai_profile": {
+            "common_names": ["Finasteride", "Propecia", "Proscar"],
+            "typical_dosages": [
+                {"amount": 1, "unit": "mg", "frequency": "daily", "context": "hair_loss"},
+            ],
+            "timing_recommendations": {
+                "preferred_windows": ["morning_with_food"],
+                "with_food": False,
+                "notes": "Consistency matters more than precise timing.",
+            },
+            "known_interactions": [
+                {
+                    "substance": "saw_palmetto",
+                    "type": "caution",
+                    "severity": "moderate",
+                    "description": "May add to DHT-lowering effects. Track libido, mood, and adverse effects together.",
+                }
+            ],
+            "monitoring_notes": "Track side effects, hair shedding phases, and long-horizon response.",
+            "safety_notes": "Avoid handling crushed tablets during pregnancy. Review sexual and mood side effects with a clinician.",
+        },
+    },
+    {
+        "name": "Topical Minoxidil 5%",
+        "category": "topical",
+        "form": "foam",
+        "description": "Topical vasodilator commonly used for scalp hair-loss protocols.",
+        "ai_profile": {
+            "common_names": ["Minoxidil", "Topical Minoxidil", "Rogaine"],
+            "typical_dosages": [
+                {"amount": 1, "unit": "application", "frequency": "twice_daily", "context": "hair_loss"},
+            ],
+            "timing_recommendations": {
+                "preferred_windows": ["morning_with_food", "evening"],
+                "with_food": False,
+                "notes": "Allow the scalp to dry fully before layering other products.",
+            },
+            "known_interactions": [],
+            "monitoring_notes": "Track shedding phase, scalp tolerance, and consistency of application.",
+            "safety_notes": "Avoid eye contact and discontinue if scalp irritation persists.",
+        },
+    },
+    {
+        "name": "Oral Minoxidil",
+        "category": "prescription",
+        "form": "tablet",
+        "description": "Low-dose oral minoxidil protocol sometimes used for hair-loss treatment.",
+        "ai_profile": {
+            "common_names": ["Oral Minoxidil", "Minoxidil"],
+            "typical_dosages": [
+                {"amount": 2.5, "unit": "mg", "frequency": "daily", "context": "hair_loss"},
+            ],
+            "timing_recommendations": {
+                "preferred_windows": ["evening"],
+                "with_food": False,
+                "notes": "Keep timing consistent and monitor blood-pressure symptoms.",
+            },
+            "known_interactions": [],
+            "monitoring_notes": "Watch edema, dizziness, resting heart rate, and blood pressure.",
+            "safety_notes": "Requires clinician oversight due to cardiovascular effects.",
+        },
+    },
+    {
+        "name": "Ketoconazole Shampoo 2%",
+        "category": "topical",
+        "form": "shampoo",
+        "description": "Medicated shampoo often used as part of scalp or hair-loss routines.",
+        "ai_profile": {
+            "common_names": ["Ketoconazole Shampoo", "Nizoral"],
+            "typical_dosages": [
+                {"amount": 1, "unit": "wash", "frequency": "weekly", "context": "scalp_protocol"},
+            ],
+            "timing_recommendations": {
+                "preferred_windows": ["evening"],
+                "with_food": False,
+                "notes": "Leave on the scalp briefly before rinsing as directed.",
+            },
+            "known_interactions": [],
+            "monitoring_notes": "Track scalp dryness, dandruff, and wash frequency.",
+            "safety_notes": "Avoid overuse if the scalp becomes irritated or overly dry.",
+        },
+    },
+]
+
 
 async def seed():
     async with engine.begin() as conn:
@@ -550,6 +641,12 @@ async def seed():
             name
             for name in (
                 await session.execute(select(Therapy.name))
+            ).scalars().all()
+        }
+        existing_medication_names = {
+            name
+            for name in (
+                await session.execute(select(Medication.name))
             ).scalars().all()
         }
 
@@ -585,12 +682,31 @@ async def seed():
             session.add(therapy)
             seeded_therapies += 1
 
+        seeded_medications = 0
+        for data in MEDICATIONS:
+            if data["name"] in existing_medication_names:
+                continue
+            medication = Medication(
+                name=data["name"],
+                category=data["category"],
+                form=data["form"],
+                description=data["description"],
+                ai_profile=data["ai_profile"],
+                ai_profile_version=1,
+                ai_generated_at=now,
+                is_verified=True,
+            )
+            session.add(medication)
+            seeded_medications += 1
+
         await session.commit()
         supplement_count = (await session.execute(select(func.count()).select_from(Supplement))).scalar_one()
         therapy_count = (await session.execute(select(func.count()).select_from(Therapy))).scalar_one()
+        medication_count = (await session.execute(select(func.count()).select_from(Medication))).scalar_one()
         print(
-            f"Seeded {seeded_supplements} new supplements and {seeded_therapies} new therapies. "
-            f"Database now has {supplement_count} supplements and {therapy_count} therapies."
+            f"Seeded {seeded_supplements} new supplements, {seeded_medications} new medications, "
+            f"and {seeded_therapies} new therapies. Database now has {supplement_count} supplements, "
+            f"{medication_count} medications, and {therapy_count} therapies."
         )
 
 

@@ -25,4 +25,13 @@ export const dailyPlan = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+  updateMedicationAdherence: (
+    itemId: string,
+    data: { status: "taken" | "skipped"; date?: string; skip_reason?: string }
+  ) =>
+    request<AdherenceResult>(`/api/v1/users/me/adherence/medications/${itemId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

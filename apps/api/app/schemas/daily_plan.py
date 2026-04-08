@@ -9,7 +9,7 @@ from app.models.user_supplement import TakeWindow
 class DailyPlanItemResponse(BaseModel):
     id: str
     name: str
-    type: Literal["supplement", "therapy"]
+    type: Literal["supplement", "medication", "therapy"]
     details: str | None
     instructions: str
     is_on_cycle: bool
@@ -29,8 +29,8 @@ class CycleAlertResponse(BaseModel):
 
 
 class InteractionWarningResponse(BaseModel):
-    supplement_a: str
-    supplement_b: str
+    item_a: str
+    item_b: str
     type: Literal["contraindication", "caution"]
     severity: Literal["critical", "major", "moderate", "minor"]
     description: str

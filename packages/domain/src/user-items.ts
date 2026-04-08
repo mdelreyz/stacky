@@ -1,3 +1,4 @@
+import type { Medication } from "./medication";
 import type { Supplement } from "./supplement";
 import type { Therapy } from "./therapy";
 
@@ -36,6 +37,21 @@ export function isTakeWindow(value: string): value is TakeWindow {
 export interface UserSupplement {
   id: string;
   supplement: Supplement;
+  dosage_amount: number;
+  dosage_unit: string;
+  frequency: Frequency;
+  take_window: TakeWindow;
+  with_food: boolean;
+  notes: string | null;
+  is_active: boolean;
+  started_at: string;
+  ended_at: string | null;
+  created_at: string;
+}
+
+export interface UserMedication {
+  id: string;
+  medication: Medication;
   dosage_amount: number;
   dosage_unit: string;
   frequency: Frequency;

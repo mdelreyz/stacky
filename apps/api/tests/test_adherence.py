@@ -5,8 +5,10 @@ from sqlalchemy import func, select
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
+from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.therapy import Therapy, TherapyCategory
+from app.models.user_medication import UserMedication
 from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
 from app.models.user_therapy import UserTherapy
 
@@ -49,6 +51,18 @@ def create_therapy(name: str):
     return asyncio.run(_create())
 
 
+def create_medication(name: str):
+    async def _create():
+        async with async_session_factory() as session:
+            medication = Medication(name=name, category=MedicationCategory.prescription, form="tablet")
+            session.add(medication)
+            await session.commit()
+            await session.refresh(medication)
+            return medication.id
+
+    return asyncio.run(_create())
+
+
 def create_user_supplement(
     user_id: str,
     supplement_id,
@@ -73,6 +87,34 @@ def create_user_supplement(
             await session.commit()
             await session.refresh(user_supplement)
             return user_supplement.id
+
+    return asyncio.run(_create())
+
+
+def create_user_medication(
+    user_id: str,
+    medication_id,
+    *,
+    frequency: Frequency = Frequency.daily,
+    take_window: TakeWindow = TakeWindow.evening,
+    started_at: date = date(2026, 4, 1),
+):
+    async def _create():
+        async with async_session_factory() as session:
+            user_medication = UserMedication(
+                user_id=user_id,
+                medication_id=medication_id,
+                dosage_amount=1,
+                dosage_unit="tablet",
+                frequency=frequency,
+                take_window=take_window,
+                started_at=started_at,
+                with_food=False,
+            )
+            session.add(user_medication)
+            await session.commit()
+            await session.refresh(user_medication)
+            return user_medication.id
 
     return asyncio.run(_create())
 
@@ -183,3 +225,25 @@ def test_mark_therapy_taken_updates_daily_plan(client):
     windows = {window["window"]: window for window in plan_response.json()["windows"]}
     assert windows["afternoon"]["items"][0]["type"] == "therapy"
     assert windows["afternoon"]["items"][0]["adherence_status"] == "taken"
+
+
+def test_mark_medication_taken_updates_daily_plan(client):
+    headers, user_id = signup(client)
+    medication_id = create_medication("Finasteride")
+    user_medication_id = create_user_medication(user_id, medication_id)
+
+    response = client.post(
+        f"/api/v1/users/me/adherence/medications/{user_medication_id}",
+        json={"status": "taken", "date": "2026-04-08"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "taken"
+    assert adherence_log_count() == 1
+
+    plan_response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
+    assert plan_response.status_code == 200
+    windows = {window["window"]: window for window in plan_response.json()["windows"]}
+    assert windows["evening"]["items"][0]["type"] == "medication"
+    assert windows["evening"]["items"][0]["adherence_status"] == "taken"

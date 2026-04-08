@@ -21,7 +21,12 @@ export function ProtocolStacksSection({ stacks }: { stacks: Protocol[] }) {
       ) : (
         stacks.map((stack) => {
           const names = stack.items
-            .map((item) => item.user_supplement?.supplement.name ?? item.user_therapy?.therapy.name)
+            .map(
+              (item) =>
+                item.user_supplement?.supplement.name ??
+                item.user_medication?.medication.name ??
+                item.user_therapy?.therapy.name
+            )
             .filter((name): name is string => Boolean(name));
 
           return (

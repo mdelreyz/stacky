@@ -1,8 +1,10 @@
 from datetime import date
 
 from app.database import async_session_factory
+from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.therapy import Therapy, TherapyCategory
+from app.models.user_medication import UserMedication
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 
@@ -49,6 +51,20 @@ def create_therapy(name: str):
     return asyncio.run(_create())
 
 
+def create_medication(name: str):
+    async def _create():
+        async with async_session_factory() as session:
+            medication = Medication(name=name, category=MedicationCategory.prescription, form="tablet")
+            session.add(medication)
+            await session.commit()
+            await session.refresh(medication)
+            return medication.id
+
+    import asyncio
+
+    return asyncio.run(_create())
+
+
 def create_user_supplement(
     user_id: str,
     supplement_id,
@@ -72,6 +88,34 @@ def create_user_supplement(
             await session.commit()
             await session.refresh(user_supplement)
             return user_supplement.id
+
+    import asyncio
+
+    return asyncio.run(_create())
+
+
+def create_user_medication(
+    user_id: str,
+    medication_id,
+    *,
+    dosage_amount: float = 1,
+    dosage_unit: str = "tablet",
+):
+    async def _create():
+        async with async_session_factory() as session:
+            user_medication = UserMedication(
+                user_id=user_id,
+                medication_id=medication_id,
+                dosage_amount=dosage_amount,
+                dosage_unit=dosage_unit,
+                frequency="daily",
+                take_window="evening",
+                started_at=date(2026, 4, 8),
+            )
+            session.add(user_medication)
+            await session.commit()
+            await session.refresh(user_medication)
+            return user_medication.id
 
     import asyncio
 
@@ -158,7 +202,7 @@ def test_protocol_rejects_supplements_from_other_accounts(client):
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Protocol items must reference supplements or therapies in your account"
+    assert response.json()["detail"] == "Protocol items must reference supplements, medications, or therapies in your account"
 
 
 def test_protocol_can_include_therapy_members(client):
@@ -183,6 +227,30 @@ def test_protocol_can_include_therapy_members(client):
     body = response.json()
     assert [item["item_type"] for item in body["items"]] == ["supplement", "therapy"]
     assert body["items"][1]["user_therapy"]["therapy"]["name"] == "Sauna"
+
+
+def test_protocol_can_include_medication_members(client):
+    headers, user_id = signup(client, "hair-stack@example.com")
+    magnesium_id = create_supplement("Magnesium")
+    finasteride_id = create_medication("Finasteride")
+
+    magnesium_user_id = create_user_supplement(user_id, magnesium_id)
+    finasteride_user_id = create_user_medication(user_id, finasteride_id)
+
+    response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Hair Stack",
+            "user_supplement_ids": [str(magnesium_user_id)],
+            "user_medication_ids": [str(finasteride_user_id)],
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert [item["item_type"] for item in body["items"]] == ["supplement", "medication"]
+    assert body["items"][1]["user_medication"]["medication"]["name"] == "Finasteride"
 
 
 def test_protocol_keeps_inactive_members_visible_and_editable(client):

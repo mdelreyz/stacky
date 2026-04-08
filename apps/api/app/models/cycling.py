@@ -32,7 +32,7 @@ class CyclingSchedule(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    item_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "supplement", "therapy", "nutrition"
+    item_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "supplement", "medication", "therapy", "nutrition"
     item_id: Mapped[uuid.UUID] = mapped_column(UUID(), nullable=False)  # polymorphic FK
     cycle_type: Mapped[CycleType] = mapped_column(
         Enum(CycleType, name="cycle_type_enum"), nullable=False, default=CycleType.on_off

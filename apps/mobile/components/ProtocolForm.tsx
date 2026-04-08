@@ -2,7 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-import type { UserSupplement, UserTherapy } from "@/lib/api";
+import type { UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { readTherapySettings } from "@/lib/therapy-settings";
 
@@ -10,6 +10,7 @@ export interface ProtocolFormState {
   name: string;
   description: string;
   selectedUserSupplementIds: string[];
+  selectedUserMedicationIds: string[];
   selectedUserTherapyIds: string[];
 }
 
@@ -17,6 +18,7 @@ export function ProtocolForm({
   state,
   setState,
   supplements,
+  medications,
   therapies,
   saving,
   primaryLabel,
@@ -27,6 +29,7 @@ export function ProtocolForm({
   state: ProtocolFormState;
   setState: Dispatch<SetStateAction<ProtocolFormState>>;
   supplements: UserSupplement[];
+  medications: UserMedication[];
   therapies: UserTherapy[];
   saving: boolean;
   primaryLabel: string;
@@ -99,6 +102,63 @@ export function ProtocolForm({
                     {supplement.dosage_amount}
                     {supplement.dosage_unit} · {getFrequencyLabel(supplement.frequency)} ·{" "}
                     {getTakeWindowLabel(supplement.take_window)}
+                  </Text>
+                </View>
+                <FontAwesome
+                  name={selected ? "check-square-o" : "square-o"}
+                  size={20}
+                  color={selected ? "#228be6" : "#adb5bd"}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.selectionHeader}>
+          <Text style={styles.sectionTitle}>Included Medications</Text>
+          <Text style={styles.selectionCount}>{state.selectedUserMedicationIds.length} selected</Text>
+        </View>
+        <Text style={styles.helperText}>
+          Keep medications separate from supplements while still allowing them in the same named stack.
+        </Text>
+
+        <View style={styles.optionList}>
+          {medications.map((medication) => {
+            const selected = state.selectedUserMedicationIds.includes(medication.id);
+            const lockedInactive = !medication.is_active && !selected;
+            return (
+              <Pressable
+                key={medication.id}
+                style={[
+                  styles.optionRow,
+                  selected && styles.optionRowSelected,
+                  lockedInactive && styles.optionRowDisabled,
+                ]}
+                onPress={() => {
+                  if (lockedInactive) return;
+                  setState((current) => ({
+                    ...current,
+                    selectedUserMedicationIds: selected
+                      ? current.selectedUserMedicationIds.filter((itemId) => itemId !== medication.id)
+                      : [...current.selectedUserMedicationIds, medication.id],
+                  }));
+                }}
+              >
+                <View style={styles.optionInfo}>
+                  <View style={styles.optionTitleRow}>
+                    <Text style={styles.optionTitle}>{medication.medication.name}</Text>
+                    {!medication.is_active ? (
+                      <View style={styles.inactiveBadge}>
+                        <Text style={styles.inactiveBadgeText}>Inactive</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={styles.optionMeta}>
+                    {medication.dosage_amount}
+                    {medication.dosage_unit} · {getFrequencyLabel(medication.frequency)} ·{" "}
+                    {getTakeWindowLabel(medication.take_window)}
                   </Text>
                 </View>
                 <FontAwesome

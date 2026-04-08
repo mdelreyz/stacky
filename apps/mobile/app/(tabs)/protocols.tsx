@@ -7,21 +7,33 @@ import { CatalogSearchInput } from "@/components/protocols/CatalogSearchInput";
 import { CatalogSection } from "@/components/protocols/CatalogSection";
 import { ProtocolStacksSection } from "@/components/protocols/ProtocolStacksSection";
 import {
+  medications as medicationsApi,
   protocols as protocolsApi,
   supplements as supplementsApi,
   therapies as therapiesApi,
+  userMedications as userMedicationsApi,
   userSupplements as userSupplementsApi,
   userTherapies as userTherapiesApi,
 } from "@/lib/api";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { readTherapySettings } from "@/lib/therapy-settings";
-import type { Protocol, Supplement, Therapy, UserSupplement, UserTherapy } from "@/lib/api";
+import type {
+  Medication,
+  Protocol,
+  Supplement,
+  Therapy,
+  UserMedication,
+  UserSupplement,
+  UserTherapy,
+} from "@/lib/api";
 
 export default function ProtocolsScreen() {
   const [stacks, setStacks] = useState<Protocol[]>([]);
   const [supplementCatalog, setSupplementCatalog] = useState<Supplement[]>([]);
+  const [medicationCatalog, setMedicationCatalog] = useState<Medication[]>([]);
   const [therapyCatalog, setTherapyCatalog] = useState<Therapy[]>([]);
   const [mySupplements, setMySupplements] = useState<UserSupplement[]>([]);
+  const [myMedications, setMyMedications] = useState<UserMedication[]>([]);
   const [myTherapies, setMyTherapies] = useState<UserTherapy[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
@@ -29,18 +41,30 @@ export default function ProtocolsScreen() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [stacksRes, supplementCatalogRes, therapyCatalogRes, mySupplementsRes, myTherapiesRes] =
+      const [
+        stacksRes,
+        supplementCatalogRes,
+        medicationCatalogRes,
+        therapyCatalogRes,
+        mySupplementsRes,
+        myMedicationsRes,
+        myTherapiesRes,
+      ] =
         await Promise.all([
           protocolsApi.list(),
           supplementsApi.list({ search: search || undefined }),
+          medicationsApi.list({ search: search || undefined }),
           therapiesApi.list({ search: search || undefined }),
           userSupplementsApi.list(),
+          userMedicationsApi.list(),
           userTherapiesApi.list(),
         ]);
       setStacks(stacksRes.items);
       setSupplementCatalog(supplementCatalogRes.items);
+      setMedicationCatalog(medicationCatalogRes.items);
       setTherapyCatalog(therapyCatalogRes.items);
       setMySupplements(mySupplementsRes.items);
+      setMyMedications(myMedicationsRes.items);
       setMyTherapies(myTherapiesRes.items);
     } catch (error) {
       console.error("Failed to fetch protocol data", error);
@@ -77,7 +101,7 @@ export default function ProtocolsScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>My Protocols</Text>
         <Text style={styles.subtitle}>
-          Supplements, modalities, activities, devices, and named stacks
+          Supplements, medications, modalities, activities, devices, and named stacks
         </Text>
       </View>
 
@@ -95,6 +119,21 @@ export default function ProtocolsScreen() {
           name: item.supplement.name,
           meta: `${item.dosage_amount}${item.dosage_unit} · ${getFrequencyLabel(item.frequency)} · ${getTakeWindowLabel(item.take_window)}`,
           href: `/user-supplement/${item.id}`,
+        }))}
+      />
+
+      <ActiveProtocolItemsSection
+        title="Active Medications"
+        actionHref="/medication/add"
+        actionLabel="Add"
+        emptyIcon="medkit"
+        emptyTitle="No medications added yet"
+        emptyHint="Use the medication catalog for prescriptions, topicals, or hair-loss treatments you want tracked separately from supplements."
+        items={myMedications.map((item) => ({
+          id: item.id,
+          name: item.medication.name,
+          meta: `${item.dosage_amount}${item.dosage_unit} · ${getFrequencyLabel(item.frequency)} · ${getTakeWindowLabel(item.take_window)}`,
+          href: `/user-medication/${item.id}`,
         }))}
       />
 
@@ -128,6 +167,18 @@ export default function ProtocolsScreen() {
           badgeLabel: item.ai_profile ? "AI" : undefined,
         }))}
         emptyText="No supplements matched your search."
+      />
+
+      <CatalogSection
+        title="Medication Catalog"
+        items={medicationCatalog.map((item) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category,
+          href: `/medication/${item.id}`,
+          iconName: "medkit",
+        }))}
+        emptyText="No medications matched your search."
       />
 
       <CatalogSection

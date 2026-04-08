@@ -11,7 +11,7 @@ import {
   type ScheduleTakeWindow,
 } from "@/lib/schedule";
 
-export interface SupplementScheduleState {
+export interface DoseScheduleState {
   dosageAmount: string;
   dosageUnit: string;
   frequency: ScheduleFrequency;
@@ -20,7 +20,7 @@ export interface SupplementScheduleState {
   notes: string;
 }
 
-export function SupplementScheduleForm({
+export function DoseScheduleForm({
   state,
   setState,
   saving,
@@ -30,8 +30,8 @@ export function SupplementScheduleForm({
   secondaryVariant = "danger",
   onSecondaryAction,
 }: {
-  state: SupplementScheduleState;
-  setState: Dispatch<SetStateAction<SupplementScheduleState>>;
+  state: DoseScheduleState;
+  setState: Dispatch<SetStateAction<DoseScheduleState>>;
   saving: boolean;
   primaryLabel: string;
   onSubmit: () => void;
@@ -146,6 +146,9 @@ export function SupplementScheduleForm({
     </>
   );
 }
+
+export type SupplementScheduleState = DoseScheduleState;
+export const SupplementScheduleForm = DoseScheduleForm;
 
 function OptionGrid({
   options,

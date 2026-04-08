@@ -76,6 +76,18 @@ function RootLayoutNav() {
           options={{ headerShown: false, presentation: "modal" }}
         />
         <Stack.Screen
+          name="medication/add"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="medication/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="medication/[id]/schedule"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
           name="therapy/[id]"
           options={{ headerShown: false }}
         />
@@ -85,6 +97,10 @@ function RootLayoutNav() {
         />
         <Stack.Screen
           name="user-supplement/[id]"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="user-medication/[id]"
           options={{ headerShown: false, presentation: "modal" }}
         />
         <Stack.Screen

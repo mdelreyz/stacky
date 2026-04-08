@@ -9,6 +9,7 @@ from app.auth import get_current_user
 from app.database import get_session
 from app.models.adherence import AdherenceLog
 from app.models.user import User
+from app.models.user_medication import UserMedication
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.schemas.adherence import AdherenceResponse, AdherenceUpdateRequest
@@ -134,6 +135,37 @@ async def upsert_therapy_adherence(
         item_type="therapy",
         item_id=user_therapy.id,
         take_window=user_therapy.take_window,
+        current_user=current_user,
+        data=data,
+        session=session,
+    )
+
+
+@router.post("/medications/{user_medication_id}", response_model=AdherenceResponse)
+async def upsert_medication_adherence(
+    user_medication_id: uuid.UUID,
+    data: AdherenceUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(
+        select(UserMedication).where(
+            UserMedication.id == user_medication_id,
+            UserMedication.user_id == current_user.id,
+        )
+    )
+    user_medication = result.scalar_one_or_none()
+    if user_medication is None:
+        raise HTTPException(status_code=404, detail="User medication not found")
+
+    target_date, _user_tz = resolve_user_date(data.date, current_user.timezone)
+    if not _is_due_today(user_medication, target_date):
+        raise HTTPException(status_code=400, detail="This medication is not scheduled for that date")
+
+    return await _upsert_adherence(
+        item_type="medication",
+        item_id=user_medication.id,
+        take_window=user_medication.take_window,
         current_user=current_user,
         data=data,
         session=session,

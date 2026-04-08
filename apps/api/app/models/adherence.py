@@ -8,7 +8,7 @@ from app.database import UUID, Base
 
 
 class AdherenceLog(Base):
-    """Tracks whether a user took/skipped a scheduled item."""
+    """Tracks whether a user took/skipped/completed a scheduled regimen item."""
 
     __tablename__ = "adherence_logs"
 
@@ -16,7 +16,7 @@ class AdherenceLog(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    item_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "supplement" or "therapy"
+    item_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "supplement", "medication", or "therapy"
     item_id: Mapped[uuid.UUID] = mapped_column(UUID(), nullable=False)
     scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     taken_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
