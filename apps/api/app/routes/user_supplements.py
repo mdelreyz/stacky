@@ -78,6 +78,24 @@ async def list_user_supplements(
     )
 
 
+@router.get("/{user_supplement_id}", response_model=UserSupplementResponse)
+async def get_user_supplement(
+    user_supplement_id: uuid.UUID,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(
+        select(UserSupplement).where(
+            UserSupplement.id == user_supplement_id,
+            UserSupplement.user_id == current_user.id,
+        )
+    )
+    user_supplement = result.scalar_one_or_none()
+    if not user_supplement:
+        raise HTTPException(status_code=404, detail="User supplement not found")
+    return await _serialize_user_supplement(user_supplement)
+
+
 @router.post("", response_model=UserSupplementResponse, status_code=201)
 async def add_user_supplement(
     data: UserSupplementCreate,

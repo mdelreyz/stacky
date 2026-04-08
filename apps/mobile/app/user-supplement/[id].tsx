@@ -18,12 +18,12 @@ import {
   SupplementScheduleForm,
   SupplementScheduleState,
 } from "@/components/SupplementScheduleForm";
-import { supplements as supplementsApi, userSupplements as userSupplementsApi } from "@/lib/api";
-import type { Supplement } from "@/lib/api";
+import { userSupplements as userSupplementsApi } from "@/lib/api";
+import type { UserSupplement } from "@/lib/api";
 
-export default function ScheduleSupplementScreen() {
+export default function ManageUserSupplementScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const [supplement, setSupplement] = useState<Supplement | null>(null);
+  const [userSupplement, setUserSupplement] = useState<UserSupplement | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formState, setFormState] = useState<SupplementScheduleState>({
@@ -39,25 +39,18 @@ export default function ScheduleSupplementScreen() {
     if (!id) return;
 
     let cancelled = false;
-    supplementsApi
+    userSupplementsApi
       .get(id)
-      .then((nextSupplement) => {
+      .then((nextUserSupplement) => {
         if (cancelled) return;
-        setSupplement(nextSupplement);
-
-        const ai = nextSupplement.ai_profile as Record<string, any> | null;
-        const firstDosage = ai?.typical_dosages?.[0];
-        const aiFrequency = firstDosage?.frequency;
-        const aiWindow = ai?.timing_recommendations?.preferred_windows?.[0];
-        const aiWithFood = Boolean(ai?.timing_recommendations?.with_food);
-
+        setUserSupplement(nextUserSupplement);
         setFormState({
-          dosageAmount: firstDosage?.amount ? String(firstDosage.amount) : "1",
-          dosageUnit: firstDosage?.unit || nextSupplement.form || "capsule",
-          frequency: isScheduleFrequency(aiFrequency) ? aiFrequency : "daily",
-          takeWindow: isScheduleTakeWindow(aiWindow) ? aiWindow : "morning_with_food",
-          withFood: aiWithFood,
-          notes: "",
+          dosageAmount: String(nextUserSupplement.dosage_amount),
+          dosageUnit: nextUserSupplement.dosage_unit,
+          frequency: nextUserSupplement.frequency as ScheduleFrequency,
+          takeWindow: nextUserSupplement.take_window as ScheduleTakeWindow,
+          withFood: nextUserSupplement.with_food,
+          notes: nextUserSupplement.notes || "",
         });
       })
       .catch(console.error)
@@ -71,7 +64,7 @@ export default function ScheduleSupplementScreen() {
   }, [id]);
 
   const handleSave = async () => {
-    if (!supplement) return;
+    if (!userSupplement) return;
     const parsedAmount = Number(formState.dosageAmount);
     if (!parsedAmount || parsedAmount <= 0) {
       showError("Enter a valid dosage amount.");
@@ -80,20 +73,30 @@ export default function ScheduleSupplementScreen() {
 
     setSaving(true);
     try {
-      await userSupplementsApi.add({
-        supplement_id: supplement.id,
+      await userSupplementsApi.update(userSupplement.id, {
         dosage_amount: parsedAmount,
         dosage_unit: formState.dosageUnit.trim() || "capsule",
         frequency: formState.frequency,
         take_window: formState.takeWindow,
         with_food: formState.withFood,
-        notes: formState.notes.trim() || undefined,
-        started_at: new Date().toISOString().slice(0, 10),
+        notes: formState.notes.trim() || null,
       });
       router.replace("/(tabs)/protocols");
     } catch (error: any) {
-      showError(error.message || "Failed to add supplement");
+      showError(error.message || "Failed to update supplement");
     } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRemove = async () => {
+    if (!userSupplement) return;
+    setSaving(true);
+    try {
+      await userSupplementsApi.remove(userSupplement.id);
+      router.replace("/(tabs)/protocols");
+    } catch (error: any) {
+      showError(error.message || "Failed to remove supplement");
       setSaving(false);
     }
   };
@@ -106,7 +109,7 @@ export default function ScheduleSupplementScreen() {
     );
   }
 
-  if (!supplement) {
+  if (!userSupplement) {
     return (
       <View style={styles.centered}>
         <Text>Supplement not found</Text>
@@ -121,8 +124,8 @@ export default function ScheduleSupplementScreen() {
           <FontAwesome name="arrow-left" size={18} color="#495057" />
         </Pressable>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Start Taking</Text>
-          <Text style={styles.subtitle}>{supplement.name}</Text>
+          <Text style={styles.title}>Manage Schedule</Text>
+          <Text style={styles.subtitle}>{userSupplement.supplement.name}</Text>
         </View>
       </View>
 
@@ -130,8 +133,10 @@ export default function ScheduleSupplementScreen() {
         state={formState}
         setState={setFormState}
         saving={saving}
-        primaryLabel="Add to My Protocol"
+        primaryLabel="Save Changes"
         onSubmit={handleSave}
+        secondaryLabel="Stop Taking"
+        onSecondaryAction={handleRemove}
       />
 
       <View style={{ height: 32 }} />
@@ -145,14 +150,6 @@ function showError(message: string) {
   } else {
     Alert.alert("Error", message);
   }
-}
-
-function isScheduleFrequency(value: string): value is ScheduleFrequency {
-  return ["daily", "twice_daily", "three_times_daily", "weekly", "every_other_day"].includes(value);
-}
-
-function isScheduleTakeWindow(value: string): value is ScheduleTakeWindow {
-  return ["morning_fasted", "morning_with_food", "midday", "afternoon", "evening", "bedtime"].includes(value);
 }
 
 const styles = StyleSheet.create({

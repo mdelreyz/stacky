@@ -132,6 +132,8 @@ export const userSupplements = {
     }>(`/api/v1/users/me/supplements${qs}`);
   },
 
+  get: (id: string) => request<UserSupplement>(`/api/v1/users/me/supplements/${id}`),
+
   add: (data: {
     supplement_id: string;
     dosage_amount: number;

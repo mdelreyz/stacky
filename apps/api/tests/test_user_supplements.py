@@ -46,6 +46,11 @@ def test_add_user_supplement_rejects_duplicate_active_entry(client):
 
     first_response = client.post("/api/v1/users/me/supplements", json=payload, headers=headers)
     assert first_response.status_code == 201
+    created = first_response.json()
+
+    get_response = client.get(f"/api/v1/users/me/supplements/{created['id']}", headers=headers)
+    assert get_response.status_code == 200
+    assert get_response.json()["supplement"]["name"] == "CoQ10"
 
     second_response = client.post("/api/v1/users/me/supplements", json=payload, headers=headers)
     assert second_response.status_code == 409

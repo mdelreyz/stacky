@@ -181,6 +181,10 @@ export class ProtocolsAPI {
     });
   }
 
+  async getUserSupplement(id: string): Promise<UserSupplement> {
+    return this.request(`/api/v1/users/me/supplements/${id}`);
+  }
+
   async updateUserSupplement(
     id: string,
     data: Record<string, unknown>

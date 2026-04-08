@@ -93,7 +93,7 @@ export default function ProtocolsScreen() {
         </View>
       ) : (
         mySupplements.map((us) => (
-          <Link key={us.id} href={`/supplement/${us.supplement.id}`} asChild>
+          <Link key={us.id} href={`/user-supplement/${us.id}`} asChild>
             <Pressable style={styles.supplementCard}>
               <View style={styles.supplementInfo}>
                 <Text style={styles.supplementName}>{us.supplement.name}</Text>
