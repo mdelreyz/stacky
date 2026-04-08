@@ -74,6 +74,13 @@ export const auth = {
     }>("/api/v1/auth/me"),
 };
 
+export const dailyPlan = {
+  get: (date?: string) => {
+    const qs = date ? `?date=${encodeURIComponent(date)}` : "";
+    return request<DailyPlan>(`/api/v1/users/me/daily-plan${qs}`);
+  },
+};
+
 // Supplements catalog
 export const supplements = {
   list: (params?: { search?: string; category?: string; page?: number }) => {
@@ -96,8 +103,9 @@ export const supplements = {
     request<{
       id: string;
       name: string;
-      status: string;
+      status: "ready" | "generating" | "failed";
       ai_profile: Record<string, unknown> | null;
+      ai_error: string | null;
     }>("/api/v1/supplements/onboard", {
       method: "POST",
       body: JSON.stringify(data),
@@ -148,6 +156,8 @@ export interface Supplement {
   form: string | null;
   description: string | null;
   ai_profile: Record<string, unknown> | null;
+  ai_status: "ready" | "generating" | "failed";
+  ai_error: string | null;
   ai_generated_at: string | null;
   is_verified: boolean;
 }
@@ -165,4 +175,42 @@ export interface UserSupplement {
   started_at: string;
   ended_at: string | null;
   created_at: string;
+}
+
+export interface DailyPlan {
+  date: string;
+  windows: TakeWindowPlan[];
+  nutrition_phase: string | null;
+  cycle_alerts: CycleAlert[];
+  interactions: InteractionWarning[];
+}
+
+export interface TakeWindowPlan {
+  window: string;
+  display_time: string;
+  items: DailyPlanItem[];
+}
+
+export interface DailyPlanItem {
+  id: string;
+  name: string;
+  type: "supplement" | "therapy";
+  dosage: string;
+  instructions: string;
+  is_on_cycle: boolean;
+  adherence_status: "pending" | "taken" | "skipped";
+}
+
+export interface CycleAlert {
+  item_name: string;
+  message: string;
+  days_until_transition: number;
+}
+
+export interface InteractionWarning {
+  supplement_a: string;
+  supplement_b: string;
+  type: "contraindication" | "caution";
+  severity: "critical" | "major" | "moderate" | "minor";
+  description: string;
 }

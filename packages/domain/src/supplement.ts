@@ -20,9 +20,13 @@ export interface Supplement {
   form: string | null;
   description: string | null;
   ai_profile: SupplementAIProfile | null;
+  ai_status: AIProfileStatus;
+  ai_error: string | null;
   ai_generated_at: string | null;
   is_verified: boolean;
 }
+
+export type AIProfileStatus = "ready" | "generating" | "failed";
 
 export interface SupplementAIProfile {
   common_names: string[];

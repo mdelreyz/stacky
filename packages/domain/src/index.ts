@@ -1,4 +1,4 @@
-export type { Supplement, SupplementCategory, SupplementAIProfile } from "./supplement";
+export type { AIProfileStatus, Supplement, SupplementCategory, SupplementAIProfile } from "./supplement";
 export type { Therapy, TherapyCategory } from "./therapy";
 export type { UserSupplement, UserTherapy, Frequency, TakeWindow } from "./user-items";
 export type { Protocol, ProtocolItem } from "./protocol";

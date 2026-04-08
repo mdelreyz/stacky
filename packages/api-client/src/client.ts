@@ -1,6 +1,9 @@
 import type {
+  AIProfileStatus,
   AuthResponse,
+  DailyPlan,
   Supplement,
+  SupplementAIProfile,
   User,
   UserSupplement,
 } from "@protocols/domain";
@@ -86,6 +89,13 @@ export class ProtocolsAPI {
     return this.request<User>("/api/v1/auth/me");
   }
 
+  async getDailyPlan(date?: string): Promise<DailyPlan> {
+    const query = new URLSearchParams();
+    if (date) query.set("date", date);
+    const qs = query.toString();
+    return this.request(`/api/v1/users/me/daily-plan${qs ? `?${qs}` : ""}`);
+  }
+
   // Supplements catalog
   async listSupplements(params?: {
     page?: number;
@@ -110,7 +120,13 @@ export class ProtocolsAPI {
     name: string;
     category?: string;
     form?: string;
-  }): Promise<{ id: string; name: string; status: string; ai_profile: unknown }> {
+  }): Promise<{
+    id: string;
+    name: string;
+    status: AIProfileStatus;
+    ai_profile: SupplementAIProfile | null;
+    ai_error: string | null;
+  }> {
     return this.request("/api/v1/supplements/onboard", {
       method: "POST",
       body: JSON.stringify(data),

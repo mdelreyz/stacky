@@ -45,7 +45,8 @@ services:
 
   worker:
     build:
-      context: ./apps/worker
+      context: .
+      dockerfile: apps/worker/Dockerfile
     environment:
       PROTOCOLS_DATABASE_URL: postgresql+asyncpg://protocols:protocols-dev-password@postgres:5432/protocols
       PROTOCOLS_REDIS_URL: redis://redis:6379/0
@@ -55,6 +56,9 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./apps/worker:/app/apps/worker
 
 volumes:
   pgdata:

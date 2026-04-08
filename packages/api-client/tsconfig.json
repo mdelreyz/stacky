@@ -4,9 +4,14 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "strict": true,
+    "baseUrl": ".",
     "declaration": true,
     "outDir": "dist",
-    "rootDir": "src",
+    "paths": {
+      "@protocols/domain": [
+        "../domain/src/index.ts"
+      ]
+    },
     "skipLibCheck": true
   },
   "include": ["src"]

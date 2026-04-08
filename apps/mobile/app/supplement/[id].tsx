@@ -12,6 +12,8 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { supplements as supplementsApi } from "@/lib/api";
 import type { Supplement } from "@/lib/api";
 
+const POLL_INTERVAL_MS = 2500;
+
 export default function SupplementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [supplement, setSupplement] = useState<Supplement | null>(null);
@@ -19,11 +21,40 @@ export default function SupplementDetailScreen() {
 
   useEffect(() => {
     if (!id) return;
-    supplementsApi
-      .get(id)
-      .then(setSupplement)
-      .catch(console.error)
-      .finally(() => setLoading(false));
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+    const loadSupplement = async (silent = false) => {
+      if (!silent) setLoading(true);
+
+      try {
+        const nextSupplement = await supplementsApi.get(id);
+        if (cancelled) return;
+        setSupplement(nextSupplement);
+
+        if (nextSupplement.ai_status === "generating" && !nextSupplement.ai_profile) {
+          timeoutId = setTimeout(() => {
+            void loadSupplement(true);
+          }, POLL_INTERVAL_MS);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        if (!cancelled && !silent) {
+          setLoading(false);
+        }
+      }
+    };
+
+    void loadSupplement();
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [id]);
 
   if (loading) {
@@ -68,14 +99,28 @@ export default function SupplementDetailScreen() {
             </Text>
           </View>
         )}
-        {ai && (
+        {ai ? (
           <View style={[styles.categoryBadge, { backgroundColor: "#e7f5ff" }]}>
             <FontAwesome name="magic" size={10} color="#228be6" />
             <Text style={[styles.categoryText, { color: "#228be6" }]}>
               {" "}AI Profile
             </Text>
           </View>
-        )}
+        ) : supplement.ai_status === "generating" ? (
+          <View style={[styles.categoryBadge, { backgroundColor: "#eef7ff" }]}>
+            <ActivityIndicator size="small" color="#228be6" />
+            <Text style={[styles.categoryText, { color: "#228be6" }]}>
+              {" "}Generating
+            </Text>
+          </View>
+        ) : supplement.ai_status === "failed" ? (
+          <View style={[styles.categoryBadge, { backgroundColor: "#fff5f5" }]}>
+            <FontAwesome name="warning" size={10} color="#e03131" />
+            <Text style={[styles.categoryText, { color: "#e03131" }]}>
+              {" "}Generation Failed
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       {supplement.description && (
@@ -229,11 +274,22 @@ export default function SupplementDetailScreen() {
             )}
           </Section>
         </>
+      ) : supplement.ai_status === "failed" ? (
+        <View style={styles.noProfile}>
+          <FontAwesome name="warning" size={32} color="#e03131" />
+          <Text style={styles.noProfileText}>AI profile generation failed</Text>
+          <Text style={styles.noProfileHint}>
+            {supplement.ai_error || "Retry onboarding once Claude access is configured."}
+          </Text>
+        </View>
       ) : (
         <View style={styles.noProfile}>
-          <FontAwesome name="hourglass-half" size={32} color="#dee2e6" />
+          <ActivityIndicator size="small" color="#228be6" />
           <Text style={styles.noProfileText}>
-            AI profile not yet generated
+            Generating AI profile
+          </Text>
+          <Text style={styles.noProfileHint}>
+            This page refreshes automatically when the profile is ready.
           </Text>
         </View>
       )}
@@ -370,4 +426,11 @@ const styles = StyleSheet.create({
     padding: 40,
   },
   noProfileText: { fontSize: 16, color: "#868e96", marginTop: 12 },
+  noProfileHint: {
+    fontSize: 13,
+    color: "#868e96",
+    marginTop: 8,
+    lineHeight: 19,
+    textAlign: "center",
+  },
 });

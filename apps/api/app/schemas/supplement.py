@@ -1,11 +1,11 @@
 import uuid
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from app.models.supplement import SupplementCategory
 from app.models.user_supplement import Frequency, TakeWindow
-
 
 # ---------- Supplement catalog ----------
 
@@ -17,6 +17,8 @@ class SupplementResponse(BaseModel):
     form: str | None
     description: str | None
     ai_profile: dict | None
+    ai_status: Literal["ready", "generating", "failed"]
+    ai_error: str | None
     ai_generated_at: datetime | None
     is_verified: bool
 
@@ -32,8 +34,9 @@ class SupplementOnboardRequest(BaseModel):
 class SupplementOnboardResponse(BaseModel):
     id: uuid.UUID
     name: str
-    status: str  # "ready", "generating", "failed"
+    status: Literal["ready", "generating", "failed"]
     ai_profile: dict | None
+    ai_error: str | None
 
     model_config = {"from_attributes": True}
 
