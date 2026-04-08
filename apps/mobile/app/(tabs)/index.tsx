@@ -9,8 +9,10 @@ import {
 import { useFocusEffect } from "expo-router";
 
 import { dailyPlan as dailyPlanApi } from "@/lib/api";
+import { CycleAlertsCard } from "@/components/today/CycleAlertsCard";
 import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
 import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
+import { NutritionPhaseCard } from "@/components/today/NutritionPhaseCard";
 import { TodayDateHeader } from "@/components/today/TodayDateHeader";
 import { getTodayIsoDate, shiftIsoDate } from "@/lib/date";
 import { showError } from "@/lib/errors";
@@ -56,6 +58,8 @@ export default function TodayScreen() {
   }
 
   const interactionWarnings = plan?.interactions ?? [];
+  const cycleAlerts = plan?.cycle_alerts ?? [];
+  const nutritionPhase = plan?.nutrition_phase ?? null;
   const windows = plan?.windows ?? [];
 
   return (
@@ -71,6 +75,8 @@ export default function TodayScreen() {
         onJumpToToday={() => setSelectedDate(getTodayIsoDate())}
       />
 
+      <NutritionPhaseCard phase={nutritionPhase} />
+      <CycleAlertsCard alerts={cycleAlerts} />
       <InteractionWarningsCard warnings={interactionWarnings} />
 
       {windows.map((windowPlan) => (

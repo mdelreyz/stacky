@@ -1,10 +1,10 @@
 import type { TakeWindow } from "./user-items";
-import type { NutritionPhase } from "./nutrition";
+import type { ActiveNutritionPhase } from "./nutrition";
 
 export interface DailyPlan {
   date: string;
   windows: TakeWindowPlan[];
-  nutrition_phase: NutritionPhase | null;
+  nutrition_phase: ActiveNutritionPhase | null;
   cycle_alerts: CycleAlert[];
   interactions: InteractionWarning[];
 }

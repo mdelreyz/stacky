@@ -5,11 +5,19 @@ export type { UserMedication, UserSupplement, UserTherapy, Frequency, TakeWindow
 export { FREQUENCY_VALUES, TAKE_WINDOW_VALUES, isFrequency, isTakeWindow } from "./user-items";
 export type { Protocol, ProtocolItem } from "./protocol";
 export type { CyclingSchedule, CycleType, CyclePhase } from "./cycling";
-export type { NutritionCycle, NutritionPhase } from "./nutrition";
+export type {
+  ActiveNutritionPhase,
+  MacroLevel,
+  NutritionCycle,
+  NutritionCycleType,
+  NutritionMacroProfile,
+  NutritionPhase,
+} from "./nutrition";
 export type {
   DailyPlan,
   TakeWindowPlan,
   DailyPlanItem,
+  CycleAlert,
   InteractionWarning,
   AdherenceResult,
   SupplementAdherenceResult,

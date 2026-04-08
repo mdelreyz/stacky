@@ -88,6 +88,14 @@ function RootLayoutNav() {
           options={{ headerShown: false, presentation: "modal" }}
         />
         <Stack.Screen
+          name="nutrition/add"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="nutrition/[id]"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
           name="therapy/[id]"
           options={{ headerShown: false }}
         />

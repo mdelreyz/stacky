@@ -4,6 +4,8 @@ import type {
   AuthResponse,
   DailyPlan,
   Medication,
+  NutritionCycle,
+  NutritionPhase,
   Protocol,
   Supplement,
   SupplementAIProfile,
@@ -141,6 +143,57 @@ export class ProtocolsAPI {
     return this.request(`/api/v1/users/me/adherence/medications/${itemId}`, {
       method: "POST",
       body: JSON.stringify(data),
+    });
+  }
+
+  async listNutrition(params?: {
+    page?: number;
+    page_size?: number;
+    active_only?: boolean;
+  }): Promise<PaginatedResponse<NutritionCycle>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.page_size) query.set("page_size", String(params.page_size));
+    if (params?.active_only !== undefined) query.set("active_only", String(params.active_only));
+    const qs = query.toString();
+    return this.request(`/api/v1/users/me/nutrition${qs ? `?${qs}` : ""}`);
+  }
+
+  async getNutrition(id: string): Promise<NutritionCycle> {
+    return this.request(`/api/v1/users/me/nutrition/${id}`);
+  }
+
+  async createNutrition(data: {
+    cycle_type: "macro_profile" | "named_diet" | "elimination" | "custom";
+    name: string;
+    phase_started_at: string;
+    phases: NutritionPhase[];
+  }): Promise<NutritionCycle> {
+    return this.request("/api/v1/users/me/nutrition", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateNutrition(
+    id: string,
+    data: {
+      cycle_type?: "macro_profile" | "named_diet" | "elimination" | "custom";
+      name?: string;
+      phase_started_at?: string;
+      phases?: NutritionPhase[];
+      is_active?: boolean;
+    }
+  ): Promise<NutritionCycle> {
+    return this.request(`/api/v1/users/me/nutrition/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeNutrition(id: string): Promise<void> {
+    return this.request(`/api/v1/users/me/nutrition/${id}`, {
+      method: "DELETE",
     });
   }
 

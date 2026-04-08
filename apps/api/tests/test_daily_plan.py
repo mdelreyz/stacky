@@ -1,8 +1,9 @@
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
 from app.models.medication import Medication, MedicationCategory
+from app.models.nutrition_cycle import NutritionCycle
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.therapy import Therapy, TherapyCategory
 from app.models.user_medication import UserMedication
@@ -173,6 +174,54 @@ def create_user_therapy(
             await session.commit()
             await session.refresh(user_therapy)
             return user_therapy.id
+
+    import asyncio
+
+    return asyncio.run(_create())
+
+
+def create_nutrition_cycle(
+    user_id: str,
+    *,
+    name: str = "Low Carb Rhythm",
+    cycle_type: str = "macro_profile",
+    phase_started_at: date = date(2026, 4, 7),
+    phases: list[dict] | None = None,
+):
+    async def _create():
+        async with async_session_factory() as session:
+            cycle_phases = phases or [
+                {
+                    "name": "Low Carb",
+                    "duration_days": 2,
+                    "macro_profile": {"carbs": "low", "protein": "high", "fat": "medium"},
+                    "pattern": None,
+                    "restrictions": ["No refined sugar"],
+                    "notes": "Base training days",
+                },
+                {
+                    "name": "High Carb",
+                    "duration_days": 1,
+                    "macro_profile": {"carbs": "high", "protein": "medium", "fat": "low"},
+                    "pattern": "Refeed",
+                    "restrictions": [],
+                    "notes": "Hard training day",
+                },
+            ]
+            nutrition_cycle = NutritionCycle(
+                user_id=user_id,
+                cycle_type=cycle_type,
+                name=name,
+                phases=cycle_phases,
+                current_phase_idx=0,
+                phase_started_at=phase_started_at,
+                next_transition=phase_started_at + timedelta(days=cycle_phases[0]["duration_days"]),
+                is_active=True,
+            )
+            session.add(nutrition_cycle)
+            await session.commit()
+            await session.refresh(nutrition_cycle)
+            return nutrition_cycle.id
 
     import asyncio
 
@@ -371,3 +420,35 @@ def test_daily_plan_surfaces_interactions_and_adherence(client):
     windows = {window["window"]: window for window in body["windows"]}
     assert windows["morning_with_food"]["items"][0]["adherence_status"] == "taken"
     assert windows["morning_with_food"]["items"][1]["adherence_status"] == "taken"
+
+
+def test_daily_plan_includes_active_nutrition_phase_and_transition_alert(client):
+    headers, user_id = signup(client)
+
+    create_nutrition_cycle(user_id)
+
+    response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["nutrition_phase"] == {
+        "plan_name": "Low Carb Rhythm",
+        "cycle_type": "macro_profile",
+        "current_phase_idx": 0,
+        "total_phases": 2,
+        "next_transition": "2026-04-09",
+        "days_until_transition": 1,
+        "name": "Low Carb",
+        "duration_days": 2,
+        "macro_profile": {"carbs": "low", "protein": "high", "fat": "medium"},
+        "pattern": None,
+        "restrictions": ["No refined sugar"],
+        "notes": "Base training days",
+    }
+    assert body["cycle_alerts"] == [
+        {
+            "item_name": "Low Carb Rhythm",
+            "message": "Transition to High Carb in 1 day.",
+            "days_until_transition": 1,
+        }
+    ]

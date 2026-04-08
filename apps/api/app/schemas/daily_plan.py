@@ -4,6 +4,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from app.models.user_supplement import TakeWindow
+from app.schemas.nutrition import ActiveNutritionPhaseResponse
 
 
 class DailyPlanItemResponse(BaseModel):
@@ -39,6 +40,6 @@ class InteractionWarningResponse(BaseModel):
 class DailyPlanResponse(BaseModel):
     date: date
     windows: list[TakeWindowPlanResponse]
-    nutrition_phase: str | None
+    nutrition_phase: ActiveNutritionPhaseResponse | None
     cycle_alerts: list[CycleAlertResponse]
     interactions: list[InteractionWarningResponse]

@@ -9,10 +9,12 @@ from sqlalchemy.orm import selectinload
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
+from app.models.nutrition_cycle import NutritionCycle
 from app.models.user import User
 from app.models.user_medication import UserMedication
 from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
 from app.models.user_therapy import UserTherapy
+from app.services.nutrition_cycles import nutrition_cycle_alert, serialize_active_nutrition_phase
 
 WINDOW_ORDER = [
     TakeWindow.morning_fasted,
@@ -301,11 +303,26 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
             .order_by(UserTherapy.take_window, UserTherapy.created_at)
         )
         user_therapies = list(therapies_result.scalars().all())
+        nutrition_result = await session.execute(
+            select(NutritionCycle)
+            .where(
+                NutritionCycle.user_id == user.id,
+                NutritionCycle.is_active.is_(True),
+            )
+            .order_by(NutritionCycle.created_at.desc())
+        )
+        active_nutrition_cycle = nutrition_result.scalars().first()
 
     due_supplements = [item for item in user_supplements if _is_due_today(item, resolved_date)]
     due_medications = [item for item in user_medications if _is_due_today(item, resolved_date)]
     due_therapies = [item for item in user_therapies if _is_due_today(item, resolved_date)]
     adherence_index = await _adherence_index(user, resolved_date, user_tz)
+    active_nutrition_phase = (
+        serialize_active_nutrition_phase(active_nutrition_cycle, resolved_date) if active_nutrition_cycle else None
+    )
+    active_nutrition_alert = (
+        nutrition_cycle_alert(active_nutrition_cycle, resolved_date) if active_nutrition_cycle else None
+    )
 
     windows = []
     for window in WINDOW_ORDER:
@@ -373,7 +390,7 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
     return {
         "date": resolved_date.isoformat(),
         "windows": windows,
-        "nutrition_phase": None,
-        "cycle_alerts": [],
+        "nutrition_phase": active_nutrition_phase,
+        "cycle_alerts": [active_nutrition_alert] if active_nutrition_alert else [],
         "interactions": _interaction_warnings([*due_supplements, *due_medications]),
     }

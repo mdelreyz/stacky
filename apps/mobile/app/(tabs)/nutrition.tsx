@@ -1,29 +1,104 @@
-import { StyleSheet, Text, View, ScrollView } from "react-native";
+import { useCallback, useState } from "react";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { Link, useFocusEffect } from "expo-router";
+
+import { nutrition as nutritionApi } from "@/lib/api";
+import { formatNutritionPhaseSummary, getNutritionCycleTypeLabel } from "@/lib/nutrition";
+import type { NutritionCycle } from "@/lib/api";
 
 export default function NutritionScreen() {
+  const [plans, setPlans] = useState<NutritionCycle[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const loadPlans = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await nutritionApi.list({ active_only: false });
+      setPlans(response.items);
+    } catch (error) {
+      console.error("Failed to load nutrition plans", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadPlans();
+    }, [loadPlans])
+  );
+
+  if (loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#228be6" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>Nutrition Cycling</Text>
-        <Text style={styles.subtitle}>
-          Carb, protein, and keto cycling schedules
-        </Text>
+        <View style={styles.headerCopy}>
+          <Text style={styles.title}>Nutrition Plans</Text>
+          <Text style={styles.subtitle}>
+            Macro profiles, named diets, elimination phases, and custom food rules
+          </Text>
+        </View>
+        <Link href="/nutrition/add" asChild>
+          <Pressable style={styles.addButton}>
+            <FontAwesome name="plus" size={14} color="#fff" />
+            <Text style={styles.addButtonText}>New</Text>
+          </Pressable>
+        </Link>
       </View>
 
-      <View style={styles.emptyCard}>
-        <FontAwesome
-          name="pie-chart"
-          size={40}
-          color="#dee2e6"
-          style={{ marginBottom: 12 }}
-        />
-        <Text style={styles.emptyText}>No nutrition cycles configured</Text>
-        <Text style={styles.emptyHint}>
-          Set up carb cycling, protein cycling, or keto cycling to see your
-          daily macro targets and phase calendar here.
-        </Text>
-      </View>
+      {plans.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <FontAwesome name="pie-chart" size={40} color="#dee2e6" style={{ marginBottom: 12 }} />
+          <Text style={styles.emptyText}>No nutrition plans configured</Text>
+          <Text style={styles.emptyHint}>
+            Build a macro profile, low FODMAP block, Atkins phase, or custom restriction plan and Today will surface the current phase.
+          </Text>
+        </View>
+      ) : (
+        plans.map((plan) => {
+          const currentPhase = plan.phases[plan.current_phase_idx] ?? plan.phases[0];
+          const summary = currentPhase ? formatNutritionPhaseSummary(currentPhase) : [];
+
+          return (
+            <Link key={plan.id} href={`/nutrition/${plan.id}`} asChild>
+              <Pressable style={styles.planCard}>
+                <View style={styles.planHeader}>
+                  <View style={styles.planInfo}>
+                    <Text style={styles.planName}>{plan.name}</Text>
+                    <Text style={styles.planMeta}>
+                      {getNutritionCycleTypeLabel(plan.cycle_type)} · Phase {plan.current_phase_idx + 1} of {plan.phases.length}
+                    </Text>
+                  </View>
+                  <View style={[styles.statusPill, plan.is_active ? styles.activePill : styles.inactivePill]}>
+                    <Text style={[styles.statusText, plan.is_active ? styles.activeText : styles.inactiveText]}>
+                      {plan.is_active ? "Active" : "Inactive"}
+                    </Text>
+                  </View>
+                </View>
+
+                {currentPhase ? <Text style={styles.phaseName}>{currentPhase.name}</Text> : null}
+                {summary.map((line) => (
+                  <Text key={line} style={styles.summaryLine}>
+                    {line}
+                  </Text>
+                ))}
+                {currentPhase?.notes ? <Text style={styles.notes}>{currentPhase.notes}</Text> : null}
+                <Text style={styles.transitionMeta}>Next transition {plan.next_transition}</Text>
+              </Pressable>
+            </Link>
+          );
+        })
+      )}
+
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
@@ -33,9 +108,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: "#f8f9fa",
   },
+  centered: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f8f9fa",
+  },
   header: {
     padding: 20,
     paddingTop: 10,
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  headerCopy: {
+    flex: 1,
   },
   title: {
     fontSize: 28,
@@ -46,6 +134,21 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6c757d",
     marginTop: 4,
+    lineHeight: 20,
+  },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "#228be6",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+  },
+  addButtonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 13,
   },
   emptyCard: {
     backgroundColor: "#ffffff",
@@ -71,5 +174,80 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 8,
     lineHeight: 18,
+  },
+  planCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 12,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  planHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  planInfo: {
+    flex: 1,
+  },
+  planName: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: "#212529",
+  },
+  planMeta: {
+    fontSize: 12,
+    color: "#6c757d",
+    marginTop: 4,
+  },
+  statusPill: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 999,
+  },
+  activePill: {
+    backgroundColor: "#ebfbee",
+  },
+  inactivePill: {
+    backgroundColor: "#f1f3f5",
+  },
+  statusText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  activeText: {
+    color: "#2b8a3e",
+  },
+  inactiveText: {
+    color: "#868e96",
+  },
+  phaseName: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#5f3dc4",
+    marginTop: 10,
+  },
+  summaryLine: {
+    fontSize: 13,
+    color: "#495057",
+    marginTop: 6,
+    lineHeight: 18,
+  },
+  notes: {
+    fontSize: 13,
+    color: "#6c757d",
+    marginTop: 8,
+    lineHeight: 18,
+  },
+  transitionMeta: {
+    fontSize: 12,
+    color: "#868e96",
+    marginTop: 10,
   },
 });

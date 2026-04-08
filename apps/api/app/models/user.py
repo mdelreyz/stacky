@@ -26,4 +26,5 @@ class User(Base):
     user_supplements = relationship("UserSupplement", back_populates="user", lazy="selectin")
     user_medications = relationship("UserMedication", back_populates="user", lazy="selectin")
     user_therapies = relationship("UserTherapy", back_populates="user", lazy="selectin")
+    nutrition_cycles = relationship("NutritionCycle", back_populates="user", lazy="selectin")
     protocols = relationship("Protocol", back_populates="user", lazy="selectin")

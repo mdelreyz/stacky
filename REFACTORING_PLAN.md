@@ -21,6 +21,10 @@ Last updated: 2026-04-08
   - the daily-plan interaction model no longer uses supplement-only field names
   - medications reuse the existing regimen scheduling, adherence, and stack seams instead of forking a parallel planner
   - the mobile medication create/manage screens sit on the same schedule primitives already used by supplements
+- The fourth pass landed with nutrition:
+  - the dormant nutrition cycle model and Nutrition tab are now real product surface instead of disconnected placeholders
+  - Today now renders both `nutrition_phase` and `cycle_alerts`, closing an existing contract gap rather than adding another hidden payload
+  - nutrition type labels and macro-level options are centralized in one mobile helper instead of being repeated across screens
 
 ## Open findings
 
@@ -38,6 +42,10 @@ Last updated: 2026-04-08
    - [apps/mobile/components/ProtocolForm.tsx](apps/mobile/components/ProtocolForm.tsx)
    - The current form is still manageable, but another family or two should push the item selection sections into dedicated hooks or section components instead of extending one file.
 
+4. Extract a reusable phase editor before nutrition becomes multi-phase in the UI.
+   - [apps/mobile/components/nutrition/NutritionPlanForm.tsx](apps/mobile/components/nutrition/NutritionPlanForm.tsx)
+   - The current nutrition flow intentionally ships as a single-phase editor even though the backend model supports repeated phases. If true multi-phase creation lands, phase rows should become their own component instead of growing this form in place.
+
 ### Low
 
 1. Align backend pagination response typing between mobile and shared client code.
@@ -50,9 +58,15 @@ Last updated: 2026-04-08
    - [packages/domain/src/daily-plan.ts](packages/domain/src/daily-plan.ts)
    - Supplements, therapies, and medications now share the same plan/adherence seams. The next family should justify promoting the remaining duplicated regimen metadata into a more explicit shared abstraction.
 
+3. Decide whether nutrition stays a dedicated cycle domain or eventually joins named protocol stacks.
+   - [apps/api/app/models/nutrition_cycle.py](apps/api/app/models/nutrition_cycle.py)
+   - [apps/mobile/app/(tabs)/nutrition.tsx](apps/mobile/app/(tabs)/nutrition.tsx)
+   - Nutrition now has a coherent dedicated flow. If the product later needs stack composition with diet plans, that should be an explicit convergence decision rather than an ad hoc link from protocol items.
+
 ## Next refactor slice
 
-1. Extract seed fixtures and regimen taxonomy into dedicated modules before nutrition or skincare catalogs land.
+1. Extract seed fixtures and regimen taxonomy into dedicated modules before skincare or topical-product catalogs land.
 2. Split `ProtocolForm` selection state if another regimen family is added to stacks.
-3. Add light frontend coverage around date navigation and adherence refresh behavior once a test harness is introduced.
-4. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.
+3. Extract a reusable multi-phase nutrition editor if nutrition plans need more than one phase in the UI.
+4. Add light frontend coverage around Today refresh behavior and the Nutrition tab once a test harness is introduced.
+5. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.
