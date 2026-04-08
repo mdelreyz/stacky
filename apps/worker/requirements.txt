@@ -1,0 +1,6 @@
+celery>=5.4.0
+redis>=5.2.0
+anthropic>=0.40.0
+sqlalchemy>=2.0.36
+asyncpg>=0.30.0
+psycopg2-binary>=2.9.9

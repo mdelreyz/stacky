@@ -1,0 +1,15 @@
+{
+  "name": "protocols",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev:mobile": "cd apps/mobile && npx expo start",
+    "build:mobile": "cd apps/mobile && npx expo export",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  }
+}

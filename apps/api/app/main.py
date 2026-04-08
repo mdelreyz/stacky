@@ -1,0 +1,40 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import settings
+from app.database import Base, engine
+from app.models import *  # noqa: F401, F403 — register all models with Base
+from app.routes import v1_router
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Auto-create tables for SQLite (dev/test only)
+    if "sqlite" in settings.database_url:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+    yield
+    await engine.dispose()
+    from app.jwt import close_redis
+
+    await close_redis()
+
+
+app = FastAPI(
+    title="Protocols API",
+    description="Health protocol management — supplements, therapies, nutrition cycling",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
+app.include_router(v1_router)

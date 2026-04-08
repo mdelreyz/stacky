@@ -1,0 +1,60 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: protocols
+      POSTGRES_PASSWORD: protocols-dev-password
+      POSTGRES_DB: protocols
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U protocols"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./apps/api
+    ports:
+      - "8000:8000"
+    environment:
+      PROTOCOLS_DATABASE_URL: postgresql+asyncpg://protocols:protocols-dev-password@postgres:5432/protocols
+      PROTOCOLS_REDIS_URL: redis://redis:6379/0
+      PROTOCOLS_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  worker:
+    build:
+      context: ./apps/worker
+    environment:
+      PROTOCOLS_DATABASE_URL: postgresql+asyncpg://protocols:protocols-dev-password@postgres:5432/protocols
+      PROTOCOLS_REDIS_URL: redis://redis:6379/0
+      PROTOCOLS_ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  pgdata:
