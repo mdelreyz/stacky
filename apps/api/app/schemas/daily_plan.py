@@ -37,9 +37,21 @@ class InteractionWarningResponse(BaseModel):
     description: str
 
 
+class SkincareGuidanceResponse(BaseModel):
+    location_name: str
+    uv_index: float
+    level: Literal["low", "moderate", "high", "very_high"]
+    is_day: bool
+    recommended_spf: int | None
+    reapply_hours: int | None
+    headline: str
+    recommendation: str
+
+
 class DailyPlanResponse(BaseModel):
     date: date
     windows: list[TakeWindowPlanResponse]
     nutrition_phase: ActiveNutritionPhaseResponse | None
+    skincare_guidance: SkincareGuidanceResponse | None
     cycle_alerts: list[CycleAlertResponse]
     interactions: list[InteractionWarningResponse]

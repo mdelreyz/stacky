@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     anthropic_api_key: str = ""
     ai_model: str = "claude-sonnet-4-20250514"
 
+    # Weather
+    weather_api_base_url: str = "https://api.open-meteo.com/v1/forecast"
+    weather_request_timeout_seconds: float = 5.0
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000

@@ -13,6 +13,7 @@ import { CycleAlertsCard } from "@/components/today/CycleAlertsCard";
 import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
 import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
 import { NutritionPhaseCard } from "@/components/today/NutritionPhaseCard";
+import { SkincareGuidanceCard } from "@/components/today/SkincareGuidanceCard";
 import { TodayDateHeader } from "@/components/today/TodayDateHeader";
 import { getTodayIsoDate, shiftIsoDate } from "@/lib/date";
 import { showError } from "@/lib/errors";
@@ -60,6 +61,7 @@ export default function TodayScreen() {
   const interactionWarnings = plan?.interactions ?? [];
   const cycleAlerts = plan?.cycle_alerts ?? [];
   const nutritionPhase = plan?.nutrition_phase ?? null;
+  const skincareGuidance = plan?.skincare_guidance ?? null;
   const windows = plan?.windows ?? [];
 
   return (
@@ -76,6 +78,7 @@ export default function TodayScreen() {
       />
 
       <NutritionPhaseCard phase={nutritionPhase} />
+      <SkincareGuidanceCard guidance={skincareGuidance} />
       <CycleAlertsCard alerts={cycleAlerts} />
       <InteractionWarningsCard warnings={interactionWarnings} />
 

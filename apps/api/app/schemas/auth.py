@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, field_validator, model_validator
 
 
 def _validate_password_strength(v: str) -> str:
@@ -40,6 +40,11 @@ class AuthUserResponse(BaseModel):
     first_name: str
     last_name: str
     email: str
+    timezone: str
+    location_name: str | None
+    latitude: float | None
+    longitude: float | None
+    created_at: datetime
 
     model_config = {"from_attributes": True}
 
@@ -62,6 +67,31 @@ class MeResponse(BaseModel):
     last_name: str
     email: str
     timezone: str
+    location_name: str | None
+    latitude: float | None
+    longitude: float | None
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class UpdateMeRequest(BaseModel):
+    first_name: str | None = Field(default=None, min_length=1, max_length=100)
+    last_name: str | None = Field(default=None, min_length=1, max_length=100)
+    timezone: str | None = Field(default=None, min_length=1, max_length=50)
+    location_name: str | None = Field(default=None, max_length=120)
+    latitude: float | None = Field(default=None, ge=-90, le=90)
+    longitude: float | None = Field(default=None, ge=-180, le=180)
+
+    @model_validator(mode="after")
+    def validate_coordinates(self):
+        latitude_provided = "latitude" in self.model_fields_set
+        longitude_provided = "longitude" in self.model_fields_set
+
+        if latitude_provided != longitude_provided:
+            raise ValueError("Latitude and longitude must be provided together")
+
+        if self.location_name is not None and not self.location_name.strip():
+            raise ValueError("Location name cannot be empty")
+
+        return self

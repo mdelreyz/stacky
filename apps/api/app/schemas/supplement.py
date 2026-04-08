@@ -51,6 +51,7 @@ class UserSupplementCreate(BaseModel):
     frequency: Frequency = Frequency.daily
     take_window: TakeWindow = TakeWindow.morning_with_food
     with_food: bool = False
+    is_out_of_stock: bool = False
     notes: str | None = None
     started_at: date
 
@@ -61,6 +62,7 @@ class UserSupplementUpdate(BaseModel):
     frequency: Frequency | None = None
     take_window: TakeWindow | None = None
     with_food: bool | None = None
+    is_out_of_stock: bool | None = None
     notes: str | None = None
     is_active: bool | None = None
     ended_at: date | None = None
@@ -74,6 +76,7 @@ class UserSupplementResponse(BaseModel):
     frequency: Frequency
     take_window: TakeWindow
     with_food: bool
+    is_out_of_stock: bool
     notes: str | None
     is_active: bool
     started_at: date
@@ -81,3 +84,18 @@ class UserSupplementResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class SupplementRefillItemResponse(BaseModel):
+    user_supplement_id: uuid.UUID
+    supplement_name: str
+    dosage_amount: float
+    dosage_unit: str
+    frequency: Frequency
+    take_window: TakeWindow
+    notes: str | None
+
+
+class SupplementRefillRequestResponse(BaseModel):
+    items: list[SupplementRefillItemResponse]
+    text: str

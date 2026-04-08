@@ -47,6 +47,7 @@ class UserSupplement(Base):
         Enum(TakeWindow, name="take_window_enum"), nullable=False, default=TakeWindow.morning_with_food
     )
     with_food: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    is_out_of_stock: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     started_at: Mapped[date] = mapped_column(Date, nullable=False)

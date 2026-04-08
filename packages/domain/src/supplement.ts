@@ -26,6 +26,21 @@ export interface Supplement {
   is_verified: boolean;
 }
 
+export interface SupplementRefillRequestItem {
+  user_supplement_id: string;
+  supplement_name: string;
+  dosage_amount: number;
+  dosage_unit: string;
+  frequency: string;
+  take_window: string;
+  notes: string | null;
+}
+
+export interface SupplementRefillRequest {
+  items: SupplementRefillRequestItem[];
+  text: string;
+}
+
 export type AIProfileStatus = "ready" | "generating" | "failed";
 
 export interface SupplementAIProfile {

@@ -1,4 +1,11 @@
-export type { AIProfileStatus, Supplement, SupplementCategory, SupplementAIProfile } from "./supplement";
+export type {
+  AIProfileStatus,
+  Supplement,
+  SupplementCategory,
+  SupplementAIProfile,
+  SupplementRefillRequest,
+  SupplementRefillRequestItem,
+} from "./supplement";
 export type { Medication, MedicationAIProfile, MedicationCategory } from "./medication";
 export type { Therapy, TherapyCategory } from "./therapy";
 export type { UserMedication, UserSupplement, UserTherapy, Frequency, TakeWindow } from "./user-items";
@@ -18,6 +25,7 @@ export type {
   TakeWindowPlan,
   DailyPlanItem,
   CycleAlert,
+  SkincareGuidance,
   InteractionWarning,
   AdherenceResult,
   SupplementAdherenceResult,

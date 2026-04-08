@@ -15,6 +15,7 @@ from app.models.user_medication import UserMedication
 from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.services.nutrition_cycles import nutrition_cycle_alert, serialize_active_nutrition_phase
+from app.services.weather import build_skincare_guidance
 
 WINDOW_ORDER = [
     TakeWindow.morning_fasted,
@@ -323,6 +324,7 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
     active_nutrition_alert = (
         nutrition_cycle_alert(active_nutrition_cycle, resolved_date) if active_nutrition_cycle else None
     )
+    skincare_guidance = await build_skincare_guidance(user)
 
     windows = []
     for window in WINDOW_ORDER:
@@ -391,6 +393,7 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
         "date": resolved_date.isoformat(),
         "windows": windows,
         "nutrition_phase": active_nutrition_phase,
+        "skincare_guidance": skincare_guidance,
         "cycle_alerts": [active_nutrition_alert] if active_nutrition_alert else [],
         "interactions": _interaction_warnings([*due_supplements, *due_medications]),
     }

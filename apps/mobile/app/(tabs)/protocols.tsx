@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useFocusEffect } from "expo-router";
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Link, useFocusEffect } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { ActiveProtocolItemsSection } from "@/components/protocols/ActiveProtocolItemsSection";
 import { CatalogSearchInput } from "@/components/protocols/CatalogSearchInput";
@@ -88,6 +89,8 @@ export default function ProtocolsScreen() {
     );
   }
 
+  const outOfStockSupplements = mySupplements.filter((item) => item.is_out_of_stock);
+
   return (
     <ScrollView
       style={styles.container}
@@ -118,9 +121,25 @@ export default function ProtocolsScreen() {
           id: item.id,
           name: item.supplement.name,
           meta: `${item.dosage_amount}${item.dosage_unit} · ${getFrequencyLabel(item.frequency)} · ${getTakeWindowLabel(item.take_window)}`,
+          detail: item.is_out_of_stock ? "Out of stock · included in refill note" : undefined,
           href: `/user-supplement/${item.id}`,
         }))}
       />
+
+      {outOfStockSupplements.length > 0 ? (
+        <Link href="/supplement/refill-request" asChild>
+          <Pressable style={styles.alertCard}>
+            <View style={styles.alertHeader}>
+              <FontAwesome name="shopping-bag" size={16} color="#e67700" />
+              <Text style={styles.alertTitle}>Supplements To Reorder</Text>
+            </View>
+            <Text style={styles.alertBody}>
+              {outOfStockSupplements.length} active supplement
+              {outOfStockSupplements.length === 1 ? "" : "s"} marked out of stock. Open the generated refill note for your next doctor or ordering request.
+            </Text>
+          </Pressable>
+        </Link>
+      ) : null}
 
       <ActiveProtocolItemsSection
         title="Active Medications"
@@ -204,4 +223,29 @@ const styles = StyleSheet.create({
   header: { padding: 20, paddingTop: 10 },
   title: { fontSize: 28, fontWeight: "700", color: "#212529" },
   subtitle: { fontSize: 14, color: "#6c757d", marginTop: 4 },
+  alertCard: {
+    backgroundColor: "#fff4e6",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#ffd8a8",
+  },
+  alertHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  alertTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#e67700",
+  },
+  alertBody: {
+    fontSize: 13,
+    color: "#495057",
+    lineHeight: 18,
+  },
 });

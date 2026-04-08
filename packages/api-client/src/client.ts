@@ -8,6 +8,7 @@ import type {
   NutritionPhase,
   Protocol,
   Supplement,
+  SupplementRefillRequest,
   SupplementAIProfile,
   Therapy,
   User,
@@ -95,6 +96,20 @@ export class ProtocolsAPI {
 
   async getMe(): Promise<User> {
     return this.request<User>("/api/v1/auth/me");
+  }
+
+  async updateMe(data: {
+    first_name?: string;
+    last_name?: string;
+    timezone?: string;
+    location_name?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  }): Promise<User> {
+    return this.request<User>("/api/v1/auth/me", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
   }
 
   async getDailyPlan(date?: string): Promise<DailyPlan> {
@@ -266,6 +281,10 @@ export class ProtocolsAPI {
 
   async getSupplement(id: string): Promise<Supplement> {
     return this.request(`/api/v1/supplements/${id}`);
+  }
+
+  async getSupplementRefillRequest(): Promise<SupplementRefillRequest> {
+    return this.request("/api/v1/users/me/supplements/refill-request");
   }
 
   async listTherapies(params?: {

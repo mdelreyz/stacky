@@ -26,6 +26,21 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.card}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/location")}>
+          <FontAwesome name="map-marker" size={18} color="#495057" />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Location & UV Guidance</Text>
+            <Text style={styles.menuHint}>
+              {user?.location_name
+                ? `${user.location_name} · ${user.timezone}`
+                : "Save a location to enable weather-based sunscreen guidance"}
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+        </Pressable>
+
+        <View style={styles.separator} />
+
         <Pressable style={styles.menuItem}>
           <FontAwesome name="bell" size={18} color="#495057" />
           <Text style={styles.menuText}>Notification Preferences</Text>
@@ -99,6 +114,8 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: 12,
   },
+  menuCopy: { flex: 1 },
   menuText: { flex: 1, fontSize: 16, color: "#212529" },
+  menuHint: { fontSize: 12, color: "#868e96", marginTop: 4 },
   separator: { height: 1, backgroundColor: "#f1f3f5", marginLeft: 46 },
 });

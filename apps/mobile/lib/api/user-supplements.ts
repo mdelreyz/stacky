@@ -1,4 +1,4 @@
-import type { UserSupplement } from "@protocols/domain";
+import type { SupplementRefillRequest, UserSupplement } from "@protocols/domain";
 
 import { request, type PaginatedResponse } from "./core";
 
@@ -30,6 +30,9 @@ export const userSupplements = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
+
+  getRefillRequest: () =>
+    request<SupplementRefillRequest>("/api/v1/users/me/supplements/refill-request"),
 
   remove: (id: string) =>
     request<void>(`/api/v1/users/me/supplements/${id}`, { method: "DELETE" }),

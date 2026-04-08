@@ -76,6 +76,10 @@ function RootLayoutNav() {
           options={{ headerShown: false, presentation: "modal" }}
         />
         <Stack.Screen
+          name="supplement/refill-request"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
           name="medication/add"
           options={{ headerShown: false, presentation: "modal" }}
         />
@@ -93,6 +97,10 @@ function RootLayoutNav() {
         />
         <Stack.Screen
           name="nutrition/[id]"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="profile/location"
           options={{ headerShown: false, presentation: "modal" }}
         />
         <Stack.Screen

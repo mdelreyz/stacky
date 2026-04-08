@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -31,6 +32,7 @@ export default function ManageUserSupplementScreen() {
     withFood: false,
     notes: "",
   });
+  const [isOutOfStock, setIsOutOfStock] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -49,6 +51,7 @@ export default function ManageUserSupplementScreen() {
           withFood: nextUserSupplement.with_food,
           notes: nextUserSupplement.notes || "",
         });
+        setIsOutOfStock(nextUserSupplement.is_out_of_stock);
       })
       .catch(console.error)
       .finally(() => {
@@ -76,6 +79,7 @@ export default function ManageUserSupplementScreen() {
         frequency: formState.frequency,
         take_window: formState.takeWindow,
         with_food: formState.withFood,
+        is_out_of_stock: isOutOfStock,
         notes: formState.notes.trim() || null,
       });
       router.replace("/(tabs)/protocols");
@@ -131,6 +135,21 @@ export default function ManageUserSupplementScreen() {
         onSecondaryAction={handleRemove}
       />
 
+      <View style={styles.stockCard}>
+        <Text style={styles.stockTitle}>Supply Status</Text>
+        <Pressable
+          style={[styles.stockToggle, isOutOfStock && styles.stockToggleActive]}
+          onPress={() => setIsOutOfStock((current) => !current)}
+        >
+          <Text style={[styles.stockToggleText, isOutOfStock && styles.stockToggleTextActive]}>
+            {isOutOfStock ? "Marked as out of stock" : "Mark as out of stock"}
+          </Text>
+        </Pressable>
+        <Text style={styles.stockHint}>
+          Out-of-stock supplements can be gathered into a generated refill note from the Protocols tab.
+        </Text>
+      </View>
+
       <View style={{ height: 32 }} />
     </ScrollView>
   );
@@ -139,4 +158,48 @@ export default function ManageUserSupplementScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f8f9fa" },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  stockCard: {
+    backgroundColor: "#fff",
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  stockTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    color: "#343a40",
+    marginBottom: 12,
+  },
+  stockToggle: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: "#f8f9fa",
+    borderWidth: 1,
+    borderColor: "#dee2e6",
+  },
+  stockToggleActive: {
+    backgroundColor: "#fff4e6",
+    borderColor: "#ffd8a8",
+  },
+  stockToggleText: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#495057",
+  },
+  stockToggleTextActive: {
+    color: "#e67700",
+  },
+  stockHint: {
+    fontSize: 12,
+    color: "#868e96",
+    marginTop: 10,
+    lineHeight: 18,
+  },
 });

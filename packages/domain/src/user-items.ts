@@ -42,6 +42,7 @@ export interface UserSupplement {
   frequency: Frequency;
   take_window: TakeWindow;
   with_food: boolean;
+  is_out_of_stock: boolean;
   notes: string | null;
   is_active: boolean;
   started_at: string;

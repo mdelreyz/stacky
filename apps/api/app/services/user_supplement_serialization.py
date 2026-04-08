@@ -27,6 +27,7 @@ async def serialize_user_supplement(user_supplement: UserSupplement | None) -> U
         frequency=user_supplement.frequency,
         take_window=user_supplement.take_window,
         with_food=user_supplement.with_food,
+        is_out_of_stock=user_supplement.is_out_of_stock,
         notes=user_supplement.notes,
         is_active=user_supplement.is_active,
         started_at=user_supplement.started_at,

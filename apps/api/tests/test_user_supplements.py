@@ -87,3 +87,57 @@ def test_remove_user_supplement_soft_deactivates_entry(client):
     assert get_response.status_code == 200
     assert get_response.json()["is_active"] is False
     assert get_response.json()["ended_at"] is not None
+
+
+def test_generate_refill_request_from_out_of_stock_supplements(client):
+    headers = auth_headers(client)
+    magnesium_id = create_supplement("Magnesium Glycinate")
+    vitamin_d_id = create_supplement("Vitamin D3")
+
+    magnesium_response = client.post(
+        "/api/v1/users/me/supplements",
+        json={
+            "supplement_id": str(magnesium_id),
+            "dosage_amount": 2,
+            "dosage_unit": "capsules",
+            "frequency": "daily",
+            "take_window": "evening",
+            "with_food": False,
+            "started_at": "2026-04-08",
+            "notes": "Sleep support",
+        },
+        headers=headers,
+    )
+    vitamin_response = client.post(
+        "/api/v1/users/me/supplements",
+        json={
+            "supplement_id": str(vitamin_d_id),
+            "dosage_amount": 1,
+            "dosage_unit": "softgel",
+            "frequency": "daily",
+            "take_window": "morning_with_food",
+            "with_food": True,
+            "started_at": "2026-04-08",
+        },
+        headers=headers,
+    )
+
+    assert magnesium_response.status_code == 201
+    assert vitamin_response.status_code == 201
+
+    mark_response = client.patch(
+        f"/api/v1/users/me/supplements/{magnesium_response.json()['id']}",
+        json={"is_out_of_stock": True},
+        headers=headers,
+    )
+    assert mark_response.status_code == 200
+    assert mark_response.json()["is_out_of_stock"] is True
+
+    refill_response = client.get("/api/v1/users/me/supplements/refill-request", headers=headers)
+    assert refill_response.status_code == 200
+
+    body = refill_response.json()
+    assert len(body["items"]) == 1
+    assert body["items"][0]["supplement_name"] == "Magnesium Glycinate"
+    assert "Magnesium Glycinate" in body["text"]
+    assert "Vitamin D3" not in body["text"]

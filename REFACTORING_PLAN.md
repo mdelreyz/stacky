@@ -25,6 +25,10 @@ Last updated: 2026-04-08
   - the dormant nutrition cycle model and Nutrition tab are now real product surface instead of disconnected placeholders
   - Today now renders both `nutrition_phase` and `cycle_alerts`, closing an existing contract gap rather than adding another hidden payload
   - nutrition type labels and macro-level options are centralized in one mobile helper instead of being repeated across screens
+- The fifth pass landed with profile/weather and supplement inventory:
+  - profile location and timezone are now editable instead of being read-only auth metadata
+  - Today now uses a forecast-backed UV seam to render skincare guidance when coordinates are available
+  - active supplements can be marked out of stock and gathered into a generated refill note instead of relying on ad hoc reminders
 
 ## Open findings
 
@@ -46,6 +50,10 @@ Last updated: 2026-04-08
    - [apps/mobile/components/nutrition/NutritionPlanForm.tsx](apps/mobile/components/nutrition/NutritionPlanForm.tsx)
    - The current nutrition flow intentionally ships as a single-phase editor even though the backend model supports repeated phases. If true multi-phase creation lands, phase rows should become their own component instead of growing this form in place.
 
+5. Split Today cards again if regimen scheduling or more guidance layers land there.
+   - [apps/mobile/app/(tabs)/index.tsx](apps/mobile/app/(tabs)/index.tsx)
+   - The screen is still controlled, but UV guidance plus richer scheduled-regime logic could push it back into watch-zone territory quickly.
+
 ### Low
 
 1. Align backend pagination response typing between mobile and shared client code.
@@ -63,10 +71,16 @@ Last updated: 2026-04-08
    - [apps/mobile/app/(tabs)/nutrition.tsx](apps/mobile/app/(tabs)/nutrition.tsx)
    - Nutrition now has a coherent dedicated flow. If the product later needs stack composition with diet plans, that should be an explicit convergence decision rather than an ad hoc link from protocol items.
 
+4. Decide whether protocol stacks evolve into calendarized regime schedules or remain static presets.
+   - [apps/api/app/models/protocol.py](apps/api/app/models/protocol.py)
+   - [apps/mobile/components/protocols/ProtocolStacksSection.tsx](apps/mobile/components/protocols/ProtocolStacksSection.tsx)
+   - The user now wants vacation plans and week-of-month switching. That likely requires a dedicated temporal activation model rather than continuing to overload plain stack membership.
+
 ## Next refactor slice
 
-1. Extract seed fixtures and regimen taxonomy into dedicated modules before skincare or topical-product catalogs land.
-2. Split `ProtocolForm` selection state if another regimen family is added to stacks.
-3. Extract a reusable multi-phase nutrition editor if nutrition plans need more than one phase in the UI.
-4. Add light frontend coverage around Today refresh behavior and the Nutrition tab once a test harness is introduced.
-5. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.
+1. Design and implement a calendarized regime-scheduling model before expanding vacation plans or week-of-month stack switching.
+2. Extract seed fixtures and regimen taxonomy into dedicated modules before skincare or topical-product catalogs land.
+3. Split `ProtocolForm` selection state if another regimen family is added to stacks.
+4. Extract a reusable multi-phase nutrition editor if nutrition plans need more than one phase in the UI.
+5. Add light frontend coverage around Today refresh behavior, UV guidance, and the Nutrition tab once a test harness is introduced.
+6. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.

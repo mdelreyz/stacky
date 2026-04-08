@@ -4,6 +4,9 @@ export interface User {
   last_name: string;
   email: string;
   timezone: string;
+   location_name: string | null;
+   latitude: number | null;
+   longitude: number | null;
   created_at: string;
 }
 

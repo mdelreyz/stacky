@@ -1,5 +1,7 @@
 from datetime import date, datetime, timedelta, timezone
 
+from sqlalchemy import select
+
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
 from app.models.medication import Medication, MedicationCategory
@@ -23,6 +25,29 @@ def signup(client) -> tuple[dict[str, str], str]:
     )
     body = response.json()
     return {"Authorization": f"Bearer {body['access_token']}"}, body["user"]["id"]
+
+
+def update_user_location(
+    user_id: str,
+    *,
+    location_name: str = "Barcelona",
+    latitude: float = 41.3874,
+    longitude: float = 2.1686,
+):
+    async def _update():
+        async with async_session_factory() as session:
+            from app.models.user import User
+
+            result = await session.execute(select(User).where(User.id == user_id))
+            user = result.scalar_one()
+            user.location_name = location_name
+            user.latitude = latitude
+            user.longitude = longitude
+            await session.commit()
+
+    import asyncio
+
+    asyncio.run(_update())
 
 
 def create_supplement(name: str, ai_profile=None):
@@ -452,3 +477,71 @@ def test_daily_plan_includes_active_nutrition_phase_and_transition_alert(client)
             "days_until_transition": 1,
         }
     ]
+
+
+def test_daily_plan_includes_skincare_guidance_when_uv_is_available(client, monkeypatch):
+    headers, user_id = signup(client)
+    update_user_location(user_id)
+
+    async def fake_build_skincare_guidance(_user):
+        return {
+            "location_name": "Barcelona",
+            "uv_index": 7.2,
+            "level": "high",
+            "is_day": True,
+            "recommended_spf": 50,
+            "reapply_hours": 2,
+            "headline": "High UV exposure",
+            "recommendation": "Use SPF 50+, reapply every 2 hours, and add shade, hat, or protective clothing if you will be outside.",
+        }
+
+    monkeypatch.setattr("app.services.daily_plan.build_skincare_guidance", fake_build_skincare_guidance)
+
+    response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["skincare_guidance"] == {
+        "location_name": "Barcelona",
+        "uv_index": 7.2,
+        "level": "high",
+        "is_day": True,
+        "recommended_spf": 50,
+        "reapply_hours": 2,
+        "headline": "High UV exposure",
+        "recommendation": "Use SPF 50+, reapply every 2 hours, and add shade, hat, or protective clothing if you will be outside.",
+    }
+
+
+def test_daily_plan_includes_skincare_guidance_when_uv_data_is_available(client, monkeypatch):
+    headers, user_id = signup(client)
+    update_user_location(user_id)
+
+    async def _fake_guidance(_user):
+        return {
+            "location_name": "Barcelona",
+            "uv_index": 7.4,
+            "level": "high",
+            "is_day": True,
+            "recommended_spf": 50,
+            "reapply_hours": 2,
+            "headline": "High UV exposure",
+            "recommendation": "Use SPF 50+, reapply every 2 hours, and add shade, hat, or protective clothing if you will be outside.",
+        }
+
+    monkeypatch.setattr("app.services.daily_plan.build_skincare_guidance", _fake_guidance)
+
+    response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["skincare_guidance"] == {
+        "location_name": "Barcelona",
+        "uv_index": 7.4,
+        "level": "high",
+        "is_day": True,
+        "recommended_spf": 50,
+        "reapply_hours": 2,
+        "headline": "High UV exposure",
+        "recommendation": "Use SPF 50+, reapply every 2 hours, and add shade, hat, or protective clothing if you will be outside.",
+    }

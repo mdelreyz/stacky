@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { auth as authApi, setToken } from "@/lib/api";
-
-interface User {
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-}
+import type { User } from "@/lib/api";
 
 interface AuthContextType {
   user: User | null;
@@ -19,6 +13,15 @@ interface AuthContextType {
     email: string;
     password: string;
   }) => Promise<void>;
+  updateProfile: (data: {
+    first_name?: string;
+    last_name?: string;
+    timezone?: string;
+    location_name?: string | null;
+    latitude?: number | null;
+    longitude?: number | null;
+  }) => Promise<void>;
+  refreshProfile: () => Promise<void>;
   logout: () => void;
 }
 
@@ -59,6 +62,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   }, []);
 
+  const refreshProfile = useCallback(async () => {
+    const nextUser = await authApi.me();
+    setUser(nextUser);
+  }, []);
+
+  const updateProfile = useCallback(
+    async (data: {
+      first_name?: string;
+      last_name?: string;
+      timezone?: string;
+      location_name?: string | null;
+      latitude?: number | null;
+      longitude?: number | null;
+    }) => {
+      const nextUser = await authApi.updateMe(data);
+      setUser(nextUser);
+    },
+    []
+  );
+
   return (
     <AuthContext.Provider
       value={{
@@ -67,6 +90,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: !!user,
         login,
         signup,
+        updateProfile,
+        refreshProfile,
         logout,
       }}
     >

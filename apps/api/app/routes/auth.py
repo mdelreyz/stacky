@@ -14,6 +14,7 @@ from app.schemas.auth import (
     MeResponse,
     SignupRequest,
     SignupResponse,
+    UpdateMeRequest,
 )
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -78,4 +79,23 @@ async def login(
 
 @router.get("/me", response_model=MeResponse)
 async def get_me(current_user: User = Depends(get_current_user)) -> MeResponse:
+    return MeResponse.model_validate(current_user)
+
+
+@router.patch("/me", response_model=MeResponse)
+async def update_me(
+    data: UpdateMeRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+) -> MeResponse:
+    update_data = data.model_dump(exclude_unset=True)
+    for key, value in update_data.items():
+        setattr(current_user, key, value)
+
+    try:
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    await session.refresh(current_user)
     return MeResponse.model_validate(current_user)

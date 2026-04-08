@@ -5,6 +5,7 @@ export interface DailyPlan {
   date: string;
   windows: TakeWindowPlan[];
   nutrition_phase: ActiveNutritionPhase | null;
+  skincare_guidance: SkincareGuidance | null;
   cycle_alerts: CycleAlert[];
   interactions: InteractionWarning[];
 }
@@ -29,6 +30,17 @@ export interface CycleAlert {
   item_name: string;
   message: string;
   days_until_transition: number;
+}
+
+export interface SkincareGuidance {
+  location_name: string;
+  uv_index: number;
+  level: "low" | "moderate" | "high" | "very_high";
+  is_day: boolean;
+  recommended_spf: number | null;
+  reapply_hours: number | null;
+  headline: string;
+  recommendation: string;
 }
 
 export interface InteractionWarning {

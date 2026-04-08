@@ -11,6 +11,8 @@ from app.models.user import User
 from app.models.user_supplement import UserSupplement
 from app.schemas.common import PaginatedResponse
 from app.schemas.supplement import (
+    SupplementRefillItemResponse,
+    SupplementRefillRequestResponse,
     UserSupplementCreate,
     UserSupplementResponse,
     UserSupplementUpdate,
@@ -19,6 +21,33 @@ from app.services.daily_plan import resolve_user_date
 from app.services.user_supplement_serialization import serialize_user_supplement
 
 router = APIRouter(prefix="/users/me/supplements", tags=["user-supplements"])
+
+
+def _supplement_refill_request_text(items: list[UserSupplement]) -> str:
+    if not items:
+        return "No active supplements are currently marked as out of stock."
+
+    lines = [
+        "Hello Doctor,",
+        "",
+        "I have run out of the following supplements and would like renewed prescriptions or order guidance for them:",
+        "",
+    ]
+    for item in items:
+        regimen = f"{float(item.dosage_amount):g} {item.dosage_unit} · {item.frequency.value.replace('_', ' ')} · {item.take_window.value.replace('_', ' ')}"
+        lines.append(f"- {item.supplement.name}: {regimen}")
+        if item.notes:
+            lines.append(f"  Notes: {item.notes}")
+
+    lines.extend(
+        [
+            "",
+            "Please let me know if you need any additional context or updates to this regimen.",
+            "",
+            "Thank you.",
+        ]
+    )
+    return "\n".join(lines)
 
 @router.get("", response_model=PaginatedResponse[UserSupplementResponse])
 async def list_user_supplements(
@@ -45,6 +74,38 @@ async def list_user_supplements(
         page=page,
         page_size=page_size,
         has_more=(offset + page_size) < total,
+    )
+
+
+@router.get("/refill-request", response_model=SupplementRefillRequestResponse)
+async def get_supplement_refill_request(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(
+        select(UserSupplement).where(
+            UserSupplement.user_id == current_user.id,
+            UserSupplement.is_active.is_(True),
+            UserSupplement.is_out_of_stock.is_(True),
+        )
+    )
+    user_supplements = list(result.scalars().all())
+    user_supplements.sort(key=lambda item: item.created_at)
+
+    return SupplementRefillRequestResponse(
+        items=[
+            SupplementRefillItemResponse(
+                user_supplement_id=item.id,
+                supplement_name=item.supplement.name,
+                dosage_amount=float(item.dosage_amount),
+                dosage_unit=item.dosage_unit,
+                frequency=item.frequency,
+                take_window=item.take_window,
+                notes=item.notes,
+            )
+            for item in user_supplements
+        ],
+        text=_supplement_refill_request_text(user_supplements),
     )
 
 
@@ -95,6 +156,7 @@ async def add_user_supplement(
         frequency=data.frequency,
         take_window=data.take_window,
         with_food=data.with_food,
+        is_out_of_stock=data.is_out_of_stock,
         notes=data.notes,
         started_at=data.started_at,
     )
