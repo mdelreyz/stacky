@@ -4,6 +4,7 @@ export interface TrackingOverview {
   window_days: number;
   start_date: string;
   end_date: string;
+  item_type_filter: "supplement" | "medication" | "therapy" | null;
   scheduled_count: number;
   taken_count: number;
   skipped_count: number;
@@ -33,6 +34,7 @@ export interface TrackingEvent {
   item_id: string;
   item_name: string;
   item_type: "supplement" | "medication" | "therapy";
+  take_window: TakeWindow | null;
   status: "taken" | "skipped";
   scheduled_at: string;
   taken_at: string | null;

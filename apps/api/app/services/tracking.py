@@ -1,4 +1,5 @@
 from datetime import date, timedelta
+from typing import Literal
 
 from sqlalchemy import select
 
@@ -6,7 +7,7 @@ from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
 from app.models.user import User
 from app.models.user_medication import UserMedication
-from app.models.user_supplement import UserSupplement
+from app.models.user_supplement import TakeWindow, UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.services.daily_plan import adherence_status_for_logs
 from app.services.regimen_schedule import (
@@ -15,6 +16,8 @@ from app.services.regimen_schedule import (
     resolve_user_date,
     scheduled_regimen_items_for_date,
 )
+
+TrackingItemType = Literal["supplement", "medication", "therapy"]
 
 
 def _item_name(item: UserSupplement | UserMedication | UserTherapy) -> str:
@@ -27,6 +30,24 @@ def _item_name(item: UserSupplement | UserMedication | UserTherapy) -> str:
 
 def _log_status(log: AdherenceLog) -> str:
     return "taken" if log.taken_at is not None else "skipped"
+
+
+def _item_type_label(item_type: TrackingItemType | None) -> str:
+    return {
+        None: "plan",
+        "supplement": "supplement plan",
+        "medication": "medication plan",
+        "therapy": "modality plan",
+    }[item_type]
+
+
+def _take_window_from_snapshot(value: str | None) -> TakeWindow | None:
+    if not value:
+        return None
+    for option in TakeWindow:
+        if option.value == value:
+            return option
+    return None
 
 
 def _build_item_suggestion(stat: dict) -> dict | None:
@@ -54,7 +75,13 @@ def _build_item_suggestion(stat: dict) -> dict | None:
     return None
 
 
-async def build_tracking_overview(user: User, *, days: int = 14, end_date: date | None = None) -> dict:
+async def build_tracking_overview(
+    user: User,
+    *,
+    days: int = 14,
+    end_date: date | None = None,
+    item_type: TrackingItemType | None = None,
+) -> dict:
     resolved_end_date, user_tz = resolve_user_date(end_date, user.timezone)
     start_date = resolved_end_date - timedelta(days=days - 1)
     schedule_context = await load_regimen_schedule_context(user)
@@ -63,13 +90,14 @@ async def build_tracking_overview(user: User, *, days: int = 14, end_date: date 
     _, end_utc = adherence_day_bounds(resolved_end_date, user_tz)
 
     async with async_session_factory() as session:
-        result = await session.execute(
-            select(AdherenceLog).where(
-                AdherenceLog.user_id == user.id,
-                AdherenceLog.scheduled_at >= start_utc,
-                AdherenceLog.scheduled_at < end_utc,
-            )
+        query = select(AdherenceLog).where(
+            AdherenceLog.user_id == user.id,
+            AdherenceLog.scheduled_at >= start_utc,
+            AdherenceLog.scheduled_at < end_utc,
         )
+        if item_type is not None:
+            query = query.where(AdherenceLog.item_type == item_type)
+        result = await session.execute(query)
         logs = list(result.scalars().all())
 
     logs_by_occurrence: dict[tuple[str, str, date], list[AdherenceLog]] = {}
@@ -88,6 +116,8 @@ async def build_tracking_overview(user: User, *, days: int = 14, end_date: date 
     for day_offset in range(days):
         target_day = start_date + timedelta(days=day_offset)
         scheduled_items = scheduled_regimen_items_for_date(schedule_context, target_day)
+        if item_type is not None:
+            scheduled_items = [scheduled_item for scheduled_item in scheduled_items if scheduled_item.item_type == item_type]
         if not scheduled_items:
             day_completion[target_day] = None
             continue
@@ -103,7 +133,7 @@ async def build_tracking_overview(user: User, *, days: int = 14, end_date: date 
                     "item_name": _item_name(item),
                     "item_type": scheduled_item.item_type,
                     "take_window": item.take_window,
-                    "regimes": scheduled_item.active_protocol_names,
+                    "regimes": scheduled_item.active_protocol_names or scheduled_item.protocol_names,
                     "scheduled_count": 0,
                     "taken_count": 0,
                     "skipped_count": 0,
@@ -158,8 +188,8 @@ async def build_tracking_overview(user: User, *, days: int = 14, end_date: date 
                 "item_id": None,
                 "item_name": None,
                 "item_type": "overall",
-                "headline": "Your plan looks dense",
-                "recommendation": "Completion has been low across the active plan. Consider splitting items into alternate or vacation regimes instead of keeping everything active at once.",
+                "headline": f"Your {_item_type_label(item_type)} looks dense",
+                "recommendation": "Completion has been low. Consider splitting items into alternate or vacation regimes instead of keeping everything active at once.",
             }
         )
     for stat in sorted_stats:
@@ -177,13 +207,15 @@ async def build_tracking_overview(user: User, *, days: int = 14, end_date: date 
         recent_events.append(
             {
                 "item_id": str(log.item_id),
-                "item_name": stat["item_name"] if stat else "Tracked item",
+                "item_name": log.item_name_snapshot or (stat["item_name"] if stat else "Tracked item"),
                 "item_type": log.item_type,
+                "take_window": _take_window_from_snapshot(log.take_window_snapshot)
+                or (stat["take_window"] if stat else None),
                 "status": _log_status(log),
                 "scheduled_at": log.scheduled_at,
                 "taken_at": log.taken_at,
                 "skip_reason": log.skip_reason,
-                "regimes": stat["regimes"] if stat else [],
+                "regimes": list(log.regimes_snapshot or (stat["regimes"] if stat else [])),
             }
         )
 
@@ -193,6 +225,7 @@ async def build_tracking_overview(user: User, *, days: int = 14, end_date: date 
         "window_days": days,
         "start_date": start_date,
         "end_date": resolved_end_date,
+        "item_type_filter": item_type,
         "scheduled_count": scheduled_count,
         "taken_count": taken_count,
         "skipped_count": skipped_count,

@@ -10,6 +10,7 @@ class TrackingEventResponse(BaseModel):
     item_id: str
     item_name: str
     item_type: Literal["supplement", "medication", "therapy"]
+    take_window: TakeWindow | None
     status: Literal["taken", "skipped"]
     scheduled_at: datetime
     taken_at: datetime | None
@@ -43,6 +44,7 @@ class TrackingOverviewResponse(BaseModel):
     window_days: int
     start_date: date
     end_date: date
+    item_type_filter: Literal["supplement", "medication", "therapy"] | None
     scheduled_count: int
     taken_count: int
     skipped_count: int

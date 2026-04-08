@@ -2,6 +2,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, func
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.database import UUID, Base
@@ -18,6 +19,9 @@ class AdherenceLog(Base):
     )
     item_type: Mapped[str] = mapped_column(String(20), nullable=False)  # "supplement", "medication", or "therapy"
     item_id: Mapped[uuid.UUID] = mapped_column(UUID(), nullable=False)
+    item_name_snapshot: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    take_window_snapshot: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    regimes_snapshot: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
     scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     taken_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     skipped: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

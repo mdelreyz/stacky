@@ -155,6 +155,15 @@ def adherence_log_count():
     return asyncio.run(_count())
 
 
+def fetch_logs():
+    async def _fetch():
+        async with async_session_factory() as session:
+            result = await session.execute(select(AdherenceLog).order_by(AdherenceLog.created_at))
+            return list(result.scalars().all())
+
+    return asyncio.run(_fetch())
+
+
 def test_mark_supplement_taken_then_skipped_updates_existing_log(client):
     headers, user_id = signup(client)
     supplement_id = create_supplement("Vitamin C")
@@ -183,6 +192,10 @@ def test_mark_supplement_taken_then_skipped_updates_existing_log(client):
     assert plan_response.status_code == 200
     windows = {window["window"]: window for window in plan_response.json()["windows"]}
     assert windows["morning_with_food"]["items"][0]["adherence_status"] == "skipped"
+    adherence_log = fetch_logs()[0]
+    assert adherence_log.item_name_snapshot == "Vitamin C"
+    assert adherence_log.take_window_snapshot == "morning_with_food"
+    assert adherence_log.regimes_snapshot == []
 
 
 def test_marking_not_due_supplement_returns_400(client):
@@ -229,6 +242,34 @@ def test_marking_supplement_in_inactive_regime_returns_400(client):
 
     assert response.status_code == 400
     assert response.json()["detail"] == "This supplement is not scheduled for that date"
+
+
+def test_adherence_snapshots_active_regime_names(client):
+    headers, user_id = signup(client)
+    supplement_id = create_supplement("Creatine")
+    user_supplement_id = create_user_supplement(user_id, supplement_id)
+
+    protocol_response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Vacation Stack",
+            "schedule": {"type": "manual", "manual_is_active": True},
+            "user_supplement_ids": [str(user_supplement_id)],
+        },
+        headers=headers,
+    )
+    assert protocol_response.status_code == 201
+
+    response = client.post(
+        f"/api/v1/users/me/adherence/supplements/{user_supplement_id}",
+        json={"status": "taken", "date": "2026-04-08"},
+        headers=headers,
+    )
+    assert response.status_code == 200
+
+    adherence_log = fetch_logs()[0]
+    assert adherence_log.item_name_snapshot == "Creatine"
+    assert adherence_log.regimes_snapshot == ["Vacation Stack"]
 
 
 def test_mark_therapy_taken_updates_daily_plan(client):

@@ -3,7 +3,9 @@ from datetime import date, datetime, timezone
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
+from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
+from app.models.user_medication import UserMedication
 from app.models.user_supplement import TakeWindow, UserSupplement
 
 
@@ -33,6 +35,18 @@ def create_supplement(name: str):
     return asyncio.run(_create())
 
 
+def create_medication(name: str):
+    async def _create():
+        async with async_session_factory() as session:
+            medication = Medication(name=name, category=MedicationCategory.prescription, form="tablet")
+            session.add(medication)
+            await session.commit()
+            await session.refresh(medication)
+            return medication.id
+
+    return asyncio.run(_create())
+
+
 def create_user_supplement(user_id: str, supplement_id):
     async def _create():
         async with async_session_factory() as session:
@@ -54,14 +68,48 @@ def create_user_supplement(user_id: str, supplement_id):
     return asyncio.run(_create())
 
 
-def create_log(user_id: str, item_id, *, scheduled_at: datetime, taken_at: datetime | None = None, skipped: bool = False):
+def create_user_medication(user_id: str, medication_id):
+    async def _create():
+        async with async_session_factory() as session:
+            user_medication = UserMedication(
+                user_id=user_id,
+                medication_id=medication_id,
+                dosage_amount=1,
+                dosage_unit="tablet",
+                frequency="daily",
+                take_window=TakeWindow.evening,
+                started_at=date(2026, 4, 1),
+            )
+            session.add(user_medication)
+            await session.commit()
+            await session.refresh(user_medication)
+            return user_medication.id
+
+    return asyncio.run(_create())
+
+
+def create_log(
+    user_id: str,
+    item_id,
+    *,
+    item_type: str = "supplement",
+    scheduled_at: datetime,
+    taken_at: datetime | None = None,
+    skipped: bool = False,
+    item_name_snapshot: str | None = None,
+    take_window_snapshot: str | None = None,
+    regimes_snapshot: list[str] | None = None,
+):
     async def _create():
         async with async_session_factory() as session:
             session.add(
                 AdherenceLog(
                     user_id=user_id,
-                    item_type="supplement",
+                    item_type=item_type,
                     item_id=item_id,
+                    item_name_snapshot=item_name_snapshot,
+                    take_window_snapshot=take_window_snapshot,
+                    regimes_snapshot=regimes_snapshot,
                     scheduled_at=scheduled_at,
                     taken_at=taken_at,
                     skipped=skipped,
@@ -126,3 +174,46 @@ def test_tracking_overview_counts_pending_scheduled_items(client):
     assert body["taken_count"] == 0
     assert body["pending_count"] == 3
     assert body["suggestions"][0]["item_type"] in {"overall", "supplement"}
+
+
+def test_tracking_overview_can_filter_by_item_type(client):
+    headers, user_id = signup(client)
+    magnesium_id = create_supplement("Magnesium")
+    finasteride_id = create_medication("Finasteride")
+    create_user_supplement(user_id, magnesium_id)
+    create_user_medication(user_id, finasteride_id)
+
+    response = client.get(
+        "/api/v1/users/me/tracking/overview?days=2&end_date=2026-04-08&item_type=medication",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["item_type_filter"] == "medication"
+    assert body["scheduled_count"] == 2
+    assert all(item["item_type"] == "medication" for item in body["item_stats"])
+
+
+def test_tracking_recent_events_use_snapshots_when_live_context_changes(client):
+    headers, user_id = signup(client)
+
+    response = client.get("/api/v1/users/me/tracking/overview?days=1&end_date=2026-04-08", headers=headers)
+    assert response.status_code == 200
+
+    create_log(
+        user_id,
+        "00000000-0000-0000-0000-000000000111",
+        scheduled_at=datetime(2026, 4, 8, 20, 0, tzinfo=timezone.utc),
+        taken_at=datetime(2026, 4, 8, 20, 10, tzinfo=timezone.utc),
+        item_name_snapshot="Archived Magnesium",
+        take_window_snapshot="evening",
+        regimes_snapshot=["Vacation Stack"],
+    )
+
+    response = client.get("/api/v1/users/me/tracking/overview?days=1&end_date=2026-04-08", headers=headers)
+    assert response.status_code == 200
+    body = response.json()
+    assert body["recent_events"][0]["item_name"] == "Archived Magnesium"
+    assert body["recent_events"][0]["take_window"] == "evening"
+    assert body["recent_events"][0]["regimes"] == ["Vacation Stack"]

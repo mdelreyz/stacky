@@ -34,6 +34,9 @@ Last updated: 2026-04-08
   - daily-plan visibility and adherence writes now share one regimen-schedule service, which removes drift between what the user sees and what they can mark complete
   - protocol schedule state moved into a dedicated mobile helper and schedule section instead of inflating one catch-all form with more inline conditionals
   - execution statistics now live behind a neutral tracking route and screen that can later join with biomarker or wearable data without changing the daily checklist flow
+- The seventh pass landed with tracking hardening:
+  - adherence events now snapshot item/regime context so recent history does not drift when names or memberships change later
+  - tracking can now be filtered by supplements, medications, or modalities instead of forcing one blended analytics view
 
 ## Open findings
 
@@ -79,7 +82,7 @@ Last updated: 2026-04-08
 4. Decide whether historical tracking should snapshot protocol membership at completion time before deeper outcome analysis lands.
    - [apps/api/app/models/adherence.py](apps/api/app/models/adherence.py)
    - [apps/api/app/services/tracking.py](apps/api/app/services/tracking.py)
-   - Current tracking intentionally joins adherence logs against live regimen definitions. That is good enough for execution analytics now, but future causal work with biomarkers may justify snapshotting active regimes per event.
+   - Item name, take window, and regime snapshots now exist on adherence events, but deeper biomarker analysis may still justify fuller protocol or dosage snapshots per event.
 
 ## Next refactor slice
 
@@ -87,5 +90,5 @@ Last updated: 2026-04-08
 2. Split `ProtocolForm` selection state again if another regimen family is added to stacks beyond the new schedule section.
 3. Extract a reusable multi-phase nutrition editor if nutrition plans need more than one phase in the UI.
 4. Add light frontend coverage around Today refresh behavior, regime scheduling, UV guidance, and tracking navigation once a test harness is introduced.
-5. Decide whether adherence events should snapshot active regime membership before biomarker-driven optimization work begins.
+5. Decide whether adherence events should snapshot dosage/session settings before biomarker-driven optimization work begins.
 6. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.

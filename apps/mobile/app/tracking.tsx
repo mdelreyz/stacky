@@ -1,6 +1,6 @@
 import type { ComponentProps, ReactNode } from "react";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useLocalSearchParams } from "expo-router";
 
@@ -14,11 +14,12 @@ export default function TrackingScreen() {
   const { endDate } = useLocalSearchParams<{ endDate?: string }>();
   const [overview, setOverview] = useState<TrackingOverview | null>(null);
   const [loading, setLoading] = useState(true);
+  const [itemTypeFilter, setItemTypeFilter] = useState<"supplement" | "medication" | "therapy" | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     trackingApi
-      .overview({ days: 14, endDate })
+      .overview({ days: 14, endDate, itemType: itemTypeFilter ?? undefined })
       .then((result) => {
         if (!cancelled) {
           setOverview(result);
@@ -37,7 +38,7 @@ export default function TrackingScreen() {
     return () => {
       cancelled = true;
     };
-  }, [endDate]);
+  }, [endDate, itemTypeFilter]);
 
   if (loading) {
     return (
@@ -64,6 +65,24 @@ export default function TrackingScreen() {
 
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>Execution Overview</Text>
+        <View style={styles.filterRow}>
+          <FilterChip label="All" selected={itemTypeFilter === null} onPress={() => setItemTypeFilter(null)} />
+          <FilterChip
+            label="Supplements"
+            selected={itemTypeFilter === "supplement"}
+            onPress={() => setItemTypeFilter("supplement")}
+          />
+          <FilterChip
+            label="Medications"
+            selected={itemTypeFilter === "medication"}
+            onPress={() => setItemTypeFilter("medication")}
+          />
+          <FilterChip
+            label="Modalities"
+            selected={itemTypeFilter === "therapy"}
+            onPress={() => setItemTypeFilter("therapy")}
+          />
+        </View>
         <View style={styles.summaryGrid}>
           <SummaryMetric label="Completion" value={`${Math.round(overview.completion_rate * 100)}%`} />
           <SummaryMetric label="Streak" value={`${overview.current_streak_days} days`} />
@@ -115,6 +134,9 @@ export default function TrackingScreen() {
                 {event.item_name} · {event.status === "taken" ? "Taken" : "Skipped"}
               </Text>
               <Text style={styles.listMeta}>{formatEventTimestamp(event.taken_at ?? event.scheduled_at)}</Text>
+              {event.take_window ? (
+                <Text style={styles.listBody}>Window: {event.take_window.replace(/_/g, " ")}</Text>
+              ) : null}
               {event.regimes.length > 0 ? <Text style={styles.listBody}>Regime: {event.regimes.join(", ")}</Text> : null}
               {event.skip_reason ? <Text style={styles.listBody}>Reason: {event.skip_reason}</Text> : null}
             </View>
@@ -133,6 +155,22 @@ function SummaryMetric({ label, value }: { label: string; value: string }) {
       <Text style={styles.metricValue}>{value}</Text>
       <Text style={styles.metricLabel}>{label}</Text>
     </View>
+  );
+}
+
+function FilterChip({
+  label,
+  selected,
+  onPress,
+}: {
+  label: string;
+  selected: boolean;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable style={[styles.filterChip, selected && styles.filterChipSelected]} onPress={onPress}>
+      <Text style={[styles.filterChipText, selected && styles.filterChipTextSelected]}>{label}</Text>
+    </Pressable>
   );
 }
 
@@ -198,6 +236,29 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     gap: 10,
     marginTop: 14,
+  },
+  filterRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 8,
+    marginTop: 14,
+  },
+  filterChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 999,
+    backgroundColor: "#f1f3f5",
+  },
+  filterChipSelected: {
+    backgroundColor: "#e7f5ff",
+  },
+  filterChipText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#495057",
+  },
+  filterChipTextSelected: {
+    color: "#1c7ed6",
   },
   metricCard: {
     flexBasis: "47%",

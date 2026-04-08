@@ -45,6 +45,12 @@ class RegimenScheduleContext:
     protocols_by_item_key: dict[tuple[str, str], list[Protocol]]
 
 
+@dataclass(slots=True)
+class RegimenMembership:
+    protocol_names: list[str]
+    active_protocol_names: list[str]
+
+
 def resolve_user_date(target_date: date | None, timezone_name: str | None) -> tuple[date, ZoneInfo]:
     try:
         user_tz = ZoneInfo(timezone_name or "UTC")
@@ -160,12 +166,44 @@ def is_regimen_item_scheduled_for_date(
     if not is_due_by_frequency(item, target_date):
         return False
 
-    protocols = context.protocols_by_item_key.get((item_type, str(item.id)), [])
-    scheduled_protocols = [protocol for protocol in protocols if protocol_has_schedule(protocol)]
+    membership = regimen_membership_for_item(context, item_type=item_type, item=item, target_date=target_date)
+    scheduled_protocols = [
+        protocol for protocol in context.protocols_by_item_key.get((item_type, str(item.id)), []) if protocol_has_schedule(protocol)
+    ]
     if not scheduled_protocols:
         return True
 
-    return any(protocol_is_available_on_date(protocol, target_date) for protocol in scheduled_protocols)
+    return bool(membership.active_protocol_names)
+
+
+def regimen_membership_for_item(
+    context: RegimenScheduleContext,
+    *,
+    item_type: ItemType,
+    item: ScheduleItem,
+    target_date: date,
+) -> RegimenMembership:
+    protocols = context.protocols_by_item_key.get((item_type, str(item.id)), [])
+    active_protocol_names = [
+        protocol.name for protocol in protocols if protocol_is_available_on_date(protocol, target_date)
+    ]
+    return RegimenMembership(
+        protocol_names=[protocol.name for protocol in protocols],
+        active_protocol_names=active_protocol_names,
+    )
+
+
+def adherence_regime_snapshot_for_item(
+    context: RegimenScheduleContext,
+    *,
+    item_type: ItemType,
+    item: ScheduleItem,
+    target_date: date,
+) -> list[str]:
+    membership = regimen_membership_for_item(context, item_type=item_type, item=item, target_date=target_date)
+    if membership.active_protocol_names:
+        return membership.active_protocol_names
+    return membership.protocol_names
 
 
 def scheduled_regimen_items_for_date(
@@ -190,15 +228,13 @@ def _scheduled_items_for_type(
         if not is_regimen_item_scheduled_for_date(context, item_type=item_type, item=item, target_date=target_date):
             continue
 
-        protocols = context.protocols_by_item_key.get((item_type, str(item.id)), [])
+        membership = regimen_membership_for_item(context, item_type=item_type, item=item, target_date=target_date)
         scheduled_items.append(
             ScheduledRegimenItem(
                 item_type=item_type,
                 item=item,
-                protocol_names=[protocol.name for protocol in protocols],
-                active_protocol_names=[
-                    protocol.name for protocol in protocols if protocol_is_available_on_date(protocol, target_date)
-                ],
+                protocol_names=membership.protocol_names,
+                active_protocol_names=membership.active_protocol_names,
             )
         )
 

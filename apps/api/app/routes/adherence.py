@@ -15,6 +15,7 @@ from app.models.user_therapy import UserTherapy
 from app.schemas.adherence import AdherenceResponse, AdherenceUpdateRequest
 from app.services.regimen_schedule import (
     adherence_day_bounds,
+    adherence_regime_snapshot_for_item,
     is_regimen_item_scheduled_for_date,
     load_regimen_schedule_context,
     resolve_user_date,
@@ -29,6 +30,8 @@ async def _upsert_adherence(
     item_type: str,
     item_id: uuid.UUID,
     take_window,
+    item_name_snapshot: str,
+    regimes_snapshot: list[str],
     current_user: User,
     data: AdherenceUpdateRequest,
     session: AsyncSession,
@@ -59,6 +62,9 @@ async def _upsert_adherence(
         session.add(adherence_log)
 
     adherence_log.scheduled_at = scheduled_at
+    adherence_log.item_name_snapshot = item_name_snapshot
+    adherence_log.take_window_snapshot = take_window.value if hasattr(take_window, "value") else str(take_window)
+    adherence_log.regimes_snapshot = regimes_snapshot
     if data.status == "taken":
         adherence_log.taken_at = datetime.now(timezone.utc)
         adherence_log.skipped = False
@@ -112,6 +118,13 @@ async def upsert_supplement_adherence(
         item_type="supplement",
         item_id=user_supplement.id,
         take_window=user_supplement.take_window,
+        item_name_snapshot=user_supplement.supplement.name,
+        regimes_snapshot=adherence_regime_snapshot_for_item(
+            schedule_context,
+            item_type="supplement",
+            item=user_supplement,
+            target_date=target_date,
+        ),
         current_user=current_user,
         data=data,
         session=session,
@@ -150,6 +163,13 @@ async def upsert_therapy_adherence(
         item_type="therapy",
         item_id=user_therapy.id,
         take_window=user_therapy.take_window,
+        item_name_snapshot=user_therapy.therapy.name,
+        regimes_snapshot=adherence_regime_snapshot_for_item(
+            schedule_context,
+            item_type="therapy",
+            item=user_therapy,
+            target_date=target_date,
+        ),
         current_user=current_user,
         data=data,
         session=session,
@@ -188,6 +208,13 @@ async def upsert_medication_adherence(
         item_type="medication",
         item_id=user_medication.id,
         take_window=user_medication.take_window,
+        item_name_snapshot=user_medication.medication.name,
+        regimes_snapshot=adherence_regime_snapshot_for_item(
+            schedule_context,
+            item_type="medication",
+            item=user_medication,
+            target_date=target_date,
+        ),
         current_user=current_user,
         data=data,
         session=session,

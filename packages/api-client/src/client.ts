@@ -270,10 +270,12 @@ export class ProtocolsAPI {
   async getTrackingOverview(params?: {
     days?: number;
     end_date?: string;
+    item_type?: "supplement" | "medication" | "therapy";
   }): Promise<TrackingOverview> {
     const query = new URLSearchParams();
     if (params?.days) query.set("days", String(params.days));
     if (params?.end_date) query.set("end_date", params.end_date);
+    if (params?.item_type) query.set("item_type", params.item_type);
     const qs = query.toString();
     return this.request(`/api/v1/users/me/tracking/overview${qs ? `?${qs}` : ""}`);
   }

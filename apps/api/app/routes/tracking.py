@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
 
@@ -14,8 +15,9 @@ router = APIRouter(prefix="/users/me/tracking", tags=["tracking"])
 async def get_tracking_overview(
     days: int = Query(14, ge=1, le=90),
     end_date: date | None = Query(default=None),
+    item_type: Literal["supplement", "medication", "therapy"] | None = Query(default=None),
     current_user: User = Depends(get_current_user),
 ):
     return TrackingOverviewResponse.model_validate(
-        await build_tracking_overview(current_user, days=days, end_date=end_date)
+        await build_tracking_overview(current_user, days=days, end_date=end_date, item_type=item_type)
     )
