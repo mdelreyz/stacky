@@ -13,7 +13,18 @@ from app.models.user_medication import UserMedication
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.schemas.common import PaginatedResponse
-from app.schemas.protocol import ProtocolCreate, ProtocolItemResponse, ProtocolResponse, ProtocolUpdate
+from app.schemas.protocol import (
+    ProtocolCreate,
+    ProtocolItemResponse,
+    ProtocolResponse,
+    ProtocolScheduleResponse,
+    ProtocolUpdate,
+)
+from app.services.protocol_schedule import (
+    protocol_is_currently_active,
+    protocol_schedule_payload,
+    protocol_schedule_summary,
+)
 from app.services.user_medication_serialization import serialize_user_medication
 from app.services.user_supplement_serialization import serialize_user_supplement
 from app.services.user_therapy_serialization import serialize_user_therapy
@@ -32,7 +43,7 @@ def _dedupe_ids(ids: list[uuid.UUID], item_label: str) -> list[uuid.UUID]:
     return ordered
 
 
-async def _serialize_protocol(protocol: Protocol) -> ProtocolResponse:
+async def _serialize_protocol(protocol: Protocol, *, timezone_name: str | None) -> ProtocolResponse:
     items: list[ProtocolItemResponse] = []
     for item in protocol.items:
         items.append(
@@ -46,11 +57,15 @@ async def _serialize_protocol(protocol: Protocol) -> ProtocolResponse:
             )
         )
 
+    schedule_payload = protocol_schedule_payload(protocol)
     return ProtocolResponse(
         id=protocol.id,
         name=protocol.name,
         description=protocol.description,
         is_active=protocol.is_active,
+        schedule=ProtocolScheduleResponse.model_validate(schedule_payload) if schedule_payload is not None else None,
+        schedule_summary=protocol_schedule_summary(protocol),
+        is_currently_active=protocol_is_currently_active(protocol, timezone_name=timezone_name),
         items=items,
         created_at=protocol.created_at,
     )
@@ -198,6 +213,22 @@ async def _replace_protocol_items(
         )
 
 
+def _apply_protocol_schedule(protocol: Protocol, schedule_data) -> None:
+    if schedule_data is None:
+        protocol.schedule_type = None
+        protocol.manual_is_active = False
+        protocol.schedule_start_date = None
+        protocol.schedule_end_date = None
+        protocol.weeks_of_month = None
+        return
+
+    protocol.schedule_type = schedule_data.type
+    protocol.manual_is_active = bool(schedule_data.manual_is_active)
+    protocol.schedule_start_date = schedule_data.start_date
+    protocol.schedule_end_date = schedule_data.end_date
+    protocol.weeks_of_month = list(schedule_data.weeks_of_month or []) or None
+
+
 @router.get("", response_model=PaginatedResponse[ProtocolResponse])
 async def list_protocols(
     page: int = Query(1, ge=1),
@@ -218,7 +249,7 @@ async def list_protocols(
     protocols = list(result.scalars().all())
 
     return PaginatedResponse(
-        items=[await _serialize_protocol(protocol) for protocol in protocols],
+        items=[await _serialize_protocol(protocol, timezone_name=current_user.timezone) for protocol in protocols],
         total=total,
         page=page,
         page_size=page_size,
@@ -238,7 +269,7 @@ async def get_protocol(
     protocol = result.scalar_one_or_none()
     if not protocol:
         raise HTTPException(status_code=404, detail="Protocol not found")
-    return await _serialize_protocol(protocol)
+    return await _serialize_protocol(protocol, timezone_name=current_user.timezone)
 
 
 @router.post("", response_model=ProtocolResponse, status_code=201)
@@ -255,6 +286,7 @@ async def create_protocol(
         name=data.name,
         description=data.description,
     )
+    _apply_protocol_schedule(protocol, data.schedule)
     session.add(protocol)
     await session.flush()
     await _replace_protocol_items(
@@ -271,7 +303,7 @@ async def create_protocol(
         _protocol_query_for_user(current_user.id).where(Protocol.id == protocol.id)
     )
     created_protocol = result.scalar_one()
-    return await _serialize_protocol(created_protocol)
+    return await _serialize_protocol(created_protocol, timezone_name=current_user.timezone)
 
 
 @router.patch("/{protocol_id}", response_model=ProtocolResponse)
@@ -292,8 +324,12 @@ async def update_protocol(
     user_supplement_ids = update_data.pop("user_supplement_ids", None)
     user_medication_ids = update_data.pop("user_medication_ids", None)
     user_therapy_ids = update_data.pop("user_therapy_ids", None)
+    update_data.pop("schedule", None)
     for key, value in update_data.items():
         setattr(protocol, key, value)
+
+    if "schedule" in data.model_fields_set:
+        _apply_protocol_schedule(protocol, data.schedule)
 
     if user_supplement_ids is not None or user_medication_ids is not None or user_therapy_ids is not None:
         resolved_user_supplement_ids = user_supplement_ids
@@ -334,7 +370,7 @@ async def update_protocol(
         _protocol_query_for_user(current_user.id).where(Protocol.id == protocol.id)
     )
     updated_protocol = refreshed_result.scalar_one()
-    return await _serialize_protocol(updated_protocol)
+    return await _serialize_protocol(updated_protocol, timezone_name=current_user.timezone)
 
 
 @router.delete("/{protocol_id}", status_code=204)

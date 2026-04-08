@@ -22,6 +22,7 @@ export interface DailyPlanItem {
   type: "supplement" | "medication" | "therapy";
   details: string | null;
   instructions: string;
+  regimes: string[];
   is_on_cycle: boolean;
   adherence_status: "pending" | "taken" | "skipped";
 }

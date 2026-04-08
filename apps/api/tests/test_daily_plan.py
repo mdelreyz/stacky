@@ -358,6 +358,7 @@ def test_daily_plan_groups_due_items_by_take_window(client):
         "type": "therapy",
         "details": "16 min · 4 min per side",
         "instructions": "Once daily. Rotate body sides evenly",
+        "regimes": [],
         "is_on_cycle": True,
         "adherence_status": "pending",
     }
@@ -445,6 +446,7 @@ def test_daily_plan_surfaces_interactions_and_adherence(client):
     windows = {window["window"]: window for window in body["windows"]}
     assert windows["morning_with_food"]["items"][0]["adherence_status"] == "taken"
     assert windows["morning_with_food"]["items"][1]["adherence_status"] == "taken"
+    assert windows["morning_with_food"]["items"][1]["regimes"] == []
 
 
 def test_daily_plan_includes_active_nutrition_phase_and_transition_alert(client):
@@ -545,3 +547,81 @@ def test_daily_plan_includes_skincare_guidance_when_uv_data_is_available(client,
         "headline": "High UV exposure",
         "recommendation": "Use SPF 50+, reapply every 2 hours, and add shade, hat, or protective clothing if you will be outside.",
     }
+
+
+def test_daily_plan_only_includes_items_from_active_scheduled_regimes(client):
+    headers, user_id = signup(client)
+
+    creatine_id = create_supplement("Creatine")
+    magnesium_id = create_supplement("Magnesium")
+    creatine_user_item_id = create_user_supplement(user_id, creatine_id)
+    magnesium_user_item_id = create_user_supplement(user_id, magnesium_id)
+
+    response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Vacation Plan",
+            "schedule": {"type": "manual", "manual_is_active": False},
+            "user_supplement_ids": [str(creatine_user_item_id)],
+        },
+        headers=headers,
+    )
+    assert response.status_code == 201
+
+    response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Baseline Stack",
+            "user_supplement_ids": [str(magnesium_user_item_id)],
+        },
+        headers=headers,
+    )
+    assert response.status_code == 201
+
+    plan_response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
+    assert plan_response.status_code == 200
+    scheduled_names = [
+        item["name"]
+        for window in plan_response.json()["windows"]
+        for item in window["items"]
+    ]
+    assert "Creatine" not in scheduled_names
+    assert "Magnesium" in scheduled_names
+
+
+def test_daily_plan_honors_week_of_month_protocol_regimes(client):
+    headers, user_id = signup(client)
+
+    zinc_id = create_supplement("Zinc")
+    zinc_user_item_id = create_user_supplement(user_id, zinc_id)
+
+    response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Week One Reset",
+            "schedule": {"type": "week_of_month", "weeks_of_month": [1]},
+            "user_supplement_ids": [str(zinc_user_item_id)],
+        },
+        headers=headers,
+    )
+    assert response.status_code == 201
+
+    hidden_response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
+    assert hidden_response.status_code == 200
+    hidden_names = [
+        item["name"]
+        for window in hidden_response.json()["windows"]
+        for item in window["items"]
+    ]
+    assert "Zinc" not in hidden_names
+
+    active_response = client.get("/api/v1/users/me/daily-plan?date=2026-04-03", headers=headers)
+    assert active_response.status_code == 200
+    active_items = [
+        item
+        for window in active_response.json()["windows"]
+        for item in window["items"]
+        if item["name"] == "Zinc"
+    ]
+    assert len(active_items) == 1
+    assert active_items[0]["regimes"] == ["Week One Reset"]

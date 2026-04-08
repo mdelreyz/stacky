@@ -13,6 +13,7 @@ class DailyPlanItemResponse(BaseModel):
     type: Literal["supplement", "medication", "therapy"]
     details: str | None
     instructions: str
+    regimes: list[str]
     is_on_cycle: bool
     adherence_status: Literal["pending", "taken", "skipped"]
 

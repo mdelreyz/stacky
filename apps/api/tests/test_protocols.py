@@ -285,3 +285,79 @@ def test_protocol_keeps_inactive_members_visible_and_editable(client):
     )
     assert update_response.status_code == 200
     assert update_response.json()["description"] == "Still references stopped items for cleanup"
+
+
+def test_protocol_can_store_manual_schedule_state(client):
+    headers, user_id = signup(client, "scheduled@example.com")
+    magnesium_id = create_supplement("Magnesium")
+    magnesium_user_id = create_user_supplement(user_id, magnesium_id)
+
+    response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Vacation Stack",
+            "schedule": {"type": "manual", "manual_is_active": True},
+            "user_supplement_ids": [str(magnesium_user_id)],
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["schedule"] == {
+        "type": "manual",
+        "manual_is_active": True,
+        "start_date": None,
+        "end_date": None,
+        "weeks_of_month": [],
+    }
+    assert body["schedule_summary"] == "Manual regime is active"
+    assert body["is_currently_active"] is True
+
+
+def test_protocol_schedule_can_be_cleared(client):
+    headers, user_id = signup(client, "clear-schedule@example.com")
+    magnesium_id = create_supplement("Magnesium")
+    magnesium_user_id = create_user_supplement(user_id, magnesium_id)
+
+    create_response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Reset Stack",
+            "schedule": {"type": "manual", "manual_is_active": False},
+            "user_supplement_ids": [str(magnesium_user_id)],
+        },
+        headers=headers,
+    )
+    assert create_response.status_code == 201
+    protocol_id = create_response.json()["id"]
+
+    update_response = client.patch(
+        f"/api/v1/users/me/protocols/{protocol_id}",
+        json={"schedule": None},
+        headers=headers,
+    )
+
+    assert update_response.status_code == 200
+    body = update_response.json()
+    assert body["schedule"] is None
+    assert body["schedule_summary"] == "Always available"
+    assert body["is_currently_active"] is True
+
+
+def test_protocol_rejects_invalid_week_of_month_schedule(client):
+    headers, user_id = signup(client, "invalid-schedule@example.com")
+    magnesium_id = create_supplement("Magnesium")
+    magnesium_user_id = create_user_supplement(user_id, magnesium_id)
+
+    response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Invalid Schedule",
+            "schedule": {"type": "week_of_month", "weeks_of_month": [0, 2]},
+            "user_supplement_ids": [str(magnesium_user_id)],
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 422

@@ -13,9 +13,10 @@ from app.models.user_medication import UserMedication
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.schemas.adherence import AdherenceResponse, AdherenceUpdateRequest
-from app.services.daily_plan import (
-    _is_due_today,
+from app.services.regimen_schedule import (
     adherence_day_bounds,
+    is_regimen_item_scheduled_for_date,
+    load_regimen_schedule_context,
     resolve_user_date,
     scheduled_datetime_for_window,
 )
@@ -90,6 +91,7 @@ async def upsert_supplement_adherence(
         select(UserSupplement).where(
             UserSupplement.id == user_supplement_id,
             UserSupplement.user_id == current_user.id,
+            UserSupplement.is_active.is_(True),
         )
     )
     user_supplement = result.scalar_one_or_none()
@@ -97,7 +99,13 @@ async def upsert_supplement_adherence(
         raise HTTPException(status_code=404, detail="User supplement not found")
 
     target_date, _user_tz = resolve_user_date(data.date, current_user.timezone)
-    if not _is_due_today(user_supplement, target_date):
+    schedule_context = await load_regimen_schedule_context(current_user)
+    if not is_regimen_item_scheduled_for_date(
+        schedule_context,
+        item_type="supplement",
+        item=user_supplement,
+        target_date=target_date,
+    ):
         raise HTTPException(status_code=400, detail="This supplement is not scheduled for that date")
 
     return await _upsert_adherence(
@@ -121,6 +129,7 @@ async def upsert_therapy_adherence(
         select(UserTherapy).where(
             UserTherapy.id == user_therapy_id,
             UserTherapy.user_id == current_user.id,
+            UserTherapy.is_active.is_(True),
         )
     )
     user_therapy = result.scalar_one_or_none()
@@ -128,7 +137,13 @@ async def upsert_therapy_adherence(
         raise HTTPException(status_code=404, detail="User therapy not found")
 
     target_date, _user_tz = resolve_user_date(data.date, current_user.timezone)
-    if not _is_due_today(user_therapy, target_date):
+    schedule_context = await load_regimen_schedule_context(current_user)
+    if not is_regimen_item_scheduled_for_date(
+        schedule_context,
+        item_type="therapy",
+        item=user_therapy,
+        target_date=target_date,
+    ):
         raise HTTPException(status_code=400, detail="This therapy is not scheduled for that date")
 
     return await _upsert_adherence(
@@ -152,6 +167,7 @@ async def upsert_medication_adherence(
         select(UserMedication).where(
             UserMedication.id == user_medication_id,
             UserMedication.user_id == current_user.id,
+            UserMedication.is_active.is_(True),
         )
     )
     user_medication = result.scalar_one_or_none()
@@ -159,7 +175,13 @@ async def upsert_medication_adherence(
         raise HTTPException(status_code=404, detail="User medication not found")
 
     target_date, _user_tz = resolve_user_date(data.date, current_user.timezone)
-    if not _is_due_today(user_medication, target_date):
+    schedule_context = await load_regimen_schedule_context(current_user)
+    if not is_regimen_item_scheduled_for_date(
+        schedule_context,
+        item_type="medication",
+        item=user_medication,
+        target_date=target_date,
+    ):
         raise HTTPException(status_code=400, detail="This medication is not scheduled for that date")
 
     return await _upsert_adherence(

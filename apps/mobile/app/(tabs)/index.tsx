@@ -14,14 +14,17 @@ import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
 import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
 import { NutritionPhaseCard } from "@/components/today/NutritionPhaseCard";
 import { SkincareGuidanceCard } from "@/components/today/SkincareGuidanceCard";
+import { TrackingSummaryCard } from "@/components/today/TrackingSummaryCard";
 import { TodayDateHeader } from "@/components/today/TodayDateHeader";
 import { getTodayIsoDate, shiftIsoDate } from "@/lib/date";
 import { showError } from "@/lib/errors";
-import type { DailyPlan } from "@/lib/api";
+import { tracking as trackingApi } from "@/lib/api";
+import type { DailyPlan, TrackingOverview } from "@/lib/api";
 
 export default function TodayScreen() {
   const [selectedDate, setSelectedDate] = useState(getTodayIsoDate);
   const [plan, setPlan] = useState<DailyPlan | null>(null);
+  const [trackingOverview, setTrackingOverview] = useState<TrackingOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingActionItemId, setPendingActionItemId] = useState<string | null>(null);
@@ -34,8 +37,22 @@ export default function TodayScreen() {
     }
 
     try {
-      const nextPlan = await dailyPlanApi.get(date);
-      setPlan(nextPlan);
+      const [planResult, trackingResult] = await Promise.allSettled([
+        dailyPlanApi.get(date),
+        trackingApi.overview({ days: 14, endDate: date }),
+      ]);
+
+      if (planResult.status === "rejected") {
+        throw planResult.reason;
+      }
+
+      setPlan(planResult.value);
+      if (trackingResult.status === "fulfilled") {
+        setTrackingOverview(trackingResult.value);
+      } else {
+        console.error("Failed to load tracking overview", trackingResult.reason);
+        setTrackingOverview(null);
+      }
     } catch (error) {
       console.error("Failed to load daily plan", error);
     } finally {
@@ -77,6 +94,7 @@ export default function TodayScreen() {
         onJumpToToday={() => setSelectedDate(getTodayIsoDate())}
       />
 
+      <TrackingSummaryCard overview={trackingOverview} endDate={selectedDate} />
       <NutritionPhaseCard phase={nutritionPhase} />
       <SkincareGuidanceCard guidance={skincareGuidance} />
       <CycleAlertsCard alerts={cycleAlerts} />

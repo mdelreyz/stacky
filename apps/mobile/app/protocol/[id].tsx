@@ -17,6 +17,12 @@ import {
   userTherapies as userTherapiesApi,
 } from "@/lib/api";
 import { showError } from "@/lib/errors";
+import {
+  buildProtocolSchedule,
+  createDefaultProtocolFormState,
+  getProtocolScheduleValidationError,
+  protocolScheduleFromProtocol,
+} from "@/lib/protocol-schedule";
 import type { Protocol, UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
 
 export default function ManageProtocolScreen() {
@@ -27,13 +33,7 @@ export default function ManageProtocolScreen() {
   const [therapies, setTherapies] = useState<UserTherapy[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formState, setFormState] = useState<ProtocolFormState>({
-    name: "",
-    description: "",
-    selectedUserSupplementIds: [],
-    selectedUserMedicationIds: [],
-    selectedUserTherapyIds: [],
-  });
+  const [formState, setFormState] = useState<ProtocolFormState>(createDefaultProtocolFormState);
 
   useEffect(() => {
     if (!id) return;
@@ -63,6 +63,7 @@ export default function ManageProtocolScreen() {
           selectedUserTherapyIds: nextProtocol.items
             .map((item) => item.user_therapy?.id)
             .filter((itemId): itemId is string => Boolean(itemId)),
+          schedule: protocolScheduleFromProtocol(nextProtocol),
         });
       })
       .catch(console.error)
@@ -89,12 +90,18 @@ export default function ManageProtocolScreen() {
       showError("Stacks need at least one item. Delete the stack if you no longer need it.");
       return;
     }
+    const scheduleError = getProtocolScheduleValidationError(formState.schedule);
+    if (scheduleError) {
+      showError(scheduleError);
+      return;
+    }
 
     setSaving(true);
     try {
       await protocolsApi.update(protocol.id, {
         name: formState.name.trim(),
         description: formState.description.trim() || null,
+        schedule: buildProtocolSchedule(formState.schedule),
         user_supplement_ids: formState.selectedUserSupplementIds,
         user_medication_ids: formState.selectedUserMedicationIds,
         user_therapy_ids: formState.selectedUserTherapyIds,

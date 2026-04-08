@@ -7,10 +7,12 @@ import type {
   NutritionCycle,
   NutritionPhase,
   Protocol,
+  ProtocolSchedule,
   Supplement,
   SupplementRefillRequest,
   SupplementAIProfile,
   Therapy,
+  TrackingOverview,
   User,
   UserMedication,
   UserSupplement,
@@ -230,6 +232,7 @@ export class ProtocolsAPI {
   async createProtocol(data: {
     name: string;
     description?: string | null;
+    schedule?: ProtocolSchedule | null;
     user_supplement_ids: string[];
     user_medication_ids?: string[];
     user_therapy_ids?: string[];
@@ -246,6 +249,7 @@ export class ProtocolsAPI {
       name?: string;
       description?: string | null;
       is_active?: boolean;
+      schedule?: ProtocolSchedule | null;
       user_supplement_ids?: string[];
       user_medication_ids?: string[];
       user_therapy_ids?: string[];
@@ -261,6 +265,17 @@ export class ProtocolsAPI {
     return this.request(`/api/v1/users/me/protocols/${id}`, {
       method: "DELETE",
     });
+  }
+
+  async getTrackingOverview(params?: {
+    days?: number;
+    end_date?: string;
+  }): Promise<TrackingOverview> {
+    const query = new URLSearchParams();
+    if (params?.days) query.set("days", String(params.days));
+    if (params?.end_date) query.set("end_date", params.end_date);
+    const qs = query.toString();
+    return this.request(`/api/v1/users/me/tracking/overview${qs ? `?${qs}` : ""}`);
   }
 
   // Supplements catalog

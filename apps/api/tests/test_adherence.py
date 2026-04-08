@@ -205,6 +205,32 @@ def test_marking_not_due_supplement_returns_400(client):
     assert response.json()["detail"] == "This supplement is not scheduled for that date"
 
 
+def test_marking_supplement_in_inactive_regime_returns_400(client):
+    headers, user_id = signup(client)
+    supplement_id = create_supplement("L-Theanine")
+    user_supplement_id = create_user_supplement(user_id, supplement_id)
+
+    protocol_response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Paused Reset",
+            "schedule": {"type": "manual", "manual_is_active": False},
+            "user_supplement_ids": [str(user_supplement_id)],
+        },
+        headers=headers,
+    )
+    assert protocol_response.status_code == 201
+
+    response = client.post(
+        f"/api/v1/users/me/adherence/supplements/{user_supplement_id}",
+        json={"status": "taken", "date": "2026-04-08"},
+        headers=headers,
+    )
+
+    assert response.status_code == 400
+    assert response.json()["detail"] == "This supplement is not scheduled for that date"
+
+
 def test_mark_therapy_taken_updates_daily_plan(client):
     headers, user_id = signup(client)
     therapy_id = create_therapy("Infrared Panel")

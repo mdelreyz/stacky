@@ -22,6 +22,9 @@ export function DailyPlanWindowCard({
               <StatusPill status={item.adherence_status} />
             </View>
             {item.details ? <Text style={styles.itemDetails}>{item.details}</Text> : null}
+            {item.regimes.length > 0 ? (
+              <Text style={styles.itemRegimes}>Regime: {item.regimes.join(", ")}</Text>
+            ) : null}
             <Text style={styles.itemInstructions}>{item.instructions}</Text>
             <AdherenceActions
               item={item}
@@ -163,6 +166,12 @@ const styles = StyleSheet.create({
     color: "#495057",
     marginTop: 4,
     lineHeight: 18,
+  },
+  itemRegimes: {
+    fontSize: 12,
+    color: "#6c757d",
+    marginTop: 6,
+    fontWeight: "600",
   },
   actionsRow: {
     flexDirection: "row",

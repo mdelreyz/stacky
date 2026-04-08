@@ -131,6 +131,10 @@ function RootLayoutNav() {
           name="protocol/[id]"
           options={{ headerShown: false, presentation: "modal" }}
         />
+        <Stack.Screen
+          name="tracking"
+          options={{ headerShown: false }}
+        />
       </Stack>
     </ThemeProvider>
   );

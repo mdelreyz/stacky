@@ -29,6 +29,11 @@ Last updated: 2026-04-08
   - profile location and timezone are now editable instead of being read-only auth metadata
   - Today now uses a forecast-backed UV seam to render skincare guidance when coordinates are available
   - active supplements can be marked out of stock and gathered into a generated refill note instead of relying on ad hoc reminders
+- The sixth pass landed with scheduled regimes and tracking:
+  - protocol stacks now support reusable manual, date-range, and week-of-month schedules instead of forcing regime switching into hardcoded toggles
+  - daily-plan visibility and adherence writes now share one regimen-schedule service, which removes drift between what the user sees and what they can mark complete
+  - protocol schedule state moved into a dedicated mobile helper and schedule section instead of inflating one catch-all form with more inline conditionals
+  - execution statistics now live behind a neutral tracking route and screen that can later join with biomarker or wearable data without changing the daily checklist flow
 
 ## Open findings
 
@@ -71,16 +76,16 @@ Last updated: 2026-04-08
    - [apps/mobile/app/(tabs)/nutrition.tsx](apps/mobile/app/(tabs)/nutrition.tsx)
    - Nutrition now has a coherent dedicated flow. If the product later needs stack composition with diet plans, that should be an explicit convergence decision rather than an ad hoc link from protocol items.
 
-4. Decide whether protocol stacks evolve into calendarized regime schedules or remain static presets.
-   - [apps/api/app/models/protocol.py](apps/api/app/models/protocol.py)
-   - [apps/mobile/components/protocols/ProtocolStacksSection.tsx](apps/mobile/components/protocols/ProtocolStacksSection.tsx)
-   - The user now wants vacation plans and week-of-month switching. That likely requires a dedicated temporal activation model rather than continuing to overload plain stack membership.
+4. Decide whether historical tracking should snapshot protocol membership at completion time before deeper outcome analysis lands.
+   - [apps/api/app/models/adherence.py](apps/api/app/models/adherence.py)
+   - [apps/api/app/services/tracking.py](apps/api/app/services/tracking.py)
+   - Current tracking intentionally joins adherence logs against live regimen definitions. That is good enough for execution analytics now, but future causal work with biomarkers may justify snapshotting active regimes per event.
 
 ## Next refactor slice
 
-1. Design and implement a calendarized regime-scheduling model before expanding vacation plans or week-of-month stack switching.
-2. Extract seed fixtures and regimen taxonomy into dedicated modules before skincare or topical-product catalogs land.
-3. Split `ProtocolForm` selection state if another regimen family is added to stacks.
-4. Extract a reusable multi-phase nutrition editor if nutrition plans need more than one phase in the UI.
-5. Add light frontend coverage around Today refresh behavior, UV guidance, and the Nutrition tab once a test harness is introduced.
+1. Extract seed fixtures and regimen taxonomy into dedicated modules before skincare or topical-product catalogs land.
+2. Split `ProtocolForm` selection state again if another regimen family is added to stacks beyond the new schedule section.
+3. Extract a reusable multi-phase nutrition editor if nutrition plans need more than one phase in the UI.
+4. Add light frontend coverage around Today refresh behavior, regime scheduling, UV guidance, and tracking navigation once a test harness is introduced.
+5. Decide whether adherence events should snapshot active regime membership before biomarker-driven optimization work begins.
 6. Consider centralizing small cross-client response helpers shared by the mobile transport layer and `packages/api-client`.

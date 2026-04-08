@@ -18,6 +18,11 @@ import {
   userTherapies as userTherapiesApi,
 } from "@/lib/api";
 import { showError } from "@/lib/errors";
+import {
+  buildProtocolSchedule,
+  createDefaultProtocolFormState,
+  getProtocolScheduleValidationError,
+} from "@/lib/protocol-schedule";
 import type { UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
 
 export default function AddProtocolScreen() {
@@ -26,13 +31,7 @@ export default function AddProtocolScreen() {
   const [therapies, setTherapies] = useState<UserTherapy[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [formState, setFormState] = useState<ProtocolFormState>({
-    name: "",
-    description: "",
-    selectedUserSupplementIds: [],
-    selectedUserMedicationIds: [],
-    selectedUserTherapyIds: [],
-  });
+  const [formState, setFormState] = useState<ProtocolFormState>(createDefaultProtocolFormState);
 
   useEffect(() => {
     let cancelled = false;
@@ -66,12 +65,18 @@ export default function AddProtocolScreen() {
       showError("Select at least one supplement, medication, or modality for this stack.");
       return;
     }
+    const scheduleError = getProtocolScheduleValidationError(formState.schedule);
+    if (scheduleError) {
+      showError(scheduleError);
+      return;
+    }
 
     setSaving(true);
     try {
       await protocolsApi.create({
         name: formState.name.trim(),
         description: formState.description.trim() || undefined,
+        schedule: buildProtocolSchedule(formState.schedule),
         user_supplement_ids: formState.selectedUserSupplementIds,
         user_medication_ids: formState.selectedUserMedicationIds,
         user_therapy_ids: formState.selectedUserTherapyIds,
@@ -95,7 +100,7 @@ export default function AddProtocolScreen() {
     <ScrollView style={styles.container}>
       <FlowScreenHeader
         title="New Stack"
-        subtitle="Group active supplements into one named protocol"
+        subtitle="Group active supplements into one named protocol or scheduled regime"
       />
 
       {supplements.length === 0 && medications.length === 0 && therapies.length === 0 ? (

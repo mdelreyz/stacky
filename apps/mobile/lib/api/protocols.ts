@@ -1,4 +1,4 @@
-import type { Protocol } from "@protocols/domain";
+import type { Protocol, ProtocolSchedule } from "@protocols/domain";
 
 import { request, type PaginatedResponse } from "./core";
 
@@ -13,6 +13,7 @@ export const protocols = {
   create: (data: {
     name: string;
     description?: string;
+    schedule?: ProtocolSchedule | null;
     user_supplement_ids: string[];
     user_medication_ids?: string[];
     user_therapy_ids?: string[];
@@ -28,6 +29,7 @@ export const protocols = {
       name?: string;
       description?: string | null;
       is_active?: boolean;
+      schedule?: ProtocolSchedule | null;
       user_supplement_ids?: string[];
       user_medication_ids?: string[];
       user_therapy_ids?: string[];

@@ -38,6 +38,24 @@ export function ProtocolStacksSection({ stacks }: { stacks: Protocol[] }) {
                     {stack.items.length} items
                     {names.length > 0 ? ` · ${names.slice(0, 3).join(", ")}` : ""}
                   </Text>
+                  <View style={styles.scheduleRow}>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        stack.is_currently_active ? styles.statusBadgeActive : styles.statusBadgePaused,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.statusBadgeText,
+                          stack.is_currently_active ? styles.statusBadgeTextActive : styles.statusBadgeTextPaused,
+                        ]}
+                      >
+                        {stack.is_currently_active ? "Active now" : "Inactive now"}
+                      </Text>
+                    </View>
+                    <Text style={styles.scheduleSummary}>{stack.schedule_summary}</Text>
+                  </View>
                   {stack.description ? (
                     <Text style={styles.stackDescription}>{stack.description}</Text>
                   ) : null}
@@ -91,5 +109,37 @@ const styles = StyleSheet.create({
   stackInfo: { flex: 1, marginRight: 12 },
   stackName: { fontSize: 15, fontWeight: "700", color: "#212529" },
   stackMeta: { fontSize: 12, color: "#6c757d", marginTop: 4 },
+  scheduleRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  statusBadge: {
+    borderRadius: 999,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  statusBadgeActive: {
+    backgroundColor: "#ebfbee",
+  },
+  statusBadgePaused: {
+    backgroundColor: "#fff5f5",
+  },
+  statusBadgeText: {
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  statusBadgeTextActive: {
+    color: "#2b8a3e",
+  },
+  statusBadgeTextPaused: {
+    color: "#c92a2a",
+  },
+  scheduleSummary: {
+    fontSize: 12,
+    color: "#495057",
+  },
   stackDescription: { fontSize: 13, color: "#495057", marginTop: 6, lineHeight: 18 },
 });

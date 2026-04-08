@@ -1,7 +1,8 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy.dialects.postgresql import JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import UUID, Base
@@ -19,6 +20,11 @@ class Protocol(Base):
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    schedule_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
+    manual_is_active: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    schedule_start_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    schedule_end_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    weeks_of_month: Mapped[list[int] | None] = mapped_column(JSON, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False

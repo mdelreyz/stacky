@@ -2,17 +2,13 @@ import type { Dispatch, SetStateAction } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { ProtocolScheduleSection } from "@/components/protocols/ProtocolScheduleSection";
 import type { UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
+import type { ProtocolFormState } from "@/lib/protocol-schedule";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { readTherapySettings } from "@/lib/therapy-settings";
 
-export interface ProtocolFormState {
-  name: string;
-  description: string;
-  selectedUserSupplementIds: string[];
-  selectedUserMedicationIds: string[];
-  selectedUserTherapyIds: string[];
-}
+export type { ProtocolFormState } from "@/lib/protocol-schedule";
 
 export function ProtocolForm({
   state,
@@ -57,6 +53,8 @@ export function ProtocolForm({
           placeholderTextColor="#adb5bd"
         />
       </View>
+
+      <ProtocolScheduleSection state={state} setState={setState} />
 
       <View style={styles.card}>
         <View style={styles.selectionHeader}>

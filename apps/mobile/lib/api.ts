@@ -6,6 +6,7 @@ export { nutrition } from "./api/nutrition";
 export { protocols } from "./api/protocols";
 export { supplements } from "./api/supplements";
 export { therapies } from "./api/therapies";
+export { tracking } from "./api/tracking";
 export { userMedications } from "./api/user-medications";
 export { userSupplements } from "./api/user-supplements";
 export { userTherapies } from "./api/user-therapies";
@@ -27,6 +28,8 @@ export type {
   NutritionPhase,
   Protocol,
   ProtocolItem,
+  ProtocolSchedule,
+  ProtocolScheduleType,
   SkincareGuidance,
   Supplement,
   SupplementAdherenceResult,
@@ -34,6 +37,10 @@ export type {
   TakeWindow,
   TakeWindowPlan,
   Therapy,
+  TrackingEvent,
+  TrackingItemStat,
+  TrackingOverview,
+  TrackingSuggestion,
   User,
   UserMedication,
   UserSupplement,

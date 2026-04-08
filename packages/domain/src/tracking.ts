@@ -1,0 +1,49 @@
+import type { TakeWindow } from "./user-items";
+
+export interface TrackingOverview {
+  window_days: number;
+  start_date: string;
+  end_date: string;
+  scheduled_count: number;
+  taken_count: number;
+  skipped_count: number;
+  pending_count: number;
+  completion_rate: number;
+  current_streak_days: number;
+  item_stats: TrackingItemStat[];
+  recent_events: TrackingEvent[];
+  suggestions: TrackingSuggestion[];
+}
+
+export interface TrackingItemStat {
+  item_id: string;
+  item_name: string;
+  item_type: "supplement" | "medication" | "therapy";
+  take_window: TakeWindow;
+  regimes: string[];
+  scheduled_count: number;
+  taken_count: number;
+  skipped_count: number;
+  pending_count: number;
+  completion_rate: number;
+  last_taken_at: string | null;
+}
+
+export interface TrackingEvent {
+  item_id: string;
+  item_name: string;
+  item_type: "supplement" | "medication" | "therapy";
+  status: "taken" | "skipped";
+  scheduled_at: string;
+  taken_at: string | null;
+  skip_reason: string | null;
+  regimes: string[];
+}
+
+export interface TrackingSuggestion {
+  item_id: string | null;
+  item_name: string | null;
+  item_type: "supplement" | "medication" | "therapy" | "overall";
+  headline: string;
+  recommendation: string;
+}

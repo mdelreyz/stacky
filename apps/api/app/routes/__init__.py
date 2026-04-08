@@ -9,6 +9,7 @@ from app.routes.nutrition import router as nutrition_router
 from app.routes.protocols import router as protocols_router
 from app.routes.supplements import router as supplements_router
 from app.routes.therapies import router as therapies_router
+from app.routes.tracking import router as tracking_router
 from app.routes.user_medications import router as user_medications_router
 from app.routes.user_supplements import router as user_supplements_router
 from app.routes.user_therapies import router as user_therapies_router
@@ -26,3 +27,4 @@ v1_router.include_router(user_therapies_router)
 v1_router.include_router(protocols_router)
 v1_router.include_router(daily_plan_router)
 v1_router.include_router(adherence_router)
+v1_router.include_router(tracking_router)

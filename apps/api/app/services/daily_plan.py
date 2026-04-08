@@ -1,11 +1,9 @@
 import re
 from collections.abc import Iterable
-from datetime import date, datetime, time, timedelta, timezone
+from datetime import date
 from typing import TypeAlias
-from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from sqlalchemy import select
-from sqlalchemy.orm import selectinload
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
@@ -15,6 +13,12 @@ from app.models.user_medication import UserMedication
 from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.services.nutrition_cycles import nutrition_cycle_alert, serialize_active_nutrition_phase
+from app.services.regimen_schedule import (
+    adherence_day_bounds,
+    load_regimen_schedule_context,
+    resolve_user_date,
+    scheduled_regimen_items_for_date,
+)
 from app.services.weather import build_skincare_guidance
 
 WINDOW_ORDER = [
@@ -35,15 +39,6 @@ WINDOW_LABELS = {
     TakeWindow.bedtime: "Bedtime",
 }
 
-WINDOW_TIMES = {
-    TakeWindow.morning_fasted: time(7, 0),
-    TakeWindow.morning_with_food: time(8, 0),
-    TakeWindow.midday: time(12, 30),
-    TakeWindow.afternoon: time(15, 0),
-    TakeWindow.evening: time(19, 0),
-    TakeWindow.bedtime: time(22, 0),
-}
-
 SEVERITY_ORDER = {
     "critical": 4,
     "major": 3,
@@ -51,20 +46,7 @@ SEVERITY_ORDER = {
     "minor": 1,
 }
 
-ScheduleItem: TypeAlias = UserSupplement | UserMedication | UserTherapy
 InteractionItem: TypeAlias = UserSupplement | UserMedication
-
-
-def resolve_user_date(target_date: date | None, timezone_name: str | None) -> tuple[date, ZoneInfo]:
-    try:
-        user_tz = ZoneInfo(timezone_name or "UTC")
-    except ZoneInfoNotFoundError:
-        user_tz = ZoneInfo("UTC")
-
-    if target_date is not None:
-        return target_date, user_tz
-
-    return datetime.now(user_tz).date(), user_tz
 
 
 def _normalize_alias(value: str) -> str:
@@ -95,26 +77,6 @@ def _interaction_profile(item: InteractionItem) -> dict:
 
 def _interaction_aliases(item: InteractionItem) -> set[str]:
     return _profile_aliases(_interaction_name(item), _interaction_profile(item))
-
-
-def _is_due_today(item: ScheduleItem, target_date: date) -> bool:
-    if item.started_at > target_date:
-        return False
-    if item.ended_at and item.ended_at < target_date:
-        return False
-
-    days_since_start = (target_date - item.started_at).days
-    frequency = item.frequency
-
-    if frequency in {Frequency.daily, Frequency.twice_daily, Frequency.three_times_daily}:
-        return True
-    if frequency == Frequency.every_other_day:
-        return days_since_start % 2 == 0
-    if frequency == Frequency.weekly:
-        return days_since_start % 7 == 0
-    if frequency == Frequency.as_needed:
-        return False
-    return False
 
 
 def _frequency_instruction(frequency: Frequency) -> str:
@@ -180,7 +142,7 @@ def _therapy_details(user_therapy: UserTherapy) -> str | None:
     return " · ".join(details)
 
 
-def _adherence_status_for_logs(logs: Iterable[AdherenceLog]) -> str:
+def adherence_status_for_logs(logs: Iterable[AdherenceLog]) -> str:
     has_taken = False
     has_skipped = False
 
@@ -197,7 +159,7 @@ def _adherence_status_for_logs(logs: Iterable[AdherenceLog]) -> str:
     return "pending"
 
 
-async def _adherence_index(user: User, target_date: date, user_tz: ZoneInfo) -> dict[tuple[str, str], list[AdherenceLog]]:
+async def _adherence_index(user: User, target_date: date, user_tz) -> dict[tuple[str, str], list[AdherenceLog]]:
     day_start_utc, day_end_utc = adherence_day_bounds(target_date, user_tz)
 
     async with async_session_factory() as session:
@@ -214,17 +176,6 @@ async def _adherence_index(user: User, target_date: date, user_tz: ZoneInfo) -> 
     for log in logs:
         indexed.setdefault((log.item_type, str(log.item_id)), []).append(log)
     return indexed
-
-
-def scheduled_datetime_for_window(target_date: date, take_window: TakeWindow, user_tz: ZoneInfo) -> datetime:
-    local_dt = datetime.combine(target_date, WINDOW_TIMES[take_window], tzinfo=user_tz)
-    return local_dt.astimezone(timezone.utc)
-
-
-def adherence_day_bounds(target_date: date, user_tz: ZoneInfo) -> tuple[datetime, datetime]:
-    day_start_local = datetime.combine(target_date, time.min, tzinfo=user_tz)
-    day_end_local = day_start_local + timedelta(days=1)
-    return day_start_local.astimezone(timezone.utc), day_end_local.astimezone(timezone.utc)
 
 
 def _interaction_warnings(due_items: list[InteractionItem]) -> list[dict]:
@@ -272,38 +223,9 @@ def _interaction_warnings(due_items: list[InteractionItem]) -> list[dict]:
 
 async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
     resolved_date, user_tz = resolve_user_date(target_date, user.timezone)
+    schedule_context = await load_regimen_schedule_context(user)
 
     async with async_session_factory() as session:
-        supplements_result = await session.execute(
-            select(UserSupplement)
-            .options(selectinload(UserSupplement.supplement))
-            .where(
-                UserSupplement.user_id == user.id,
-                UserSupplement.is_active.is_(True),
-            )
-            .order_by(UserSupplement.take_window, UserSupplement.created_at)
-        )
-        user_supplements = list(supplements_result.scalars().all())
-        medications_result = await session.execute(
-            select(UserMedication)
-            .options(selectinload(UserMedication.medication))
-            .where(
-                UserMedication.user_id == user.id,
-                UserMedication.is_active.is_(True),
-            )
-            .order_by(UserMedication.take_window, UserMedication.created_at)
-        )
-        user_medications = list(medications_result.scalars().all())
-        therapies_result = await session.execute(
-            select(UserTherapy)
-            .options(selectinload(UserTherapy.therapy))
-            .where(
-                UserTherapy.user_id == user.id,
-                UserTherapy.is_active.is_(True),
-            )
-            .order_by(UserTherapy.take_window, UserTherapy.created_at)
-        )
-        user_therapies = list(therapies_result.scalars().all())
         nutrition_result = await session.execute(
             select(NutritionCycle)
             .where(
@@ -314,9 +236,13 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
         )
         active_nutrition_cycle = nutrition_result.scalars().first()
 
-    due_supplements = [item for item in user_supplements if _is_due_today(item, resolved_date)]
-    due_medications = [item for item in user_medications if _is_due_today(item, resolved_date)]
-    due_therapies = [item for item in user_therapies if _is_due_today(item, resolved_date)]
+    scheduled_items = scheduled_regimen_items_for_date(schedule_context, resolved_date)
+    due_supplements = [item.item for item in scheduled_items if item.item_type == "supplement"]
+    due_medications = [item.item for item in scheduled_items if item.item_type == "medication"]
+    due_therapies = [item.item for item in scheduled_items if item.item_type == "therapy"]
+    active_regimes_by_item = {
+        (item.item_type, str(item.item.id)): item.active_protocol_names for item in scheduled_items
+    }
     adherence_index = await _adherence_index(user, resolved_date, user_tz)
     active_nutrition_phase = (
         serialize_active_nutrition_phase(active_nutrition_cycle, resolved_date) if active_nutrition_cycle else None
@@ -340,8 +266,9 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
                     "type": "supplement",
                     "details": f"{item.dosage_amount:g} {item.dosage_unit}",
                     "instructions": _supplement_instructions(item),
+                    "regimes": active_regimes_by_item.get(("supplement", str(item.id)), []),
                     "is_on_cycle": True,
-                    "adherence_status": _adherence_status_for_logs(
+                    "adherence_status": adherence_status_for_logs(
                         adherence_index.get(("supplement", str(item.id)), [])
                     ),
                 }
@@ -357,8 +284,9 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
                     "type": "medication",
                     "details": f"{item.dosage_amount:g} {item.dosage_unit}",
                     "instructions": _medication_instructions(item),
+                    "regimes": active_regimes_by_item.get(("medication", str(item.id)), []),
                     "is_on_cycle": True,
-                    "adherence_status": _adherence_status_for_logs(
+                    "adherence_status": adherence_status_for_logs(
                         adherence_index.get(("medication", str(item.id)), [])
                     ),
                 }
@@ -374,8 +302,9 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
                     "type": "therapy",
                     "details": _therapy_details(item),
                     "instructions": _therapy_instructions(item),
+                    "regimes": active_regimes_by_item.get(("therapy", str(item.id)), []),
                     "is_on_cycle": True,
-                    "adherence_status": _adherence_status_for_logs(
+                    "adherence_status": adherence_status_for_logs(
                         adherence_index.get(("therapy", str(item.id)), [])
                     ),
                 }
