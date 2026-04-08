@@ -2,7 +2,9 @@ from datetime import date
 
 from app.database import async_session_factory
 from app.models.supplement import Supplement, SupplementCategory
+from app.models.therapy import Therapy, TherapyCategory
 from app.models.user_supplement import UserSupplement
+from app.models.user_therapy import UserTherapy
 
 
 def signup(client, email: str) -> tuple[dict[str, str], str]:
@@ -33,6 +35,20 @@ def create_supplement(name: str):
     return asyncio.run(_create())
 
 
+def create_therapy(name: str):
+    async def _create():
+        async with async_session_factory() as session:
+            therapy = Therapy(name=name, category=TherapyCategory.other)
+            session.add(therapy)
+            await session.commit()
+            await session.refresh(therapy)
+            return therapy.id
+
+    import asyncio
+
+    return asyncio.run(_create())
+
+
 def create_user_supplement(
     user_id: str,
     supplement_id,
@@ -56,6 +72,32 @@ def create_user_supplement(
             await session.commit()
             await session.refresh(user_supplement)
             return user_supplement.id
+
+    import asyncio
+
+    return asyncio.run(_create())
+
+
+def create_user_therapy(
+    user_id: str,
+    therapy_id,
+    *,
+    duration_minutes: int = 20,
+):
+    async def _create():
+        async with async_session_factory() as session:
+            user_therapy = UserTherapy(
+                user_id=user_id,
+                therapy_id=therapy_id,
+                duration_minutes=duration_minutes,
+                frequency="daily",
+                take_window="evening",
+                started_at=date(2026, 4, 8),
+            )
+            session.add(user_therapy)
+            await session.commit()
+            await session.refresh(user_therapy)
+            return user_therapy.id
 
     import asyncio
 
@@ -116,7 +158,31 @@ def test_protocol_rejects_supplements_from_other_accounts(client):
     )
 
     assert response.status_code == 400
-    assert response.json()["detail"] == "Protocol items must reference supplements in your account"
+    assert response.json()["detail"] == "Protocol items must reference supplements or therapies in your account"
+
+
+def test_protocol_can_include_therapy_members(client):
+    headers, user_id = signup(client, "mixed-stack@example.com")
+    magnesium_id = create_supplement("Magnesium")
+    sauna_id = create_therapy("Sauna")
+
+    magnesium_user_id = create_user_supplement(user_id, magnesium_id)
+    sauna_user_id = create_user_therapy(user_id, sauna_id)
+
+    response = client.post(
+        "/api/v1/users/me/protocols",
+        json={
+            "name": "Recovery Stack",
+            "user_supplement_ids": [str(magnesium_user_id)],
+            "user_therapy_ids": [str(sauna_user_id)],
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert [item["item_type"] for item in body["items"]] == ["supplement", "therapy"]
+    assert body["items"][1]["user_therapy"]["therapy"]["name"] == "Sauna"
 
 
 def test_protocol_keeps_inactive_members_visible_and_editable(client):

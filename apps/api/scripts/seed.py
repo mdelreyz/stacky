@@ -1,14 +1,18 @@
 """Seed the database with common supplements and their AI profiles."""
+# ruff: noqa: I001
 import asyncio
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
+from sqlalchemy import func, select
+
 # Add the api directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from app.database import async_session_factory, engine, Base
-from app.models import *  # noqa
+from app.database import Base, async_session_factory, engine
+from app.models.supplement import Supplement
+from app.models.therapy import Therapy
 
 
 SUPPLEMENTS = [
@@ -358,21 +362,201 @@ SUPPLEMENTS = [
     },
 ]
 
+THERAPIES = [
+    {
+        "name": "HBOT",
+        "category": "other",
+        "description": "Hyperbaric oxygen therapy session used for recovery, resilience, and focused oxygen exposure.",
+        "ai_profile": {
+            "tags": ["hbot", "hyperbaric", "recovery", "pressure_therapy"],
+            "default_duration_minutes": 60,
+            "default_frequency": "weekly",
+            "default_take_window": "afternoon",
+            "session_template": "60 min at 2.0 ATA",
+        },
+    },
+    {
+        "name": "Infrared Sauna",
+        "category": "thermal",
+        "description": "Heat exposure protocol for recovery, sweating, relaxation, and cardiovascular conditioning.",
+        "ai_profile": {
+            "tags": ["sauna", "thermal", "recovery"],
+            "default_duration_minutes": 25,
+            "default_frequency": "daily",
+            "default_take_window": "evening",
+            "session_template": "20-30 min moderate heat block",
+        },
+    },
+    {
+        "name": "IHHT",
+        "category": "breathwork",
+        "description": "Intermittent hypoxia-hyperoxia training protocol for conditioning, respiratory adaptation, and recovery.",
+        "ai_profile": {
+            "tags": ["ihht", "hypoxia", "hyperoxia", "respiratory_training"],
+            "default_duration_minutes": 35,
+            "default_frequency": "weekly",
+            "default_take_window": "morning_with_food",
+            "session_template": "Alternating hypoxia and hyperoxia rounds",
+        },
+    },
+    {
+        "name": "Lymphatic Massage",
+        "category": "manual",
+        "description": "Manual recovery session focused on drainage, swelling reduction, and tissue support.",
+        "ai_profile": {
+            "tags": ["lymphatic", "massage", "manual_therapy", "recovery"],
+            "default_duration_minutes": 45,
+            "default_frequency": "weekly",
+            "default_take_window": "afternoon",
+            "session_template": "Full body drainage sequence",
+        },
+    },
+    {
+        "name": "PEMF",
+        "category": "electrical",
+        "description": "Pulsed electromagnetic field session for recovery, relaxation, and device-led protocol blocks.",
+        "ai_profile": {
+            "tags": ["pemf", "electromagnetic", "device_protocol"],
+            "default_duration_minutes": 20,
+            "default_frequency": "daily",
+            "default_take_window": "afternoon",
+            "session_template": "20 min device program",
+        },
+    },
+    {
+        "name": "Nurosym VNS",
+        "category": "electrical",
+        "description": "Auricular vagus nerve stimulation session using a dedicated neurostimulation device.",
+        "ai_profile": {
+            "tags": ["nurosym", "vns", "neurostimulation", "device_protocol"],
+            "default_duration_minutes": 20,
+            "default_frequency": "daily",
+            "default_take_window": "morning_with_food",
+            "session_template": "20 min vagal stimulation block",
+        },
+    },
+    {
+        "name": "Muse 2 Meditation",
+        "category": "sound",
+        "description": "Guided meditation session using Muse 2 neurofeedback for attention and nervous-system regulation.",
+        "ai_profile": {
+            "tags": ["muse_2", "meditation", "mindfulness", "neurofeedback"],
+            "default_duration_minutes": 15,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "15 min mindfulness or breath-led neurofeedback",
+        },
+    },
+    {
+        "name": "Transcendental Meditation",
+        "category": "sound",
+        "description": "Seated meditation practice block for focus, calm, and nervous-system downshifting.",
+        "ai_profile": {
+            "tags": ["meditation", "transcendental", "mind_body"],
+            "default_duration_minutes": 20,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "20 min seated meditation",
+        },
+    },
+    {
+        "name": "EMOM Pull-Up Session",
+        "category": "movement",
+        "description": "Minute-by-minute strength protocol for pull-ups, calisthenics, or targeted skill progression.",
+        "ai_profile": {
+            "tags": ["training", "emom", "pullups", "calisthenics"],
+            "default_duration_minutes": 18,
+            "default_frequency": "weekly",
+            "default_take_window": "afternoon",
+            "session_template": "EMOM pull-up ladder with planned volume",
+        },
+    },
+    {
+        "name": "Hyrox Interval Session",
+        "category": "movement",
+        "description": "Structured endurance and station-based training block for Hyrox preparation.",
+        "ai_profile": {
+            "tags": ["training", "hyrox", "intervals", "conditioning"],
+            "default_duration_minutes": 45,
+            "default_frequency": "weekly",
+            "default_take_window": "afternoon",
+            "session_template": "Intervals plus sled, carries, and run transitions",
+        },
+    },
+    {
+        "name": "Infrared Panel",
+        "category": "light",
+        "description": "Red or infrared light exposure routine for full body, front-only, face, or segmented side blocks.",
+        "ai_profile": {
+            "tags": ["infrared", "red_light", "light_therapy"],
+            "default_duration_minutes": 16,
+            "default_frequency": "daily",
+            "default_take_window": "morning_with_food",
+            "session_template": "4 min per side or 5 min front-only block",
+        },
+    },
+    {
+        "name": "Lyma Laser",
+        "category": "light",
+        "description": "Targeted laser routine for skin and tissue support using a handheld device.",
+        "ai_profile": {
+            "tags": ["lyma", "laser", "skin", "light_therapy"],
+            "default_duration_minutes": 12,
+            "default_frequency": "daily",
+            "default_take_window": "evening",
+            "session_template": "Targeted face or treatment-zone passes",
+        },
+    },
+    {
+        "name": "Microneedling",
+        "category": "manual",
+        "description": "Periodic skin protocol for texture, collagen support, and resurfacing routines.",
+        "ai_profile": {
+            "tags": ["skin", "microneedling", "collagen"],
+            "default_duration_minutes": 20,
+            "default_frequency": "weekly",
+            "default_take_window": "evening",
+            "session_template": "Face-focused pass sequence with recovery notes",
+        },
+    },
+    {
+        "name": "CO2 Resurfacing",
+        "category": "light",
+        "description": "Infrequent resurfacing treatment placeholder for planning annual or seasonal skin protocols.",
+        "ai_profile": {
+            "tags": ["skin", "co2", "resurfacing", "aesthetic"],
+            "default_duration_minutes": 30,
+            "default_frequency": "weekly",
+            "default_take_window": "evening",
+            "session_template": "Procedure planning and aftercare tracking block",
+        },
+    },
+]
+
 
 async def seed():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
     async with async_session_factory() as session:
-        # Check if already seeded
-        from sqlalchemy import select, func
-        count = (await session.execute(select(func.count()).select_from(Supplement))).scalar_one()
-        if count > 0:
-            print(f"Database already has {count} supplements. Skipping seed.")
-            return
-
         now = datetime.now(timezone.utc)
+        existing_supplement_names = {
+            name
+            for name in (
+                await session.execute(select(Supplement.name))
+            ).scalars().all()
+        }
+        existing_therapy_names = {
+            name
+            for name in (
+                await session.execute(select(Therapy.name))
+            ).scalars().all()
+        }
+
+        seeded_supplements = 0
         for data in SUPPLEMENTS:
+            if data["name"] in existing_supplement_names:
+                continue
             supplement = Supplement(
                 name=data["name"],
                 category=data["category"],
@@ -384,9 +568,30 @@ async def seed():
                 is_verified=True,
             )
             session.add(supplement)
+            seeded_supplements += 1
+
+        seeded_therapies = 0
+        for data in THERAPIES:
+            if data["name"] in existing_therapy_names:
+                continue
+            therapy = Therapy(
+                name=data["name"],
+                category=data["category"],
+                description=data["description"],
+                ai_profile=data["ai_profile"],
+                ai_profile_version=1,
+                ai_generated_at=now,
+            )
+            session.add(therapy)
+            seeded_therapies += 1
 
         await session.commit()
-        print(f"Seeded {len(SUPPLEMENTS)} supplements successfully.")
+        supplement_count = (await session.execute(select(func.count()).select_from(Supplement))).scalar_one()
+        therapy_count = (await session.execute(select(func.count()).select_from(Therapy))).scalar_one()
+        print(
+            f"Seeded {seeded_supplements} new supplements and {seeded_therapies} new therapies. "
+            f"Database now has {supplement_count} supplements and {therapy_count} therapies."
+        )
 
 
 if __name__ == "__main__":

@@ -17,3 +17,7 @@ class SupplementAdherenceResponse(BaseModel):
     scheduled_at: datetime
     taken_at: datetime | None
     skip_reason: str | None
+
+
+AdherenceUpdateRequest = SupplementAdherenceUpdateRequest
+AdherenceResponse = SupplementAdherenceResponse

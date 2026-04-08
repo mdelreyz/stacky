@@ -6,7 +6,9 @@ from sqlalchemy import func, select
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
 from app.models.supplement import Supplement, SupplementCategory
+from app.models.therapy import Therapy, TherapyCategory
 from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
+from app.models.user_therapy import UserTherapy
 
 
 def signup(client) -> tuple[dict[str, str], str]:
@@ -35,6 +37,18 @@ def create_supplement(name: str):
     return asyncio.run(_create())
 
 
+def create_therapy(name: str):
+    async def _create():
+        async with async_session_factory() as session:
+            therapy = Therapy(name=name, category=TherapyCategory.other)
+            session.add(therapy)
+            await session.commit()
+            await session.refresh(therapy)
+            return therapy.id
+
+    return asyncio.run(_create())
+
+
 def create_user_supplement(
     user_id: str,
     supplement_id,
@@ -59,6 +73,33 @@ def create_user_supplement(
             await session.commit()
             await session.refresh(user_supplement)
             return user_supplement.id
+
+    return asyncio.run(_create())
+
+
+def create_user_therapy(
+    user_id: str,
+    therapy_id,
+    *,
+    frequency: Frequency = Frequency.daily,
+    take_window: TakeWindow = TakeWindow.afternoon,
+    started_at: date = date(2026, 4, 1),
+):
+    async def _create():
+        async with async_session_factory() as session:
+            user_therapy = UserTherapy(
+                user_id=user_id,
+                therapy_id=therapy_id,
+                duration_minutes=20,
+                frequency=frequency,
+                take_window=take_window,
+                settings={"session_details": "Full body"},
+                started_at=started_at,
+            )
+            session.add(user_therapy)
+            await session.commit()
+            await session.refresh(user_therapy)
+            return user_therapy.id
 
     return asyncio.run(_create())
 
@@ -120,3 +161,25 @@ def test_marking_not_due_supplement_returns_400(client):
 
     assert response.status_code == 400
     assert response.json()["detail"] == "This supplement is not scheduled for that date"
+
+
+def test_mark_therapy_taken_updates_daily_plan(client):
+    headers, user_id = signup(client)
+    therapy_id = create_therapy("Infrared Panel")
+    user_therapy_id = create_user_therapy(user_id, therapy_id)
+
+    response = client.post(
+        f"/api/v1/users/me/adherence/therapies/{user_therapy_id}",
+        json={"status": "taken", "date": "2026-04-08"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "taken"
+    assert adherence_log_count() == 1
+
+    plan_response = client.get("/api/v1/users/me/daily-plan?date=2026-04-08", headers=headers)
+    assert plan_response.status_code == 200
+    windows = {window["window"]: window for window in plan_response.json()["windows"]}
+    assert windows["afternoon"]["items"][0]["type"] == "therapy"
+    assert windows["afternoon"]["items"][0]["adherence_status"] == "taken"

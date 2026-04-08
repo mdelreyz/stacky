@@ -10,6 +10,7 @@ export type {
   TakeWindowPlan,
   DailyPlanItem,
   InteractionWarning,
+  AdherenceResult,
   SupplementAdherenceResult,
 } from "./daily-plan";
 export type { Interaction, InteractionType, Severity } from "./interaction";

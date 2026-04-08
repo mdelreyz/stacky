@@ -19,7 +19,7 @@ export interface DailyPlanItem {
   id: string;
   name: string;
   type: "supplement" | "therapy";
-  dosage: string;
+  details: string | null;
   instructions: string;
   is_on_cycle: boolean;
   adherence_status: "pending" | "taken" | "skipped";
@@ -39,10 +39,12 @@ export interface InteractionWarning {
   description: string;
 }
 
-export interface SupplementAdherenceResult {
+export interface AdherenceResult {
   item_id: string;
   status: "taken" | "skipped";
   scheduled_at: string;
   taken_at: string | null;
   skip_reason: string | null;
 }
+
+export type SupplementAdherenceResult = AdherenceResult;

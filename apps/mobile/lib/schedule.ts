@@ -41,3 +41,11 @@ export function isScheduleFrequency(value: string): value is ScheduleFrequency {
 export function isScheduleTakeWindow(value: string): value is ScheduleTakeWindow {
   return isTakeWindow(value);
 }
+
+export function getFrequencyLabel(value: Frequency): string {
+  return FREQUENCY_OPTIONS.find((option) => option.value === value)?.label ?? value.replace(/_/g, " ");
+}
+
+export function getTakeWindowLabel(value: TakeWindow): string {
+  return TAKE_WINDOW_OPTIONS.find((option) => option.value === value)?.label ?? value.replace(/_/g, " ");
+}

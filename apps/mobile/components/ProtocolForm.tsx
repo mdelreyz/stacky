@@ -2,18 +2,22 @@ import type { Dispatch, SetStateAction } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
-import type { UserSupplement } from "@/lib/api";
+import type { UserSupplement, UserTherapy } from "@/lib/api";
+import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
+import { readTherapySettings } from "@/lib/therapy-settings";
 
 export interface ProtocolFormState {
   name: string;
   description: string;
   selectedUserSupplementIds: string[];
+  selectedUserTherapyIds: string[];
 }
 
 export function ProtocolForm({
   state,
   setState,
   supplements,
+  therapies,
   saving,
   primaryLabel,
   onSubmit,
@@ -23,6 +27,7 @@ export function ProtocolForm({
   state: ProtocolFormState;
   setState: Dispatch<SetStateAction<ProtocolFormState>>;
   supplements: UserSupplement[];
+  therapies: UserTherapy[];
   saving: boolean;
   primaryLabel: string;
   onSubmit: () => void;
@@ -92,9 +97,68 @@ export function ProtocolForm({
                   </View>
                   <Text style={styles.optionMeta}>
                     {supplement.dosage_amount}
-                    {supplement.dosage_unit} · {supplement.frequency.replace(/_/g, " ")} ·{" "}
-                    {supplement.take_window.replace(/_/g, " ")}
+                    {supplement.dosage_unit} · {getFrequencyLabel(supplement.frequency)} ·{" "}
+                    {getTakeWindowLabel(supplement.take_window)}
                   </Text>
+                </View>
+                <FontAwesome
+                  name={selected ? "check-square-o" : "square-o"}
+                  size={20}
+                  color={selected ? "#228be6" : "#adb5bd"}
+                />
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
+      <View style={styles.card}>
+        <View style={styles.selectionHeader}>
+          <Text style={styles.sectionTitle}>Included Modalities</Text>
+          <Text style={styles.selectionCount}>{state.selectedUserTherapyIds.length} selected</Text>
+        </View>
+        <Text style={styles.helperText}>
+          Use this for therapies, devices, meditation, training, recovery, or other scheduled protocols.
+        </Text>
+
+        <View style={styles.optionList}>
+          {therapies.map((therapy) => {
+            const selected = state.selectedUserTherapyIds.includes(therapy.id);
+            const lockedInactive = !therapy.is_active && !selected;
+            const settingsState = readTherapySettings(therapy.settings);
+            const detail = settingsState.sessionDetails || settingsState.lastSessionDetails;
+            return (
+              <Pressable
+                key={therapy.id}
+                style={[
+                  styles.optionRow,
+                  selected && styles.optionRowSelected,
+                  lockedInactive && styles.optionRowDisabled,
+                ]}
+                onPress={() => {
+                  if (lockedInactive) return;
+                  setState((current) => ({
+                    ...current,
+                    selectedUserTherapyIds: selected
+                      ? current.selectedUserTherapyIds.filter((itemId) => itemId !== therapy.id)
+                      : [...current.selectedUserTherapyIds, therapy.id],
+                  }));
+                }}
+              >
+                <View style={styles.optionInfo}>
+                  <View style={styles.optionTitleRow}>
+                    <Text style={styles.optionTitle}>{therapy.therapy.name}</Text>
+                    {!therapy.is_active ? (
+                      <View style={styles.inactiveBadge}>
+                        <Text style={styles.inactiveBadgeText}>Inactive</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <Text style={styles.optionMeta}>
+                    {therapy.duration_minutes ? `${therapy.duration_minutes} min · ` : ""}
+                    {getFrequencyLabel(therapy.frequency)} · {getTakeWindowLabel(therapy.take_window)}
+                  </Text>
+                  {detail ? <Text style={styles.optionSubmeta}>{detail}</Text> : null}
                 </View>
                 <FontAwesome
                   name={selected ? "check-square-o" : "square-o"}
@@ -223,6 +287,11 @@ const styles = StyleSheet.create({
   optionMeta: {
     fontSize: 12,
     color: "#6c757d",
+    marginTop: 4,
+  },
+  optionSubmeta: {
+    fontSize: 12,
+    color: "#495057",
     marginTop: 4,
   },
   inactiveBadge: {

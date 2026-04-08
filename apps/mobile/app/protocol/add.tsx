@@ -11,27 +11,33 @@ import { router } from "expo-router";
 
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
-import { protocols as protocolsApi, userSupplements as userSupplementsApi } from "@/lib/api";
+import {
+  protocols as protocolsApi,
+  userSupplements as userSupplementsApi,
+  userTherapies as userTherapiesApi,
+} from "@/lib/api";
 import { showError } from "@/lib/errors";
-import type { UserSupplement } from "@/lib/api";
+import type { UserSupplement, UserTherapy } from "@/lib/api";
 
 export default function AddProtocolScreen() {
   const [supplements, setSupplements] = useState<UserSupplement[]>([]);
+  const [therapies, setTherapies] = useState<UserTherapy[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formState, setFormState] = useState<ProtocolFormState>({
     name: "",
     description: "",
     selectedUserSupplementIds: [],
+    selectedUserTherapyIds: [],
   });
 
   useEffect(() => {
     let cancelled = false;
-    userSupplementsApi
-      .list()
-      .then((response) => {
+    Promise.all([userSupplementsApi.list(), userTherapiesApi.list()])
+      .then(([supplementsResponse, therapiesResponse]) => {
         if (cancelled) return;
-        setSupplements(response.items);
+        setSupplements(supplementsResponse.items);
+        setTherapies(therapiesResponse.items);
       })
       .catch(console.error)
       .finally(() => {
@@ -48,8 +54,11 @@ export default function AddProtocolScreen() {
       showError("Enter a stack name.");
       return;
     }
-    if (formState.selectedUserSupplementIds.length === 0) {
-      showError("Select at least one supplement for this stack.");
+    if (
+      formState.selectedUserSupplementIds.length === 0 &&
+      formState.selectedUserTherapyIds.length === 0
+    ) {
+      showError("Select at least one supplement or modality for this stack.");
       return;
     }
 
@@ -59,6 +68,7 @@ export default function AddProtocolScreen() {
         name: formState.name.trim(),
         description: formState.description.trim() || undefined,
         user_supplement_ids: formState.selectedUserSupplementIds,
+        user_therapy_ids: formState.selectedUserTherapyIds,
       });
       router.replace("/(tabs)/protocols");
     } catch (error: any) {
@@ -82,12 +92,12 @@ export default function AddProtocolScreen() {
         subtitle="Group active supplements into one named protocol"
       />
 
-      {supplements.length === 0 ? (
+      {supplements.length === 0 && therapies.length === 0 ? (
         <View style={styles.emptyCard}>
-          <FontAwesome name="flask" size={36} color="#dee2e6" />
-          <Text style={styles.emptyTitle}>No active supplements yet</Text>
+          <FontAwesome name="calendar-check-o" size={36} color="#dee2e6" />
+          <Text style={styles.emptyTitle}>No active items yet</Text>
           <Text style={styles.emptyText}>
-            Add supplements to your protocol first, then bundle them into a stack here.
+            Add supplements or modalities to your protocol first, then bundle them into a stack here.
           </Text>
         </View>
       ) : (
@@ -95,6 +105,7 @@ export default function AddProtocolScreen() {
           state={formState}
           setState={setFormState}
           supplements={supplements}
+          therapies={therapies}
           saving={saving}
           primaryLabel="Create Stack"
           onSubmit={handleSave}

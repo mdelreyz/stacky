@@ -1,4 +1,4 @@
-import type { DailyPlan, SupplementAdherenceResult } from "@protocols/domain";
+import type { AdherenceResult, DailyPlan } from "@protocols/domain";
 
 import { request } from "./core";
 
@@ -12,7 +12,16 @@ export const dailyPlan = {
     itemId: string,
     data: { status: "taken" | "skipped"; date?: string; skip_reason?: string }
   ) =>
-    request<SupplementAdherenceResult>(`/api/v1/users/me/adherence/supplements/${itemId}`, {
+    request<AdherenceResult>(`/api/v1/users/me/adherence/supplements/${itemId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  updateTherapyAdherence: (
+    itemId: string,
+    data: { status: "taken" | "skipped"; date?: string; skip_reason?: string }
+  ) =>
+    request<AdherenceResult>(`/api/v1/users/me/adherence/therapies/${itemId}`, {
       method: "POST",
       body: JSON.stringify(data),
     }),

@@ -5,11 +5,11 @@ import type { DailyPlanItem, TakeWindowPlan } from "@/lib/api";
 export function DailyPlanWindowCard({
   windowPlan,
   pendingActionItemId,
-  onUpdateSupplementAdherence,
+  onUpdateAdherence,
 }: {
   windowPlan: TakeWindowPlan;
   pendingActionItemId: string | null;
-  onUpdateSupplementAdherence: (itemId: string, status: "taken" | "skipped") => Promise<void>;
+  onUpdateAdherence: (item: DailyPlanItem, status: "taken" | "skipped") => Promise<void>;
 }) {
   return (
     <View style={styles.section}>
@@ -21,15 +21,13 @@ export function DailyPlanWindowCard({
               <Text style={styles.itemName}>{item.name}</Text>
               <StatusPill status={item.adherence_status} />
             </View>
-            <Text style={styles.itemDosage}>{item.dosage}</Text>
+            {item.details ? <Text style={styles.itemDetails}>{item.details}</Text> : null}
             <Text style={styles.itemInstructions}>{item.instructions}</Text>
-            {item.type === "supplement" ? (
-              <AdherenceActions
-                item={item}
-                loading={pendingActionItemId === item.id}
-                onUpdate={(status) => onUpdateSupplementAdherence(item.id, status)}
-              />
-            ) : null}
+            <AdherenceActions
+              item={item}
+              loading={pendingActionItemId === item.id}
+              onUpdate={(status) => onUpdateAdherence(item, status)}
+            />
           </View>
         ))
       ) : (
@@ -68,7 +66,11 @@ function AdherenceActions({
         disabled={loading}
       >
         <Text style={styles.takeButtonText}>
-          {loading && item.adherence_status !== "taken" ? "Saving..." : "Take"}
+          {loading && item.adherence_status !== "taken"
+            ? "Saving..."
+            : item.type === "supplement"
+              ? "Take"
+              : "Complete"}
         </Text>
       </Pressable>
       <Pressable
@@ -150,7 +152,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#212529",
   },
-  itemDosage: {
+  itemDetails: {
     fontSize: 13,
     color: "#1c7ed6",
     marginTop: 4,

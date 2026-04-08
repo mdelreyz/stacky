@@ -13,6 +13,7 @@ import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
 import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
 import { TodayDateHeader } from "@/components/today/TodayDateHeader";
 import { getTodayIsoDate, shiftIsoDate } from "@/lib/date";
+import { showError } from "@/lib/errors";
 import type { DailyPlan } from "@/lib/api";
 
 export default function TodayScreen() {
@@ -77,18 +78,23 @@ export default function TodayScreen() {
           key={windowPlan.window}
           windowPlan={windowPlan}
           pendingActionItemId={pendingActionItemId}
-          onUpdateSupplementAdherence={async (itemId, status) => {
-            setPendingActionItemId(itemId);
+          onUpdateAdherence={async (item, status) => {
+            setPendingActionItemId(item.id);
             try {
-              await dailyPlanApi.updateSupplementAdherence(itemId, {
+              const updateAdherence =
+                item.type === "supplement"
+                  ? dailyPlanApi.updateSupplementAdherence
+                  : dailyPlanApi.updateTherapyAdherence;
+              await updateAdherence(item.id, {
                 status,
                 date: selectedDate,
               });
               await loadPlan(selectedDate, true);
             } catch (error) {
-              console.error("Failed to update supplement adherence", error);
+              console.error("Failed to update adherence", error);
+              showError("Failed to update completion status.");
             } finally {
-              setPendingActionItemId((current) => (current === itemId ? null : current));
+              setPendingActionItemId((current) => (current === item.id ? null : current));
             }
           }}
         />

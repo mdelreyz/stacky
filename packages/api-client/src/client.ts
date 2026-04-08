@@ -1,13 +1,15 @@
 import type {
+  AdherenceResult,
   AIProfileStatus,
   AuthResponse,
   DailyPlan,
   Protocol,
   Supplement,
   SupplementAIProfile,
-  SupplementAdherenceResult,
+  Therapy,
   User,
   UserSupplement,
+  UserTherapy,
 } from "@protocols/domain";
 
 interface PaginatedResponse<T> {
@@ -105,8 +107,22 @@ export class ProtocolsAPI {
       date?: string;
       skip_reason?: string;
     }
-  ): Promise<SupplementAdherenceResult> {
+  ): Promise<AdherenceResult> {
     return this.request(`/api/v1/users/me/adherence/supplements/${itemId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateTherapyAdherence(
+    itemId: string,
+    data: {
+      status: "taken" | "skipped";
+      date?: string;
+      skip_reason?: string;
+    }
+  ): Promise<AdherenceResult> {
+    return this.request(`/api/v1/users/me/adherence/therapies/${itemId}`, {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -131,6 +147,7 @@ export class ProtocolsAPI {
     name: string;
     description?: string | null;
     user_supplement_ids: string[];
+    user_therapy_ids?: string[];
   }): Promise<Protocol> {
     return this.request("/api/v1/users/me/protocols", {
       method: "POST",
@@ -145,6 +162,7 @@ export class ProtocolsAPI {
       description?: string | null;
       is_active?: boolean;
       user_supplement_ids?: string[];
+      user_therapy_ids?: string[];
     }
   ): Promise<Protocol> {
     return this.request(`/api/v1/users/me/protocols/${id}`, {
@@ -177,6 +195,25 @@ export class ProtocolsAPI {
 
   async getSupplement(id: string): Promise<Supplement> {
     return this.request(`/api/v1/supplements/${id}`);
+  }
+
+  async listTherapies(params?: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+    category?: string;
+  }): Promise<PaginatedResponse<Therapy>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.page_size) query.set("page_size", String(params.page_size));
+    if (params?.search) query.set("search", params.search);
+    if (params?.category) query.set("category", params.category);
+    const qs = query.toString();
+    return this.request(`/api/v1/therapies${qs ? `?${qs}` : ""}`);
+  }
+
+  async getTherapy(id: string): Promise<Therapy> {
+    return this.request(`/api/v1/therapies/${id}`);
   }
 
   async onboardSupplement(data: {
@@ -240,6 +277,52 @@ export class ProtocolsAPI {
 
   async removeUserSupplement(id: string): Promise<void> {
     return this.request(`/api/v1/users/me/supplements/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async listUserTherapies(params?: {
+    page?: number;
+    active_only?: boolean;
+  }): Promise<PaginatedResponse<UserTherapy>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.active_only !== undefined) query.set("active_only", String(params.active_only));
+    const qs = query.toString();
+    return this.request(`/api/v1/users/me/therapies${qs ? `?${qs}` : ""}`);
+  }
+
+  async addUserTherapy(data: {
+    therapy_id: string;
+    duration_minutes?: number;
+    frequency?: string;
+    take_window?: string;
+    settings?: Record<string, unknown>;
+    notes?: string;
+    started_at: string;
+  }): Promise<UserTherapy> {
+    return this.request("/api/v1/users/me/therapies", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUserTherapy(id: string): Promise<UserTherapy> {
+    return this.request(`/api/v1/users/me/therapies/${id}`);
+  }
+
+  async updateUserTherapy(
+    id: string,
+    data: Record<string, unknown>
+  ): Promise<UserTherapy> {
+    return this.request(`/api/v1/users/me/therapies/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeUserTherapy(id: string): Promise<void> {
+    return this.request(`/api/v1/users/me/therapies/${id}`, {
       method: "DELETE",
     });
   }
