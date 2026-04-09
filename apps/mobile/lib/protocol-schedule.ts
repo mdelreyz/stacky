@@ -23,6 +23,7 @@ export interface ProtocolFormState {
   selectedUserSupplementIds: string[];
   selectedUserMedicationIds: string[];
   selectedUserTherapyIds: string[];
+  selectedUserPeptideIds: string[];
   schedule: ProtocolScheduleFormState;
 }
 
@@ -43,6 +44,7 @@ export function createDefaultProtocolFormState(): ProtocolFormState {
     selectedUserSupplementIds: [],
     selectedUserMedicationIds: [],
     selectedUserTherapyIds: [],
+    selectedUserPeptideIds: [],
     schedule: createDefaultProtocolScheduleFormState(),
   };
 }

@@ -13,6 +13,7 @@ import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
 import {
   userMedications as userMedicationsApi,
+  userPeptides as userPeptidesApi,
   protocols as protocolsApi,
   userSupplements as userSupplementsApi,
   userTherapies as userTherapiesApi,
@@ -23,25 +24,27 @@ import {
   createDefaultProtocolFormState,
   getProtocolScheduleValidationError,
 } from "@/lib/protocol-schedule";
-import type { UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
+import type { UserMedication, UserPeptide, UserSupplement, UserTherapy } from "@/lib/api";
 
 export default function AddProtocolScreen() {
   const [supplements, setSupplements] = useState<UserSupplement[]>([]);
   const [medications, setMedications] = useState<UserMedication[]>([]);
   const [therapies, setTherapies] = useState<UserTherapy[]>([]);
+  const [peptides, setPeptides] = useState<UserPeptide[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formState, setFormState] = useState<ProtocolFormState>(createDefaultProtocolFormState);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.allSettled([userSupplementsApi.list(), userMedicationsApi.list(), userTherapiesApi.list()])
-      .then(([supplementsResult, medicationsResult, therapiesResult]) => {
+    Promise.allSettled([userSupplementsApi.list(), userMedicationsApi.list(), userTherapiesApi.list(), userPeptidesApi.list()])
+      .then(([supplementsResult, medicationsResult, therapiesResult, peptidesResult]) => {
         if (cancelled) return;
         if (
           supplementsResult.status === "rejected" &&
           medicationsResult.status === "rejected" &&
-          therapiesResult.status === "rejected"
+          therapiesResult.status === "rejected" &&
+          peptidesResult.status === "rejected"
         ) {
           showError("Failed to load user items");
           return;
@@ -49,6 +52,7 @@ export default function AddProtocolScreen() {
         if (supplementsResult.status === "fulfilled") setSupplements(supplementsResult.value.items);
         if (medicationsResult.status === "fulfilled") setMedications(medicationsResult.value.items);
         if (therapiesResult.status === "fulfilled") setTherapies(therapiesResult.value.items);
+        if (peptidesResult.status === "fulfilled") setPeptides(peptidesResult.value.items);
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -67,9 +71,10 @@ export default function AddProtocolScreen() {
     if (
       formState.selectedUserSupplementIds.length === 0 &&
       formState.selectedUserMedicationIds.length === 0 &&
-      formState.selectedUserTherapyIds.length === 0
+      formState.selectedUserTherapyIds.length === 0 &&
+      formState.selectedUserPeptideIds.length === 0
     ) {
-      showError("Select at least one supplement, medication, or modality for this stack.");
+      showError("Select at least one supplement, medication, modality, or peptide for this stack.");
       return;
     }
     const scheduleError = getProtocolScheduleValidationError(formState.schedule);
@@ -87,6 +92,7 @@ export default function AddProtocolScreen() {
         user_supplement_ids: formState.selectedUserSupplementIds,
         user_medication_ids: formState.selectedUserMedicationIds,
         user_therapy_ids: formState.selectedUserTherapyIds,
+        user_peptide_ids: formState.selectedUserPeptideIds,
       });
       router.replace("/(tabs)/protocols");
     } catch (error: any) {
@@ -110,7 +116,7 @@ export default function AddProtocolScreen() {
         subtitle="Group active supplements into one named protocol or scheduled regime"
       />
 
-      {supplements.length === 0 && medications.length === 0 && therapies.length === 0 ? (
+      {supplements.length === 0 && medications.length === 0 && therapies.length === 0 && peptides.length === 0 ? (
         <View style={styles.emptyCard}>
           <FontAwesome name="calendar-check-o" size={36} color="#dee2e6" />
           <Text style={styles.emptyTitle}>No active items yet</Text>
@@ -125,6 +131,7 @@ export default function AddProtocolScreen() {
           supplements={supplements}
           medications={medications}
           therapies={therapies}
+          peptides={peptides}
           saving={saving}
           primaryLabel="Create Stack"
           onSubmit={handleSave}

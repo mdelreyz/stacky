@@ -10,10 +10,12 @@ import { CatalogSection } from "@/components/protocols/CatalogSection";
 import { ProtocolStacksSection } from "@/components/protocols/ProtocolStacksSection";
 import {
   medications as medicationsApi,
+  peptides as peptidesApi,
   protocols as protocolsApi,
   supplements as supplementsApi,
   therapies as therapiesApi,
   userMedications as userMedicationsApi,
+  userPeptides as userPeptidesApi,
   userSupplements as userSupplementsApi,
   userTherapies as userTherapiesApi,
 } from "@/lib/api";
@@ -22,10 +24,12 @@ import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { describeTherapySettings, formatLastCompletedAt, readTherapySettings } from "@/lib/therapy-settings";
 import type {
   Medication,
+  Peptide,
   Protocol,
   Supplement,
   Therapy,
   UserMedication,
+  UserPeptide,
   UserSupplement,
   UserTherapy,
 } from "@/lib/api";
@@ -35,9 +39,11 @@ export default function ProtocolsScreen() {
   const [supplementCatalog, setSupplementCatalog] = useState<Supplement[]>([]);
   const [medicationCatalog, setMedicationCatalog] = useState<Medication[]>([]);
   const [therapyCatalog, setTherapyCatalog] = useState<Therapy[]>([]);
+  const [peptideCatalog, setPeptideCatalog] = useState<Peptide[]>([]);
   const [mySupplements, setMySupplements] = useState<UserSupplement[]>([]);
   const [myMedications, setMyMedications] = useState<UserMedication[]>([]);
   const [myTherapies, setMyTherapies] = useState<UserTherapy[]>([]);
+  const [myPeptides, setMyPeptides] = useState<UserPeptide[]>([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,27 +55,33 @@ export default function ProtocolsScreen() {
         supplementCatalogRes,
         medicationCatalogRes,
         therapyCatalogRes,
+        peptideCatalogRes,
         mySupplementsRes,
         myMedicationsRes,
         myTherapiesRes,
+        myPeptidesRes,
       ] =
         await Promise.allSettled([
           protocolsApi.list(),
           supplementsApi.list({ search: search || undefined }),
           medicationsApi.list({ search: search || undefined }),
           therapiesApi.list({ search: search || undefined }),
+          peptidesApi.list({ search: search || undefined }),
           userSupplementsApi.list(),
           userMedicationsApi.list(),
           userTherapiesApi.list(),
+          userPeptidesApi.list(),
         ]);
       if (stacksRes.status === "fulfilled") setStacks(stacksRes.value.items);
       if (supplementCatalogRes.status === "fulfilled") setSupplementCatalog(supplementCatalogRes.value.items);
       if (medicationCatalogRes.status === "fulfilled") setMedicationCatalog(medicationCatalogRes.value.items);
       if (therapyCatalogRes.status === "fulfilled") setTherapyCatalog(therapyCatalogRes.value.items);
+      if (peptideCatalogRes.status === "fulfilled") setPeptideCatalog(peptideCatalogRes.value.items);
       if (mySupplementsRes.status === "fulfilled") setMySupplements(mySupplementsRes.value.items);
       if (myMedicationsRes.status === "fulfilled") setMyMedications(myMedicationsRes.value.items);
       if (myTherapiesRes.status === "fulfilled") setMyTherapies(myTherapiesRes.value.items);
-      const allRejected = [stacksRes, supplementCatalogRes, medicationCatalogRes, therapyCatalogRes, mySupplementsRes, myMedicationsRes, myTherapiesRes].every((r) => r.status === "rejected");
+      if (myPeptidesRes.status === "fulfilled") setMyPeptides(myPeptidesRes.value.items);
+      const allRejected = [stacksRes, supplementCatalogRes, medicationCatalogRes, therapyCatalogRes, peptideCatalogRes, mySupplementsRes, myMedicationsRes, myTherapiesRes, myPeptidesRes].every((r) => r.status === "rejected");
       if (allRejected) showError("Failed to load protocols");
     } catch (error) {
       showError("Failed to load protocols");
@@ -180,6 +192,19 @@ export default function ProtocolsScreen() {
         })}
       />
 
+      <ActiveProtocolItemsSection
+        title="Active Peptides"
+        emptyIcon="eyedropper"
+        emptyTitle="No peptides added yet"
+        emptyHint="Browse the peptide catalog below to add research peptides, therapeutic peptides, or performance compounds."
+        items={myPeptides.map((item) => ({
+          id: item.id,
+          name: item.peptide.name,
+          meta: `${item.dosage_amount}${item.dosage_unit}${item.route ? ` · ${item.route}` : ""} · ${getFrequencyLabel(item.frequency)} · ${getTakeWindowLabel(item.take_window)}`,
+          href: `/user-peptide/${item.id}`,
+        }))}
+      />
+
       <CatalogSearchInput value={search} onChangeText={setSearch} />
 
       <CatalogSection
@@ -218,6 +243,19 @@ export default function ProtocolsScreen() {
           iconName: "heartbeat",
         }))}
         emptyText="No modalities matched your search."
+      />
+
+      <CatalogSection
+        title="Peptide Catalog"
+        categoryFilter
+        items={peptideCatalog.map((item) => ({
+          id: item.id,
+          name: item.name,
+          category: item.category.replace(/_/g, " "),
+          href: `/peptide/${item.id}`,
+          iconName: "eyedropper",
+        }))}
+        emptyText="No peptides matched your search."
       />
 
       <View style={{ height: 40 }} />

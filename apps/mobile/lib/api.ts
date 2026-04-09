@@ -5,9 +5,11 @@ export { medications } from "./api/medications";
 export { nutrition } from "./api/nutrition";
 export { protocols } from "./api/protocols";
 export { supplements } from "./api/supplements";
+export { peptides } from "./api/peptides";
 export { therapies } from "./api/therapies";
 export { tracking } from "./api/tracking";
 export { userMedications } from "./api/user-medications";
+export { userPeptides } from "./api/user-peptides";
 export { userSupplements } from "./api/user-supplements";
 export { userTherapies } from "./api/user-therapies";
 
@@ -23,6 +25,8 @@ export type {
   MedicationAIProfile,
   Medication,
   NutritionCycle,
+  Peptide,
+  PeptideCategory,
   NutritionCycleType,
   NutritionMacroProfile,
   NutritionPhase,
@@ -43,6 +47,7 @@ export type {
   TrackingSuggestion,
   User,
   UserMedication,
+  UserPeptide,
   UserSupplement,
   UserTherapy,
 } from "@protocols/domain";

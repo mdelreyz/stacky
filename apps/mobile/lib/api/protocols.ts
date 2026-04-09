@@ -17,6 +17,7 @@ export const protocols = {
     user_supplement_ids: string[];
     user_medication_ids?: string[];
     user_therapy_ids?: string[];
+    user_peptide_ids?: string[];
   }) =>
     request<Protocol>("/api/v1/users/me/protocols", {
       method: "POST",
@@ -33,6 +34,7 @@ export const protocols = {
       user_supplement_ids?: string[];
       user_medication_ids?: string[];
       user_therapy_ids?: string[];
+      user_peptide_ids?: string[];
     }
   ) =>
     request<Protocol>(`/api/v1/users/me/protocols/${id}`, {

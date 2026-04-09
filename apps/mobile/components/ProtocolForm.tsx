@@ -6,7 +6,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { colors } from "@/constants/Colors";
 import { ItemSelectionList, type SelectableItem } from "@/components/protocols/ItemSelectionList";
 import { ProtocolScheduleSection } from "@/components/protocols/ProtocolScheduleSection";
-import type { UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
+import type { UserMedication, UserPeptide, UserSupplement, UserTherapy } from "@/lib/api";
 import type { ProtocolFormState } from "@/lib/protocol-schedule";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { describeTherapySettings } from "@/lib/therapy-settings";
@@ -42,12 +42,22 @@ function toTherapyItem(t: UserTherapy): SelectableItem {
   };
 }
 
+function toPeptideItem(p: UserPeptide): SelectableItem {
+  return {
+    id: p.id,
+    title: p.peptide.name,
+    meta: `${p.dosage_amount}${p.dosage_unit}${p.route ? ` \u00b7 ${p.route}` : ""} \u00b7 ${getFrequencyLabel(p.frequency)} \u00b7 ${getTakeWindowLabel(p.take_window)}`,
+    is_active: p.is_active,
+  };
+}
+
 export function ProtocolForm({
   state,
   setState,
   supplements,
   medications,
   therapies,
+  peptides,
   saving,
   primaryLabel,
   onSubmit,
@@ -59,6 +69,7 @@ export function ProtocolForm({
   supplements: UserSupplement[];
   medications: UserMedication[];
   therapies: UserTherapy[];
+  peptides: UserPeptide[];
   saving: boolean;
   primaryLabel: string;
   onSubmit: () => void;
@@ -68,9 +79,10 @@ export function ProtocolForm({
   const supplementItems = useMemo(() => supplements.map(toSupplementItem), [supplements]);
   const medicationItems = useMemo(() => medications.map(toMedicationItem), [medications]);
   const therapyItems = useMemo(() => therapies.map(toTherapyItem), [therapies]);
+  const peptideItems = useMemo(() => peptides.map(toPeptideItem), [peptides]);
 
   const toggleId = useCallback(
-    (key: "selectedUserSupplementIds" | "selectedUserMedicationIds" | "selectedUserTherapyIds", id: string) => {
+    (key: "selectedUserSupplementIds" | "selectedUserMedicationIds" | "selectedUserTherapyIds" | "selectedUserPeptideIds", id: string) => {
       setState((current) => ({
         ...current,
         [key]: current[key].includes(id)
@@ -126,6 +138,14 @@ export function ProtocolForm({
         items={therapyItems}
         selectedIds={state.selectedUserTherapyIds}
         onToggle={(id) => toggleId("selectedUserTherapyIds", id)}
+      />
+
+      <ItemSelectionList
+        title="Included Peptides"
+        helperText="Research, therapeutic, or performance peptides with injection schedules and cycling."
+        items={peptideItems}
+        selectedIds={state.selectedUserPeptideIds}
+        onToggle={(id) => toggleId("selectedUserPeptideIds", id)}
       />
 
       <Pressable

@@ -12,6 +12,7 @@ import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
 import {
   userMedications as userMedicationsApi,
+  userPeptides as userPeptidesApi,
   protocols as protocolsApi,
   userSupplements as userSupplementsApi,
   userTherapies as userTherapiesApi,
@@ -23,7 +24,7 @@ import {
   getProtocolScheduleValidationError,
   protocolScheduleFromProtocol,
 } from "@/lib/protocol-schedule";
-import type { Protocol, UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
+import type { Protocol, UserMedication, UserPeptide, UserSupplement, UserTherapy } from "@/lib/api";
 
 export default function ManageProtocolScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -31,6 +32,7 @@ export default function ManageProtocolScreen() {
   const [supplements, setSupplements] = useState<UserSupplement[]>([]);
   const [medications, setMedications] = useState<UserMedication[]>([]);
   const [therapies, setTherapies] = useState<UserTherapy[]>([]);
+  const [peptides, setPeptides] = useState<UserPeptide[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [formState, setFormState] = useState<ProtocolFormState>(createDefaultProtocolFormState);
@@ -44,8 +46,9 @@ export default function ManageProtocolScreen() {
       userSupplementsApi.list(false),
       userMedicationsApi.list(false),
       userTherapiesApi.list(false),
+      userPeptidesApi.list(false),
     ])
-      .then(([protocolResult, supplementsResult, medicationsResult, therapiesResult]) => {
+      .then(([protocolResult, supplementsResult, medicationsResult, therapiesResult, peptidesResult]) => {
         if (cancelled) return;
         if (protocolResult.status === "rejected") {
           showError("Failed to load protocol data");
@@ -56,6 +59,7 @@ export default function ManageProtocolScreen() {
         if (supplementsResult.status === "fulfilled") setSupplements(supplementsResult.value.items);
         if (medicationsResult.status === "fulfilled") setMedications(medicationsResult.value.items);
         if (therapiesResult.status === "fulfilled") setTherapies(therapiesResult.value.items);
+        if (peptidesResult.status === "fulfilled") setPeptides(peptidesResult.value.items);
         setFormState({
           name: nextProtocol.name,
           description: nextProtocol.description || "",
@@ -67,6 +71,9 @@ export default function ManageProtocolScreen() {
             .filter((itemId): itemId is string => Boolean(itemId)),
           selectedUserTherapyIds: nextProtocol.items
             .map((item) => item.user_therapy?.id)
+            .filter((itemId): itemId is string => Boolean(itemId)),
+          selectedUserPeptideIds: nextProtocol.items
+            .map((item) => item.user_peptide?.id)
             .filter((itemId): itemId is string => Boolean(itemId)),
           schedule: protocolScheduleFromProtocol(nextProtocol),
         });
@@ -89,7 +96,8 @@ export default function ManageProtocolScreen() {
     if (
       formState.selectedUserSupplementIds.length === 0 &&
       formState.selectedUserMedicationIds.length === 0 &&
-      formState.selectedUserTherapyIds.length === 0
+      formState.selectedUserTherapyIds.length === 0 &&
+      formState.selectedUserPeptideIds.length === 0
     ) {
       showError("Stacks need at least one item. Delete the stack if you no longer need it.");
       return;
@@ -109,6 +117,7 @@ export default function ManageProtocolScreen() {
         user_supplement_ids: formState.selectedUserSupplementIds,
         user_medication_ids: formState.selectedUserMedicationIds,
         user_therapy_ids: formState.selectedUserTherapyIds,
+        user_peptide_ids: formState.selectedUserPeptideIds,
       });
       router.replace("/(tabs)/protocols");
     } catch (error: any) {
@@ -159,6 +168,7 @@ export default function ManageProtocolScreen() {
         supplements={supplements}
         medications={medications}
         therapies={therapies}
+        peptides={peptides}
         saving={saving}
         primaryLabel="Save Stack"
         onSubmit={handleSave}
