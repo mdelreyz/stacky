@@ -33,3 +33,8 @@ class User(Base):
     nutrition_cycles = relationship("NutritionCycle", back_populates="user")
     protocols = relationship("Protocol", back_populates="user")
     preferences = relationship("UserPreferences", back_populates="user", uselist=False)
+    custom_exercises = relationship("Exercise", back_populates="user")
+    workout_routines = relationship("WorkoutRoutine", back_populates="user")
+    exercise_regimes = relationship("ExerciseRegime", back_populates="user")
+    workout_sessions = relationship("WorkoutSession", back_populates="user")
+    gym_locations = relationship("GymLocation", back_populates="user")

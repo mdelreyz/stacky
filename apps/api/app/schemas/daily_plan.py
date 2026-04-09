@@ -49,9 +49,19 @@ class SkincareGuidanceResponse(BaseModel):
     recommendation: str
 
 
+class ExercisePlanItemResponse(BaseModel):
+    routine_id: str
+    routine_name: str
+    exercise_count: int
+    estimated_duration_minutes: int | None
+    regime_name: str
+    status: Literal["pending", "in_progress", "completed"]
+
+
 class DailyPlanResponse(BaseModel):
     date: date
     windows: list[TakeWindowPlanResponse]
+    exercise_plan: list[ExercisePlanItemResponse]
     nutrition_phase: ActiveNutritionPhaseResponse | None
     skincare_guidance: SkincareGuidanceResponse | None
     cycle_alerts: list[CycleAlertResponse]

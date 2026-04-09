@@ -9,10 +9,12 @@ export function DailyPlanWindowCard({
   windowPlan,
   pendingActionItemId,
   onUpdateAdherence,
+  onRequestSkip,
 }: {
   windowPlan: TakeWindowPlan;
   pendingActionItemId: string | null;
-  onUpdateAdherence: (item: DailyPlanItem, status: "taken" | "skipped") => Promise<void>;
+  onUpdateAdherence: (item: DailyPlanItem, status: "taken" | "skipped", skipReason?: string) => Promise<void>;
+  onRequestSkip: (item: DailyPlanItem) => void;
 }) {
   const [markingAll, setMarkingAll] = useState(false);
   const pendingItems = windowPlan.items.filter((i) => i.adherence_status === "pending");
@@ -64,7 +66,8 @@ export function DailyPlanWindowCard({
             <AdherenceActions
               item={item}
               loading={pendingActionItemId === item.id}
-              onUpdate={(status) => onUpdateAdherence(item, status)}
+              onTake={() => void onUpdateAdherence(item, "taken")}
+              onSkip={() => onRequestSkip(item)}
             />
           </View>
         ))
@@ -85,11 +88,13 @@ export function DailyPlanWindowCard({
 function AdherenceActions({
   item,
   loading,
-  onUpdate,
+  onTake,
+  onSkip,
 }: {
   item: DailyPlanItem;
   loading: boolean;
-  onUpdate: (status: "taken" | "skipped") => Promise<void>;
+  onTake: () => void;
+  onSkip: () => void;
 }) {
   return (
     <View style={styles.actionsRow}>
@@ -100,7 +105,7 @@ function AdherenceActions({
           loading && styles.actionButtonDisabled,
           item.adherence_status === "taken" && styles.actionButtonActive,
         ]}
-        onPress={() => void onUpdate("taken")}
+        onPress={onTake}
         disabled={loading}
       >
         <Text style={styles.takeButtonText}>
@@ -120,7 +125,7 @@ function AdherenceActions({
           loading && styles.actionButtonDisabled,
           item.adherence_status === "skipped" && styles.skipButtonActive,
         ]}
-        onPress={() => void onUpdate("skipped")}
+        onPress={onSkip}
         disabled={loading}
       >
         <Text style={styles.skipButtonText}>Skip</Text>

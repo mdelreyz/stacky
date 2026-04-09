@@ -16,12 +16,14 @@ import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
 import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
 import { NutritionPhaseCard } from "@/components/today/NutritionPhaseCard";
 import { SkincareGuidanceCard } from "@/components/today/SkincareGuidanceCard";
+import { SkipReasonModal } from "@/components/today/SkipReasonModal";
+import { TodayExerciseCard } from "@/components/today/TodayExerciseCard";
 import { TrackingSummaryCard } from "@/components/today/TrackingSummaryCard";
 import { TodayDateHeader } from "@/components/today/TodayDateHeader";
 import { getTodayIsoDate, shiftIsoDate } from "@/lib/date";
 import { showError } from "@/lib/errors";
 import { tracking as trackingApi } from "@/lib/api";
-import type { DailyPlan, TrackingOverview } from "@/lib/api";
+import type { DailyPlan, DailyPlanItem, TrackingOverview } from "@/lib/api";
 
 export default function TodayScreen() {
   const [selectedDate, setSelectedDate] = useState(getTodayIsoDate);
@@ -30,6 +32,7 @@ export default function TodayScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingActionItemId, setPendingActionItemId] = useState<string | null>(null);
+  const [skipModalItem, setSkipModalItem] = useState<DailyPlanItem | null>(null);
 
   const loadPlan = useCallback(async (date: string, refresh = false) => {
     if (refresh) {
@@ -107,7 +110,8 @@ export default function TodayScreen() {
           key={windowPlan.window}
           windowPlan={windowPlan}
           pendingActionItemId={pendingActionItemId}
-          onUpdateAdherence={async (item, status) => {
+          onRequestSkip={(item) => setSkipModalItem(item)}
+          onUpdateAdherence={async (item, status, skipReason?) => {
             setPendingActionItemId(item.id);
             try {
               const adherenceByType: Record<string, typeof dailyPlanApi.updateSupplementAdherence> = {
@@ -121,6 +125,7 @@ export default function TodayScreen() {
                 await updateAdherence(item.id, {
                   status,
                   date: selectedDate,
+                  ...(skipReason ? { skip_reason: skipReason } : {}),
                 });
               } catch {
                 // Offline — queue the write for later
@@ -134,7 +139,7 @@ export default function TodayScreen() {
                 await enqueueWrite({
                   path: `/api/v1/users/me/adherence/${typePath}/${item.id}`,
                   method: "POST",
-                  body: JSON.stringify({ status, date: selectedDate }),
+                  body: JSON.stringify({ status, date: selectedDate, ...(skipReason ? { skip_reason: skipReason } : {}) }),
                 });
               }
               // Invalidate cache so next fetch gets fresh data
@@ -148,6 +153,53 @@ export default function TodayScreen() {
           }}
         />
       ))}
+
+      <SkipReasonModal
+        visible={skipModalItem !== null}
+        itemName={skipModalItem?.name ?? ""}
+        onCancel={() => setSkipModalItem(null)}
+        onConfirm={async (reason) => {
+          if (!skipModalItem) return;
+          const item = skipModalItem;
+          setSkipModalItem(null);
+          setPendingActionItemId(item.id);
+          try {
+            const adherenceByType: Record<string, typeof dailyPlanApi.updateSupplementAdherence> = {
+              supplement: dailyPlanApi.updateSupplementAdherence,
+              medication: dailyPlanApi.updateMedicationAdherence,
+              therapy: dailyPlanApi.updateTherapyAdherence,
+              peptide: dailyPlanApi.updatePeptideAdherence,
+            };
+            const updateAdherence = adherenceByType[item.type] ?? dailyPlanApi.updateSupplementAdherence;
+            try {
+              await updateAdherence(item.id, {
+                status: "skipped",
+                date: selectedDate,
+                ...(reason ? { skip_reason: reason } : {}),
+              });
+            } catch {
+              const typePathMap: Record<string, string> = {
+                supplement: "supplements",
+                medication: "medications",
+                therapy: "therapies",
+                peptide: "peptides",
+              };
+              const typePath = typePathMap[item.type] ?? "supplements";
+              await enqueueWrite({
+                path: `/api/v1/users/me/adherence/${typePath}/${item.id}`,
+                method: "POST",
+                body: JSON.stringify({ status: "skipped", date: selectedDate, ...(reason ? { skip_reason: reason } : {}) }),
+              });
+            }
+            await invalidateCache(`daily-plan:${selectedDate}`);
+            await loadPlan(selectedDate, true);
+          } catch (error) {
+            showError("Failed to skip item");
+          } finally {
+            setPendingActionItemId((current) => (current === item.id ? null : current));
+          }
+        }}
+      />
     </ScrollView>
   );
 }

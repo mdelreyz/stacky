@@ -35,6 +35,8 @@ export function TrackingSummaryCard({
           <Metric label="Done" value={`${overview.taken_count}/${overview.scheduled_count}`} />
         </View>
 
+        {overview.daily_completion && <MiniStreak dailyCompletion={overview.daily_completion} />}
+
         {overview.suggestions.length > 0 ? (
           <Text style={styles.hint}>{overview.suggestions[0].headline}</Text>
         ) : (
@@ -50,6 +52,29 @@ function Metric({ label, value }: { label: string; value: string }) {
     <View style={styles.metric}>
       <Text style={styles.metricValue}>{value}</Text>
       <Text style={styles.metricLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function MiniStreak({ dailyCompletion }: { dailyCompletion: Record<string, boolean | null> }) {
+  const dates = Object.keys(dailyCompletion).sort();
+  const last7 = dates.slice(-7);
+  if (last7.length === 0) return null;
+
+  return (
+    <View style={styles.streakRow}>
+      {last7.map((date) => {
+        const status = dailyCompletion[date];
+        const dayLabel = new Date(date + "T12:00:00").toLocaleDateString(undefined, { weekday: "narrow" });
+        const dotColor =
+          status === true ? colors.success : status === false ? "#ffa94d" : colors.border;
+        return (
+          <View key={date} style={styles.streakDay}>
+            <Text style={styles.streakLabel}>{dayLabel}</Text>
+            <View style={[styles.streakDot, { backgroundColor: dotColor }]} />
+          </View>
+        );
+      })}
     </View>
   );
 }
@@ -101,6 +126,26 @@ const styles = StyleSheet.create({
     color: colors.gray,
     marginTop: 4,
     textTransform: "uppercase",
+  },
+  streakRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 14,
+    paddingHorizontal: 4,
+  },
+  streakDay: {
+    alignItems: "center",
+    gap: 4,
+  },
+  streakLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#5c7c94",
+  },
+  streakDot: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
   hint: {
     fontSize: 13,

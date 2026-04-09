@@ -1,9 +1,19 @@
 import type { TakeWindow } from "./user-items";
 import type { ActiveNutritionPhase } from "./nutrition";
 
+export interface ExercisePlanItem {
+  routine_id: string;
+  routine_name: string;
+  exercise_count: number;
+  estimated_duration_minutes: number | null;
+  regime_name: string;
+  status: "pending" | "in_progress" | "completed";
+}
+
 export interface DailyPlan {
   date: string;
   windows: TakeWindowPlan[];
+  exercise_plan: ExercisePlanItem[];
   nutrition_phase: ActiveNutritionPhase | null;
   skincare_guidance: SkincareGuidance | null;
   cycle_alerts: CycleAlert[];

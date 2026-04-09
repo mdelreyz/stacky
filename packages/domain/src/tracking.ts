@@ -11,6 +11,7 @@ export interface TrackingOverview {
   pending_count: number;
   completion_rate: number;
   current_streak_days: number;
+  daily_completion: Record<string, boolean | null>;
   item_stats: TrackingItemStat[];
   recent_events: TrackingEvent[];
   suggestions: TrackingSuggestion[];

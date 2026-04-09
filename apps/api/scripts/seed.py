@@ -11,10 +11,12 @@ from sqlalchemy import func, select
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.database import Base, async_session_factory, engine
+from app.models.exercise import Exercise
 from app.models.medication import Medication
 from app.models.peptide import Peptide
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
+from scripts.seed_exercise_catalog import EXERCISE_CATALOG
 from scripts.seed_supplement_catalog import SUPPLEMENT_CATALOG
 
 
@@ -1214,16 +1216,42 @@ async def seed():
             session.add(peptide)
             seeded_peptides += 1
 
+        # Exercises (shared catalog — user_id=NULL)
+        existing_exercise_names = {
+            name
+            for name in (
+                await session.execute(select(Exercise.name).where(Exercise.user_id.is_(None)))
+            ).scalars().all()
+        }
+        seeded_exercises = 0
+        for data in EXERCISE_CATALOG:
+            if data["name"] in existing_exercise_names:
+                continue
+            exercise = Exercise(
+                name=data["name"],
+                category=data["category"],
+                primary_muscle=data["primary_muscle"],
+                secondary_muscles=data.get("secondary_muscles"),
+                equipment=data["equipment"],
+                description=data.get("description"),
+                instructions=data.get("instructions"),
+                is_compound=data.get("is_compound", False),
+            )
+            session.add(exercise)
+            seeded_exercises += 1
+
         await session.commit()
         supplement_count = (await session.execute(select(func.count()).select_from(Supplement))).scalar_one()
         therapy_count = (await session.execute(select(func.count()).select_from(Therapy))).scalar_one()
         medication_count = (await session.execute(select(func.count()).select_from(Medication))).scalar_one()
         peptide_count = (await session.execute(select(func.count()).select_from(Peptide))).scalar_one()
+        exercise_count = (await session.execute(select(func.count()).select_from(Exercise))).scalar_one()
         print(
             f"Seeded {seeded_supplements} new supplements, {seeded_medications} new medications, "
-            f"{seeded_therapies} new therapies, and {seeded_peptides} new peptides. "
+            f"{seeded_therapies} new therapies, {seeded_peptides} new peptides, "
+            f"and {seeded_exercises} new exercises. "
             f"Database now has {supplement_count} supplements, {medication_count} medications, "
-            f"{therapy_count} therapies, and {peptide_count} peptides."
+            f"{therapy_count} therapies, {peptide_count} peptides, and {exercise_count} exercises."
         )
 
 

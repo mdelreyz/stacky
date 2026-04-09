@@ -5,6 +5,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useLocalSearchParams } from "expo-router";
 
 import { colors } from "@/constants/Colors";
+import { AdherenceCalendar } from "@/components/tracking/AdherenceCalendar";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { tracking as trackingApi } from "@/lib/api";
 import { formatIsoDate } from "@/lib/date";
@@ -62,6 +63,14 @@ export default function TrackingScreen() {
         title="Tracking"
         subtitle={`${formatIsoDate(overview.end_date)} snapshot`}
       />
+
+      {overview.daily_completion && (
+        <AdherenceCalendar
+          dailyCompletion={overview.daily_completion}
+          startDate={overview.start_date}
+          endDate={overview.end_date}
+        />
+      )}
 
       <View style={styles.summaryCard}>
         <Text style={styles.summaryTitle}>Execution Overview</Text>

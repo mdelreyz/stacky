@@ -226,6 +226,13 @@ async def build_tracking_overview(
 
     completion_rate = round(taken_count / scheduled_count, 3) if scheduled_count else 0.0
 
+    # Convert day_completion to a serializable dict:
+    # True = all taken, False = has pending/skipped, None = nothing scheduled
+    daily_completion = {
+        day.isoformat(): status
+        for day, status in sorted(day_completion.items())
+    }
+
     return {
         "window_days": days,
         "start_date": start_date,
@@ -237,6 +244,7 @@ async def build_tracking_overview(
         "pending_count": pending_count,
         "completion_rate": completion_rate,
         "current_streak_days": current_streak_days,
+        "daily_completion": daily_completion,
         "item_stats": sorted_stats,
         "recent_events": recent_events,
         "suggestions": suggestions,

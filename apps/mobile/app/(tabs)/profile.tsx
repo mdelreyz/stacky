@@ -28,6 +28,17 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.card}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/edit")}>
+          <FontAwesome name="pencil" size={18} color={colors.textSecondary} />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Edit Profile</Text>
+            <Text style={styles.menuHint}>Update your name</Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
         <Pressable style={styles.menuItem} onPress={() => router.push("/profile/location")}>
           <FontAwesome name="map-marker" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>

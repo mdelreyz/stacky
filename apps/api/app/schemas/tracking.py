@@ -51,6 +51,7 @@ class TrackingOverviewResponse(BaseModel):
     pending_count: int
     completion_rate: float
     current_streak_days: int
+    daily_completion: dict[str, bool | None]
     item_stats: list[TrackingItemStatResponse]
     recent_events: list[TrackingEventResponse]
     suggestions: list[TrackingSuggestionResponse]

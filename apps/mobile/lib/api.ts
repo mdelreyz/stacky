@@ -13,6 +13,12 @@ export { userMedications } from "./api/user-medications";
 export { userPeptides } from "./api/user-peptides";
 export { userSupplements } from "./api/user-supplements";
 export { userTherapies } from "./api/user-therapies";
+export { exercises } from "./api/exercises";
+export { workoutRoutines } from "./api/workout-routines";
+export { exerciseRegimes } from "./api/exercise-regimes";
+export { workoutSessions } from "./api/workout-sessions";
+export { exerciseStats } from "./api/exercise-stats";
+export { gymLocations } from "./api/gym-locations";
 
 export type {
   AdherenceResult,
@@ -62,4 +68,26 @@ export type {
   UserPeptide,
   UserSupplement,
   UserTherapy,
+  Exercise,
+  ExerciseCategory,
+  ExerciseEquipment,
+  ExerciseCreate,
+  ExerciseProgress,
+  ExerciseRegime,
+  ExerciseStatsOverview,
+  GymLocation,
+  GymLocationMatch,
+  MuscleGroup,
+  MuscleGroupVolume,
+  WeekDay,
+  WeeklyOverview,
+  WorkoutRoutine,
+  WorkoutRoutineCreate,
+  WorkoutRoutineListItem,
+  WorkoutSession,
+  WorkoutSessionCreate,
+  WorkoutSessionListItem,
+  WorkoutSet,
+  WorkoutSetInput,
+  SessionExercise,
 } from "@protocols/domain";

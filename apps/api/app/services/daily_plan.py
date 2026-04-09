@@ -1,18 +1,20 @@
 import re
 from collections.abc import Iterable
-from datetime import date
+from datetime import date, datetime, time, timezone
 from typing import TypeAlias
 
 from sqlalchemy import select
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
+from app.models.enums import Frequency, TakeWindow, WeekDay
+from app.models.exercise_regime import ExerciseRegime
 from app.models.nutrition_cycle import NutritionCycle
 from app.models.user import User
 from app.models.user_medication import UserMedication
-from app.models.enums import Frequency, TakeWindow
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
+from app.models.workout_session import WorkoutSession
 from app.services.nutrition_cycles import nutrition_cycle_alert, serialize_active_nutrition_phase
 from app.services.regimen_schedule import (
     adherence_day_bounds,
@@ -222,6 +224,79 @@ def _interaction_warnings(due_items: list[InteractionItem]) -> list[dict]:
     return sorted(warnings_by_pair.values(), key=lambda warning: SEVERITY_ORDER.get(warning["severity"], 0), reverse=True)
 
 
+_WEEKDAY_MAP = {
+    0: WeekDay.monday,
+    1: WeekDay.tuesday,
+    2: WeekDay.wednesday,
+    3: WeekDay.thursday,
+    4: WeekDay.friday,
+    5: WeekDay.saturday,
+    6: WeekDay.sunday,
+}
+
+
+async def _build_exercise_plan(user: User, target_date: date) -> list[dict]:
+    """Return today's scheduled workouts from the active regime, with completion status."""
+    weekday = _WEEKDAY_MAP[target_date.weekday()]
+
+    async with async_session_factory() as session:
+        result = await session.execute(
+            select(ExerciseRegime).where(
+                ExerciseRegime.user_id == user.id,
+                ExerciseRegime.is_active.is_(True),
+            )
+        )
+        active_regime = result.scalar_one_or_none()
+        if not active_regime:
+            return []
+
+        # Find today's entries
+        today_entries = [e for e in active_regime.schedule_entries if e.day_of_week == weekday]
+        if not today_entries:
+            return []
+
+        # Check if a session was already logged today for each routine
+        day_start = datetime.combine(target_date, time.min, tzinfo=timezone.utc)
+        day_end = datetime.combine(target_date, time.max, tzinfo=timezone.utc)
+
+        sessions_result = await session.execute(
+            select(WorkoutSession).where(
+                WorkoutSession.user_id == user.id,
+                WorkoutSession.started_at >= day_start,
+                WorkoutSession.started_at <= day_end,
+            )
+        )
+        todays_sessions = sessions_result.scalars().all()
+        completed_routine_ids = {
+            str(s.routine_id) for s in todays_sessions if s.routine_id and s.completed_at
+        }
+        started_routine_ids = {
+            str(s.routine_id) for s in todays_sessions if s.routine_id
+        }
+
+        plan_items = []
+        for entry in today_entries:
+            routine = entry.routine
+            routine_id_str = str(routine.id)
+            if routine_id_str in completed_routine_ids:
+                status = "completed"
+            elif routine_id_str in started_routine_ids:
+                status = "in_progress"
+            else:
+                status = "pending"
+
+            plan_items.append({
+                "routine_id": routine_id_str,
+                "routine_name": routine.name,
+                "exercise_count": len(routine.exercises),
+                "estimated_duration_minutes": routine.estimated_duration_minutes,
+                "regime_name": active_regime.name,
+                "status": status,
+            })
+
+        return plan_items
+
+
 async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
     resolved_date, user_tz = resolve_user_date(target_date, user.timezone)
     schedule_context = await load_regimen_schedule_context(user)
@@ -339,9 +414,13 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
             }
         )
 
+    # ─── Exercise: today's routine from active regime ────────────
+    exercise_plan = await _build_exercise_plan(user, resolved_date)
+
     return {
         "date": resolved_date.isoformat(),
         "windows": windows,
+        "exercise_plan": exercise_plan,
         "nutrition_phase": active_nutrition_phase,
         "skincare_guidance": skincare_guidance,
         "cycle_alerts": [active_nutrition_alert] if active_nutrition_alert else [],
