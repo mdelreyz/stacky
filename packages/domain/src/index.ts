@@ -61,7 +61,13 @@ export type {
   RecommendationItemType,
   RecommendationResponse,
   RecommendedItem,
+  ScoreDimension,
+  StackScoreResponse,
+  SynergyPair,
   UserPreferences,
   UserPreferencesUpdate,
+  WizardRecommendedItem,
+  WizardResponse,
+  WizardTurn,
 } from "./preferences";
 export type { User, AuthResponse } from "./user";

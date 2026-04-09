@@ -18,6 +18,7 @@ from app.models.medication import Medication, MedicationCategory
 from app.models.therapy import Therapy
 from app.models.peptide import Peptide
 from app.models.user_preferences import UserPreferences
+from app.services.stack_score import KNOWN_SYNERGIES
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +160,18 @@ def _peptide_to_dict(p: Peptide) -> dict:
 
 # ── Static fallback ─────────────────────────────────────────────────────────
 
+def _find_synergy_partners(current_names: list[str]) -> dict[str, str]:
+    """Map candidate names → synergy reason based on what the user already takes."""
+    current_lower = {n.lower() for n in current_names}
+    partners: dict[str, str] = {}  # candidate name (lower) → reason
+    for name_a, name_b, benefit in KNOWN_SYNERGIES:
+        if name_a.lower() in current_lower and name_b.lower() not in current_lower:
+            partners[name_b.lower()] = f"Synergy with {name_a}: {benefit}"
+        elif name_b.lower() in current_lower and name_a.lower() not in current_lower:
+            partners[name_a.lower()] = f"Synergy with {name_b}: {benefit}"
+    return partners
+
+
 def static_recommendations(
     *,
     catalog: CatalogSnapshot,
@@ -166,6 +179,7 @@ def static_recommendations(
     max_items: int,
     exclude_ids: set[str],
     item_types: list[str],
+    current_item_names: list[str] | None = None,
 ) -> list[dict]:
     """Rank catalog items using the static priority tiers. No AI needed."""
     priority_list: list[str] = []
@@ -198,8 +212,21 @@ def static_recommendations(
         for p in catalog.peptides:
             catalog_by_name[p["name"].lower()] = {**p, "item_type": "peptide"}
 
+    # Identify synergy partners with the user's current stack
+    synergy_partners = _find_synergy_partners(current_item_names or [])
+
+    # Boost synergy partners: prepend them to the priority list if not already high
+    synergy_boosted: list[str] = []
+    for candidate_lower, _reason in synergy_partners.items():
+        if candidate_lower not in seen and candidate_lower in catalog_by_name:
+            synergy_boosted.append(catalog_by_name[candidate_lower]["name"])
+            seen.add(candidate_lower)
+
+    # Synergy items go first, then the goal-priority list
+    final_order = synergy_boosted + ordered_names
+
     results: list[dict] = []
-    for rank, name in enumerate(ordered_names, 1):
+    for rank, name in enumerate(final_order, 1):
         if len(results) >= max_items:
             break
         entry = catalog_by_name.get(name.lower())
@@ -207,12 +234,17 @@ def static_recommendations(
             continue
         if entry["id"] in exclude_ids:
             continue
+        synergy_reason = synergy_partners.get(name.lower())
+        if synergy_reason:
+            reason = f"{synergy_reason} — also top-ranked for {', '.join(goals) or 'general longevity'}"
+        else:
+            reason = f"Top-ranked for {', '.join(goals) or 'general longevity'} (evidence-based priority #{rank})"
         results.append({
             "catalog_id": entry["id"],
             "item_type": entry["item_type"],
             "name": entry["name"],
             "category": entry.get("category", "other"),
-            "reason": f"Top-ranked for {', '.join(goals) or 'general longevity'} (evidence-based priority #{rank})",
+            "reason": reason,
             "priority_rank": len(results) + 1,
             "suggested_dosage": None,
             "suggested_window": None,
@@ -256,7 +288,12 @@ def _build_recommendation_prompt(
 
     current_section = ""
     if current_item_names:
-        current_section = f"\n\nUser currently takes: {', '.join(current_item_names)}\nDo NOT recommend these. Consider synergies and avoid redundancy."
+        synergy_hints = _find_synergy_partners(current_item_names)
+        synergy_text = ""
+        if synergy_hints:
+            synergy_lines = [f"  - {name}: {reason}" for name, reason in synergy_hints.items()]
+            synergy_text = "\n\nKNOWN SYNERGIES with current stack (boost these if available in catalog):\n" + "\n".join(synergy_lines)
+        current_section = f"\n\nUser currently takes: {', '.join(current_item_names)}\nDo NOT recommend these. Consider synergies and avoid redundancy.{synergy_text}"
 
     catalog_sections = []
     if "supplement" in item_types and catalog.supplements:
@@ -377,5 +414,6 @@ def generate_recommendations(
             max_items=max_items,
             exclude_ids=exclude_ids,
             item_types=item_types,
+            current_item_names=current_item_names,
         )
         return items, f"Recommendations based on evidence-based priority ranking for {', '.join(goals) or 'general longevity'}."

@@ -134,3 +134,58 @@ class InteractionCheckResponse(BaseModel):
     has_critical: bool
     has_major: bool
     total_warnings: int
+
+
+# ── Stack Score ─────────────────────────────────────────────────────
+
+
+class ScoreDimensionResponse(BaseModel):
+    name: str
+    score: float
+    weight: float
+    details: str
+
+
+class SynergyPairResponse(BaseModel):
+    item_a: str
+    item_b: str
+    benefit: str
+
+
+class StackScoreResponse(BaseModel):
+    total_score: int
+    dimensions: list[ScoreDimensionResponse]
+    synergies_found: list[SynergyPairResponse]
+    suggestions: list[str]
+    item_count: int
+
+
+# ── Guided Wizard ───────────────────────────────────────────────────
+
+
+class WizardTurnSchema(BaseModel):
+    role: Literal["user", "assistant"]
+    content: str
+
+
+class WizardRequest(BaseModel):
+    message: str = Field(..., min_length=1, max_length=2000)
+    conversation: list[WizardTurnSchema] = Field(default_factory=list)
+
+
+class WizardRecommendedItem(BaseModel):
+    name: str
+    item_type: str
+    reason: str
+    suggested_dosage: str | None = None
+    suggested_window: str | None = None
+
+
+class WizardResponse(BaseModel):
+    assistant_message: str
+    conversation: list[WizardTurnSchema]
+    is_complete: bool
+    extracted_preferences: dict | None = None
+    recommended_items: list[WizardRecommendedItem] | None = None
+    protocol_name: str | None = None
+    summary: str | None = None

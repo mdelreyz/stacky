@@ -8,6 +8,9 @@ import type {
   HealthGoal,
   InteractionCheckResponse,
   Medication,
+  StackScoreResponse,
+  WizardResponse,
+  WizardTurn,
   NutritionCycle,
   NutritionPhase,
   Peptide,
@@ -709,6 +712,23 @@ export class ProtocolsAPI {
 
   async checkInteractions(): Promise<InteractionCheckResponse> {
     return this.request("/api/v1/users/me/preferences/interactions");
+  }
+
+  async getStackScore(): Promise<StackScoreResponse> {
+    return this.request("/api/v1/users/me/preferences/stack-score");
+  }
+
+  async wizardTurn(data: {
+    message: string;
+    conversation?: WizardTurn[];
+  }): Promise<WizardResponse> {
+    return this.request("/api/v1/users/me/preferences/wizard", {
+      method: "POST",
+      body: JSON.stringify({
+        message: data.message,
+        conversation: data.conversation ?? [],
+      }),
+    });
   }
 }
 

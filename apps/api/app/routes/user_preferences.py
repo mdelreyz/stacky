@@ -28,14 +28,23 @@ from app.schemas.user_preferences import (
     RecommendationRequest,
     RecommendationResponse,
     RecommendedItem,
+    ScoreDimensionResponse,
+    StackScoreResponse,
+    SynergyPairResponse,
     UserPreferencesCreate,
     UserPreferencesResponse,
     UserPreferencesUpdate,
+    WizardRecommendedItem,
+    WizardRequest,
+    WizardResponse,
+    WizardTurnSchema,
 )
 from app.services.interaction_checker import (
     build_item_dicts_for_checking,
     check_interactions,
 )
+from app.services.guided_wizard import WizardTurn, run_wizard_turn
+from app.services.stack_score import compute_stack_score
 from app.services.recommendation_engine import (
     CatalogSnapshot,
     generate_recommendations,
@@ -497,4 +506,109 @@ async def check_user_interactions(
         has_critical=any(i.severity == "critical" for i in interactions),
         has_major=any(i.severity == "major" for i in interactions),
         total_warnings=len(interactions),
+    )
+
+
+@router.get("/stack-score", response_model=StackScoreResponse)
+async def get_stack_score(
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Compute a 0-100 score rating the user's current active regimen."""
+    prefs = await _get_or_none(session, current_user.id)
+
+    # Load active items
+    supplements_result = await session.execute(
+        select(UserSupplement)
+        .options(selectinload(UserSupplement.supplement))
+        .where(UserSupplement.user_id == current_user.id, UserSupplement.is_active.is_(True))
+    )
+    user_supplements = list(supplements_result.scalars().all())
+
+    medications_result = await session.execute(
+        select(UserMedication)
+        .options(selectinload(UserMedication.medication))
+        .where(UserMedication.user_id == current_user.id, UserMedication.is_active.is_(True))
+    )
+    user_medications = list(medications_result.scalars().all())
+
+    peptides_result = await session.execute(
+        select(UserPeptide)
+        .options(selectinload(UserPeptide.peptide))
+        .where(UserPeptide.user_id == current_user.id, UserPeptide.is_active.is_(True))
+    )
+    user_peptides = list(peptides_result.scalars().all())
+
+    item_dicts = build_item_dicts_for_checking(
+        supplements=user_supplements,
+        medications=user_medications,
+        peptides=user_peptides,
+    )
+
+    interactions = check_interactions(item_dicts)
+
+    result = compute_stack_score(
+        item_dicts=item_dicts,
+        interactions=interactions,
+        preferences=prefs,
+    )
+
+    return StackScoreResponse(
+        total_score=result.total_score,
+        dimensions=[
+            ScoreDimensionResponse(
+                name=d.name, score=d.score, weight=d.weight, details=d.details,
+            )
+            for d in result.dimensions
+        ],
+        synergies_found=[
+            SynergyPairResponse(
+                item_a=s.item_a, item_b=s.item_b, benefit=s.benefit,
+            )
+            for s in result.synergies_found
+        ],
+        suggestions=result.suggestions,
+        item_count=result.item_count,
+    )
+
+
+@router.post("/wizard", response_model=WizardResponse)
+async def wizard_turn(
+    data: WizardRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    """Process one turn of the guided wizard conversation.
+
+    The client sends the user's message + full conversation history,
+    and gets back the assistant's response. When is_complete=True,
+    the response includes extracted preferences and recommendations
+    ready to be applied.
+    """
+    catalog = await _load_catalog(session, ["supplement", "medication", "therapy", "peptide"])
+
+    conversation = [
+        WizardTurn(role=t.role, content=t.content)
+        for t in data.conversation
+    ]
+
+    result = run_wizard_turn(
+        conversation=conversation,
+        user_message=data.message,
+        catalog=catalog,
+    )
+
+    return WizardResponse(
+        assistant_message=result.assistant_message,
+        conversation=[
+            WizardTurnSchema(role=t.role, content=t.content)
+            for t in result.conversation
+        ],
+        is_complete=result.is_complete,
+        extracted_preferences=result.extracted_preferences,
+        recommended_items=[
+            WizardRecommendedItem(**item) for item in result.recommended_items
+        ] if result.recommended_items else None,
+        protocol_name=result.protocol_name,
+        summary=result.summary,
     )

@@ -100,3 +100,51 @@ export interface InteractionCheckResponse {
   has_major: boolean;
   total_warnings: number;
 }
+
+// ── Stack Score ─────────────────────────────────────────────────────
+
+export interface ScoreDimension {
+  name: string;
+  score: number;
+  weight: number;
+  details: string;
+}
+
+export interface SynergyPair {
+  item_a: string;
+  item_b: string;
+  benefit: string;
+}
+
+export interface StackScoreResponse {
+  total_score: number;
+  dimensions: ScoreDimension[];
+  synergies_found: SynergyPair[];
+  suggestions: string[];
+  item_count: number;
+}
+
+// ── Guided Wizard ───────────────────────────────────────────────────
+
+export interface WizardTurn {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface WizardRecommendedItem {
+  name: string;
+  item_type: string;
+  reason: string;
+  suggested_dosage: string | null;
+  suggested_window: string | null;
+}
+
+export interface WizardResponse {
+  assistant_message: string;
+  conversation: WizardTurn[];
+  is_complete: boolean;
+  extracted_preferences: Record<string, unknown> | null;
+  recommended_items: WizardRecommendedItem[] | null;
+  protocol_name: string | null;
+  summary: string | null;
+}

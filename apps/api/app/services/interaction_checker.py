@@ -104,39 +104,45 @@ def build_item_dicts_for_checking(
     items: list[dict] = []
 
     for s in (supplements or []):
-        profile = s.supplement.ai_profile if hasattr(s, "supplement") else getattr(s, "ai_profile", None)
+        catalog = s.supplement if hasattr(s, "supplement") else s
+        profile = getattr(catalog, "ai_profile", None)
         common_names = []
         if profile and isinstance(profile, dict):
             common_names = profile.get("common_names", [])
-        name = s.supplement.name if hasattr(s, "supplement") else s.name
         items.append({
-            "name": name,
+            "name": catalog.name,
             "ai_profile": profile,
             "common_names": common_names,
+            "category": getattr(catalog, "category", None),
+            "goals": getattr(catalog, "goals", None) or [],
         })
 
     for m in (medications or []):
-        profile = m.medication.ai_profile if hasattr(m, "medication") else getattr(m, "ai_profile", None)
+        catalog = m.medication if hasattr(m, "medication") else m
+        profile = getattr(catalog, "ai_profile", None)
         common_names = []
         if profile and isinstance(profile, dict):
             common_names = profile.get("common_names", [])
-        name = m.medication.name if hasattr(m, "medication") else m.name
         items.append({
-            "name": name,
+            "name": catalog.name,
             "ai_profile": profile,
             "common_names": common_names,
+            "category": getattr(catalog, "category", None),
+            "goals": getattr(catalog, "goals", None) or [],
         })
 
     for p in (peptides or []):
-        profile = p.peptide.ai_profile if hasattr(p, "peptide") else getattr(p, "ai_profile", None)
+        catalog = p.peptide if hasattr(p, "peptide") else p
+        profile = getattr(catalog, "ai_profile", None)
         common_names = []
         if profile and isinstance(profile, dict):
             common_names = profile.get("common_names", [])
-        name = p.peptide.name if hasattr(p, "peptide") else p.name
         items.append({
-            "name": name,
+            "name": catalog.name,
             "ai_profile": profile,
             "common_names": common_names,
+            "category": getattr(catalog, "category", None),
+            "goals": getattr(catalog, "goals", None) or [],
         })
 
     return items
