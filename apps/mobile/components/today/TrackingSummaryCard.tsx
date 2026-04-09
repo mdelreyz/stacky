@@ -2,6 +2,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import type { TrackingOverview } from "@/lib/api";
 
 export function TrackingSummaryCard({
@@ -25,7 +26,7 @@ export function TrackingSummaryCard({
             <Text style={styles.title}>Tracking</Text>
             <Text style={styles.subtitle}>Last {overview.window_days} days</Text>
           </View>
-          <FontAwesome name="line-chart" size={18} color="#1c7ed6" />
+          <FontAwesome name="line-chart" size={18} color={colors.primaryDark} />
         </View>
 
         <View style={styles.metricsRow}>
@@ -85,7 +86,7 @@ const styles = StyleSheet.create({
   },
   metric: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     borderRadius: 10,
     paddingVertical: 12,
     paddingHorizontal: 10,
@@ -93,11 +94,11 @@ const styles = StyleSheet.create({
   metricValue: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1c7ed6",
+    color: colors.primaryDark,
   },
   metricLabel: {
     fontSize: 11,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 4,
     textTransform: "uppercase",
   },

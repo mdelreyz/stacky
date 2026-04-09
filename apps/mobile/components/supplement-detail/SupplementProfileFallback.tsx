@@ -1,6 +1,8 @@
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
+
 export function SupplementProfileFallback({
   status,
   error,
@@ -12,7 +14,7 @@ export function SupplementProfileFallback({
     <View style={styles.noProfile}>
       {status === "failed" ? (
         <>
-          <FontAwesome name="warning" size={32} color="#e03131" />
+          <FontAwesome name="warning" size={32} color={colors.danger} />
           <Text style={styles.noProfileText}>AI profile generation failed</Text>
           <Text style={styles.noProfileHint}>
             {error || "Retry onboarding once Claude access is configured."}
@@ -20,7 +22,7 @@ export function SupplementProfileFallback({
         </>
       ) : (
         <>
-          <ActivityIndicator size="small" color="#228be6" />
+          <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.noProfileText}>Generating AI profile</Text>
           <Text style={styles.noProfileHint}>
             This page refreshes automatically when the profile is ready.
@@ -38,12 +40,12 @@ const styles = StyleSheet.create({
   },
   noProfileText: {
     fontSize: 16,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 12,
   },
   noProfileHint: {
     fontSize: 13,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 8,
     lineHeight: 19,
     textAlign: "center",

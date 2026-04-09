@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import type { InteractionWarning } from "@/lib/api";
 
 export function InteractionWarningsCard({
@@ -15,7 +16,7 @@ export function InteractionWarningsCard({
   return (
     <View style={styles.warningCard}>
       <View style={styles.warningHeader}>
-        <FontAwesome name="exclamation-triangle" size={16} color="#c92a2a" />
+        <FontAwesome name="exclamation-triangle" size={16} color={colors.dangerDark} />
         <Text style={styles.warningTitle}>Interaction Warnings</Text>
       </View>
       {warnings.map((warning, index) => (
@@ -35,7 +36,7 @@ export function InteractionWarningsCard({
 
 const styles = StyleSheet.create({
   warningCard: {
-    backgroundColor: "#fff5f5",
+    backgroundColor: colors.dangerLight,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   warningTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#c92a2a",
+    color: colors.dangerDark,
   },
   warningRow: {
     marginTop: 8,

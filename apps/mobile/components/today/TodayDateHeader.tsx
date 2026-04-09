@@ -1,6 +1,7 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import { formatIsoDate, isTodayIsoDate } from "@/lib/date";
 
 export function TodayDateHeader({
@@ -21,7 +22,7 @@ export function TodayDateHeader({
 
       <View style={styles.controls}>
         <Pressable style={styles.arrowButton} onPress={() => onChangeDay(-1)}>
-          <FontAwesome name="chevron-left" size={14} color="#495057" />
+          <FontAwesome name="chevron-left" size={14} color={colors.textSecondary} />
         </Pressable>
         {isToday ? (
           <View style={styles.todayBadge}>
@@ -33,7 +34,7 @@ export function TodayDateHeader({
           </Pressable>
         )}
         <Pressable style={styles.arrowButton} onPress={() => onChangeDay(1)}>
-          <FontAwesome name="chevron-right" size={14} color="#495057" />
+          <FontAwesome name="chevron-right" size={14} color={colors.textSecondary} />
         </Pressable>
       </View>
     </View>
@@ -47,13 +48,13 @@ const styles = StyleSheet.create({
   },
   eyebrow: {
     fontSize: 14,
-    color: "#6c757d",
+    color: colors.gray,
     marginBottom: 4,
   },
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   controls: {
     flexDirection: "row",
@@ -65,10 +66,10 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 999,
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 3,
@@ -78,22 +79,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: "#e7f5ff",
+    backgroundColor: colors.primaryLight,
   },
   todayButtonText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#1864ab",
+    color: colors.primaryDarker,
   },
   todayBadge: {
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: "#ebfbee",
+    backgroundColor: colors.successLight,
   },
   todayBadgeText: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#2b8a3e",
+    color: colors.success,
   },
 });

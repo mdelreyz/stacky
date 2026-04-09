@@ -75,7 +75,7 @@ export function CatalogSection({
             <Pressable style={styles.card}>
               <View style={styles.infoRow}>
                 <View style={styles.iconWrap}>
-                  <FontAwesome name={item.iconName} size={14} color="#1c7ed6" />
+                  <FontAwesome name={item.iconName} size={14} color={colors.primaryDark} />
                 </View>
                 <View style={styles.info}>
                   <Text style={styles.name}>{item.name}</Text>
@@ -87,7 +87,7 @@ export function CatalogSection({
                   <Text style={styles.badgeText}>{item.badgeLabel}</Text>
                 </View>
               ) : null}
-              <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+              <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
             </Pressable>
           </Link>
         ))
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   emptyCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 10,
@@ -136,17 +136,17 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: "#868e96",
+    color: colors.textMuted,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 8,
     borderRadius: 10,
     padding: 14,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 3,
@@ -165,13 +165,13 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#e7f5ff",
+    backgroundColor: colors.primaryLight,
   },
   info: { flex: 1 },
-  name: { fontSize: 15, fontWeight: "600", color: "#212529" },
-  category: { fontSize: 12, color: "#6c757d", marginTop: 4 },
+  name: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
+  category: { fontSize: 12, color: colors.gray, marginTop: 4 },
   badge: {
-    backgroundColor: "#e7f5ff",
+    backgroundColor: colors.primaryLight,
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 4,
@@ -180,6 +180,6 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#1864ab",
+    color: colors.primaryDarker,
   },
 });

@@ -1,5 +1,8 @@
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import type { DailyPlanItem, TakeWindowPlan } from "@/lib/api";
 
 export function DailyPlanWindowCard({
@@ -11,9 +14,41 @@ export function DailyPlanWindowCard({
   pendingActionItemId: string | null;
   onUpdateAdherence: (item: DailyPlanItem, status: "taken" | "skipped") => Promise<void>;
 }) {
+  const [markingAll, setMarkingAll] = useState(false);
+  const pendingItems = windowPlan.items.filter((i) => i.adherence_status === "pending");
+  const hasPending = pendingItems.length > 0;
+
+  const handleMarkAll = async () => {
+    if (!hasPending || markingAll) return;
+    setMarkingAll(true);
+    try {
+      await Promise.all(pendingItems.map((item) => onUpdateAdherence(item, "taken")));
+    } finally {
+      setMarkingAll(false);
+    }
+  };
+
   return (
     <View style={styles.section}>
-      <Text style={styles.sectionTitle}>{windowPlan.display_time}</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>{windowPlan.display_time}</Text>
+        {hasPending && windowPlan.items.length > 1 && (
+          <Pressable
+            style={[styles.markAllButton, markingAll && styles.markAllDisabled]}
+            onPress={handleMarkAll}
+            disabled={markingAll}
+          >
+            {markingAll ? (
+              <ActivityIndicator size="small" color={colors.success} />
+            ) : (
+              <>
+                <FontAwesome name="check-circle" size={13} color={colors.success} />
+                <Text style={styles.markAllText}>Mark All</Text>
+              </>
+            )}
+          </Pressable>
+        )}
+      </View>
       {windowPlan.items.length > 0 ? (
         windowPlan.items.map((item) => (
           <View key={item.id} style={styles.itemCard}>
@@ -96,9 +131,9 @@ function AdherenceActions({
 
 function StatusPill({ status }: { status: "pending" | "taken" | "skipped" }) {
   const stylesByStatus = {
-    pending: { backgroundColor: "#e7f5ff", color: "#1c7ed6", label: "Pending" },
-    taken: { backgroundColor: "#ebfbee", color: "#2b8a3e", label: "Taken" },
-    skipped: { backgroundColor: "#fff5f5", color: "#c92a2a", label: "Skipped" },
+    pending: { backgroundColor: colors.primaryLight, color: colors.primaryDark, label: "Pending" },
+    taken: { backgroundColor: colors.successLight, color: colors.success, label: "Taken" },
+    skipped: { backgroundColor: colors.dangerLight, color: colors.dangerDark, label: "Skipped" },
   }[status];
 
   return (
@@ -112,30 +147,52 @@ function StatusPill({ status }: { status: "pending" | "taken" | "skipped" }) {
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#495057",
-    marginBottom: 8,
+    color: colors.textSecondary,
+  },
+  markAllButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: colors.successLight,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  markAllDisabled: {
+    opacity: 0.6,
+  },
+  markAllText: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: colors.success,
   },
   placeholder: {
     fontSize: 14,
-    color: "#adb5bd",
+    color: colors.textPlaceholder,
   },
   hint: {
     fontSize: 13,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 8,
     fontStyle: "italic",
   },
@@ -143,7 +200,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 8,
     borderTopWidth: 1,
-    borderTopColor: "#f1f3f5",
+    borderTopColor: colors.surface,
   },
   itemHeader: {
     flexDirection: "row",
@@ -155,23 +212,23 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 15,
     fontWeight: "600",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   itemDetails: {
     fontSize: 13,
-    color: "#1c7ed6",
+    color: colors.primaryDark,
     marginTop: 4,
     fontWeight: "600",
   },
   itemInstructions: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     marginTop: 4,
     lineHeight: 18,
   },
   itemRegimes: {
     fontSize: 12,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 6,
     fontWeight: "600",
   },
@@ -191,25 +248,25 @@ const styles = StyleSheet.create({
   },
   actionButtonActive: {
     borderWidth: 1,
-    borderColor: "#2b8a3e",
+    borderColor: colors.success,
   },
   takeButton: {
-    backgroundColor: "#ebfbee",
+    backgroundColor: colors.successLight,
   },
   takeButtonText: {
-    color: "#2b8a3e",
+    color: colors.success,
     fontSize: 13,
     fontWeight: "700",
   },
   skipButton: {
-    backgroundColor: "#fff5f5",
+    backgroundColor: colors.dangerLight,
   },
   skipButtonActive: {
     borderWidth: 1,
-    borderColor: "#c92a2a",
+    borderColor: colors.dangerDark,
   },
   skipButtonText: {
-    color: "#c92a2a",
+    color: colors.dangerDark,
     fontSize: 13,
     fontWeight: "700",
   },

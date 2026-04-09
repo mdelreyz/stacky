@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import type { SupplementAIProfile } from "@protocols/domain";
 
 export function SupplementAIProfileContent({
@@ -151,7 +152,7 @@ function Section({
   return (
     <View style={styles.section}>
       <View style={styles.sectionTitleRow}>
-        <FontAwesome name={icon as never} size={15} color="#228be6" style={styles.sectionIcon} />
+        <FontAwesome name={icon as never} size={15} color={colors.primary} style={styles.sectionIcon} />
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       {children}
@@ -171,20 +172,20 @@ function InfoRow({ label, value }: { label: string; value: string }) {
 function severityColor(
   severity: "critical" | "major" | "moderate" | "minor"
 ): string {
-  if (severity === "critical") return "#e03131";
+  if (severity === "critical") return colors.danger;
   if (severity === "major") return "#fd7e14";
   if (severity === "moderate") return "#fcc419";
-  return "#adb5bd";
+  return colors.textPlaceholder;
 }
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -201,23 +202,23 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   bodyText: {
     fontSize: 14,
-    color: "#495057",
+    color: colors.textSecondary,
     lineHeight: 20,
   },
   bodyTextSmall: {
     fontSize: 13,
-    color: "#868e96",
+    color: colors.textMuted,
     lineHeight: 18,
     marginTop: 6,
   },
   subLabel: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#495057",
+    color: colors.textSecondary,
   },
   contraindicationsLabel: {
     marginTop: 12,
@@ -231,11 +232,11 @@ const styles = StyleSheet.create({
   dosageAmount: {
     fontSize: 15,
     fontWeight: "600",
-    color: "#228be6",
+    color: colors.primary,
   },
   dosageContext: {
     fontSize: 13,
-    color: "#868e96",
+    color: colors.textMuted,
   },
   infoRow: {
     flexDirection: "row",
@@ -245,13 +246,13 @@ const styles = StyleSheet.create({
   },
   infoLabel: {
     fontSize: 14,
-    color: "#868e96",
+    color: colors.textMuted,
   },
   infoValue: {
     flex: 1,
     fontSize: 14,
     fontWeight: "500",
-    color: "#212529",
+    color: colors.textPrimary,
     textAlign: "right",
   },
   interactionRow: {
@@ -272,11 +273,11 @@ const styles = StyleSheet.create({
   interactionSubstance: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   interactionDesc: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     lineHeight: 18,
   },
   synergyRow: {
@@ -285,11 +286,11 @@ const styles = StyleSheet.create({
   synergySubstance: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#2b8a3e",
+    color: colors.success,
   },
   synergyBenefit: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     marginTop: 2,
   },
   tagContainer: {
@@ -299,20 +300,20 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   tag: {
-    backgroundColor: "#f1f3f5",
+    backgroundColor: colors.surface,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
   tagText: {
     fontSize: 12,
-    color: "#495057",
+    color: colors.textSecondary,
   },
   tagDanger: {
-    backgroundColor: "#fff5f5",
+    backgroundColor: colors.dangerLight,
   },
   tagDangerText: {
     fontSize: 12,
-    color: "#e03131",
+    color: colors.danger,
   },
 });

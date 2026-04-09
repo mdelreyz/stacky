@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import { formatNutritionPhaseSummary, getNutritionCycleTypeLabel } from "@/lib/nutrition";
 import type { ActiveNutritionPhase } from "@/lib/api";
 
@@ -76,13 +77,13 @@ const styles = StyleSheet.create({
   },
   summaryLine: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     marginTop: 6,
     lineHeight: 18,
   },
   notes: {
     fontSize: 13,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 8,
     lineHeight: 18,
   },

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import type { SkincareGuidance } from "@/lib/api";
 
 export function SkincareGuidanceCard({ guidance }: { guidance: SkincareGuidance | null }) {
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
   },
   body: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     marginTop: 8,
     lineHeight: 18,
   },

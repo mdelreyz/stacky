@@ -1,6 +1,8 @@
 import { StyleSheet, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
+
 export function CatalogSearchInput({
   value,
   onChangeText,
@@ -10,11 +12,11 @@ export function CatalogSearchInput({
 }) {
   return (
     <View style={styles.searchContainer}>
-      <FontAwesome name="search" size={14} color="#adb5bd" style={{ marginRight: 8 }} />
+      <FontAwesome name="search" size={14} color={colors.textPlaceholder} style={{ marginRight: 8 }} />
       <TextInput
         style={styles.searchInput}
         placeholder="Search catalogs..."
-        placeholderTextColor="#adb5bd"
+        placeholderTextColor={colors.textPlaceholder}
         value={value}
         onChangeText={onChangeText}
       />
@@ -24,7 +26,7 @@ export function CatalogSearchInput({
 
 const styles = StyleSheet.create({
   searchContainer: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     borderRadius: 10,
     marginHorizontal: 16,
     marginBottom: 12,
@@ -32,7 +34,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.03,
     shadowRadius: 3,
@@ -41,6 +43,6 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     fontSize: 15,
-    color: "#212529",
+    color: colors.textPrimary,
   },
 });

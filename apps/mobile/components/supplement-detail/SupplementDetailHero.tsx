@@ -1,6 +1,7 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import type { Supplement } from "@/lib/api";
 
 export function SupplementDetailHero({
@@ -16,7 +17,7 @@ export function SupplementDetailHero({
     <>
       <View style={styles.topBar}>
         <Pressable onPress={onBack} style={styles.backButton}>
-          <FontAwesome name="arrow-left" size={18} color="#495057" />
+          <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
         </Pressable>
         <Text style={styles.topTitle} numberOfLines={1}>
           {supplement.name}
@@ -41,7 +42,7 @@ export function SupplementDetailHero({
       ) : null}
 
       <Pressable style={styles.primaryAction} onPress={onAddToProtocol}>
-        <FontAwesome name="plus-circle" size={16} color="#fff" />
+        <FontAwesome name="plus-circle" size={16} color={colors.white} />
         <Text style={styles.primaryActionText}>Add to My Protocol</Text>
       </Pressable>
     </>
@@ -52,7 +53,7 @@ function ProfileStatusBadge({ supplement }: { supplement: Supplement }) {
   if (supplement.ai_profile) {
     return (
       <View style={[styles.categoryBadge, styles.infoBadge]}>
-        <FontAwesome name="magic" size={10} color="#228be6" />
+        <FontAwesome name="magic" size={10} color={colors.primary} />
         <Text style={[styles.categoryText, styles.infoBadgeText]}> AI Profile</Text>
       </View>
     );
@@ -61,7 +62,7 @@ function ProfileStatusBadge({ supplement }: { supplement: Supplement }) {
   if (supplement.ai_status === "generating") {
     return (
       <View style={[styles.categoryBadge, styles.infoSubtleBadge]}>
-        <ActivityIndicator size="small" color="#228be6" />
+        <ActivityIndicator size="small" color={colors.primary} />
         <Text style={[styles.categoryText, styles.infoBadgeText]}> Generating</Text>
       </View>
     );
@@ -70,7 +71,7 @@ function ProfileStatusBadge({ supplement }: { supplement: Supplement }) {
   if (supplement.ai_status === "failed") {
     return (
       <View style={[styles.categoryBadge, styles.dangerBadge]}>
-        <FontAwesome name="warning" size={10} color="#e03131" />
+        <FontAwesome name="warning" size={10} color={colors.danger} />
         <Text style={[styles.categoryText, styles.dangerBadgeText]}> Generation Failed</Text>
       </View>
     );
@@ -93,7 +94,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 18,
     fontWeight: "600",
-    color: "#212529",
+    color: colors.textPrimary,
     textAlign: "center",
   },
   spacer: {
@@ -117,32 +118,32 @@ const styles = StyleSheet.create({
   categoryText: {
     fontSize: 12,
     fontWeight: "600",
-    color: "#2b8a3e",
+    color: colors.success,
   },
   neutralBadge: {
-    backgroundColor: "#f1f3f5",
+    backgroundColor: colors.surface,
   },
   neutralBadgeText: {
-    color: "#495057",
+    color: colors.textSecondary,
   },
   infoBadge: {
-    backgroundColor: "#e7f5ff",
+    backgroundColor: colors.primaryLight,
   },
   infoSubtleBadge: {
     backgroundColor: "#eef7ff",
   },
   infoBadgeText: {
-    color: "#228be6",
+    color: colors.primary,
   },
   dangerBadge: {
-    backgroundColor: "#fff5f5",
+    backgroundColor: colors.dangerLight,
   },
   dangerBadgeText: {
-    color: "#e03131",
+    color: colors.danger,
   },
   description: {
     fontSize: 15,
-    color: "#495057",
+    color: colors.textSecondary,
     lineHeight: 22,
     paddingHorizontal: 20,
     marginBottom: 16,
@@ -152,14 +153,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     marginHorizontal: 16,
     marginBottom: 16,
     paddingVertical: 14,
     borderRadius: 12,
   },
   primaryActionText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 15,
     fontWeight: "700",
   },

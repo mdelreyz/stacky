@@ -2,6 +2,8 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
 
+import { colors } from "@/constants/Colors";
+
 export function FlowScreenHeader({
   title,
   subtitle,
@@ -12,7 +14,7 @@ export function FlowScreenHeader({
   return (
     <View style={styles.header}>
       <Pressable onPress={() => router.back()} style={styles.backButton}>
-        <FontAwesome name="arrow-left" size={18} color="#495057" />
+        <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
       </Pressable>
       <View style={styles.content}>
         <Text style={styles.title}>{title}</Text>
@@ -39,11 +41,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 2,
   },
 });

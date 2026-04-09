@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import {
   PROTOCOL_SCHEDULE_TYPE_OPTIONS,
   PROTOCOL_WEEK_OPTIONS,
@@ -66,7 +67,7 @@ export function ProtocolScheduleSection({
           <FontAwesome
             name={schedule.manualIsActive ? "check-square-o" : "square-o"}
             size={18}
-            color={schedule.manualIsActive ? "#2b8a3e" : "#868e96"}
+            color={schedule.manualIsActive ? colors.success : colors.textMuted}
           />
           <View style={styles.toggleCopy}>
             <Text style={styles.toggleTitle}>{schedule.manualIsActive ? "Manual regime is active" : "Manual regime is paused"}</Text>
@@ -89,7 +90,7 @@ export function ProtocolScheduleSection({
                 }))
               }
               placeholder="2026-08-01"
-              placeholderTextColor="#adb5bd"
+              placeholderTextColor={colors.textPlaceholder}
               autoCapitalize="none"
             />
           </View>
@@ -105,7 +106,7 @@ export function ProtocolScheduleSection({
                 }))
               }
               placeholder="2026-08-14"
-              placeholderTextColor="#adb5bd"
+              placeholderTextColor={colors.textPlaceholder}
               autoCapitalize="none"
             />
           </View>
@@ -150,12 +151,12 @@ export function ProtocolScheduleSection({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -164,12 +165,12 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
     marginBottom: 12,
   },
   helperText: {
     fontSize: 12,
-    color: "#868e96",
+    color: colors.textMuted,
     lineHeight: 18,
     marginTop: 8,
   },
@@ -183,30 +184,30 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: "#f1f3f5",
+    backgroundColor: colors.surface,
   },
   optionChipSelected: {
-    backgroundColor: "#e7f5ff",
+    backgroundColor: colors.primaryLight,
   },
   optionChipText: {
-    color: "#495057",
+    color: colors.textSecondary,
     fontSize: 13,
     fontWeight: "600",
   },
   optionChipTextSelected: {
-    color: "#1c7ed6",
+    color: colors.primaryDark,
   },
   toggleRow: {
     flexDirection: "row",
     gap: 12,
     alignItems: "flex-start",
     borderRadius: 12,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     padding: 14,
     marginTop: 14,
   },
   toggleRowActive: {
-    backgroundColor: "#ebfbee",
+    backgroundColor: colors.successLight,
   },
   toggleCopy: {
     flex: 1,
@@ -214,11 +215,11 @@ const styles = StyleSheet.create({
   toggleTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
   },
   toggleHint: {
     fontSize: 12,
-    color: "#6c757d",
+    color: colors.gray,
     lineHeight: 18,
     marginTop: 4,
   },
@@ -233,18 +234,18 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#6c757d",
+    color: colors.gray,
     marginBottom: 8,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     fontSize: 15,
-    color: "#212529",
+    color: colors.textPrimary,
   },
   weekSection: {
     marginTop: 14,
