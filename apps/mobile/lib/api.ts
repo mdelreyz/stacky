@@ -21,6 +21,7 @@ export type {
   DailyPlan,
   DailyPlanItem,
   Frequency,
+  InteractionCheckResponse,
   InteractionWarning,
   MacroLevel,
   MedicationAIProfile,

@@ -13,4 +13,16 @@ export const medications = {
   },
 
   get: (id: string) => request<Medication>(`/api/v1/medications/${id}`),
+
+  onboard: (data: { name: string; category?: string; form?: string }) =>
+    request<{
+      id: string;
+      name: string;
+      status: "ready" | "generating" | "failed";
+      ai_profile: Record<string, unknown> | null;
+      ai_error: string | null;
+    }>("/api/v1/medications/onboard", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
 };

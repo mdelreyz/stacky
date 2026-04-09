@@ -54,33 +54,27 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem}>
-          <FontAwesome name="bell" size={18} color="#495057" />
-          <Text style={styles.menuText}>Notification Preferences</Text>
-          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
-        </Pressable>
-
-        <View style={styles.separator} />
-
-        <Pressable style={styles.menuItem}>
-          <FontAwesome name="clock-o" size={18} color="#495057" />
-          <Text style={styles.menuText}>Take Window Times</Text>
-          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
-        </Pressable>
-
-        <View style={styles.separator} />
-
-        <Pressable style={styles.menuItem}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/safety")}>
           <FontAwesome name="shield" size={18} color="#495057" />
-          <Text style={styles.menuText}>Safety Check</Text>
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Safety Check</Text>
+            <Text style={styles.menuHint}>
+              Scan your active stack for known interactions
+            </Text>
+          </View>
           <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
         </Pressable>
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/tracking")}>
           <FontAwesome name="line-chart" size={18} color="#495057" />
-          <Text style={styles.menuText}>Adherence Stats</Text>
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Adherence Stats</Text>
+            <Text style={styles.menuHint}>
+              Completion rates, streaks, and per-item tracking
+            </Text>
+          </View>
           <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
         </Pressable>
       </View>

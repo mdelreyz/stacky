@@ -53,9 +53,7 @@ export const preferences = {
     }),
 
   checkInteractions: () =>
-    request<InteractionCheckResponse>("/api/v1/users/me/preferences/interactions/check", {
-      method: "POST",
-    }),
+    request<InteractionCheckResponse>("/api/v1/users/me/preferences/interactions"),
 
   getStackScore: () =>
     request<StackScoreResponse>("/api/v1/users/me/preferences/stack-score"),

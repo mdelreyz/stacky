@@ -1,74 +1,142 @@
-import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useState } from "react";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TextInput,
+  Pressable,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { router } from "expo-router";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
-import { CatalogSearchInput } from "@/components/protocols/CatalogSearchInput";
-import { CatalogSection } from "@/components/protocols/CatalogSection";
 import { medications as medicationsApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
-import type { Medication } from "@/lib/api";
 
 export default function AddMedicationScreen() {
-  const [search, setSearch] = useState("");
-  const [medications, setMedications] = useState<Medication[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    medicationsApi
-      .list({ search: search || undefined })
-      .then((response) => {
-        if (!cancelled) {
-          setMedications(response.items);
-        }
-      })
-      .catch(() => showError("Failed to search medications"))
-      .finally(() => {
-        if (!cancelled) {
-          setLoading(false);
-        }
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [search]);
-
-  if (loading) {
-    return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
-      </View>
-    );
-  }
+  const handleOnboard = async () => {
+    if (!name.trim()) return;
+    setLoading(true);
+    try {
+      const result = await medicationsApi.onboard({ name: name.trim() });
+      router.replace(`/medication/${result.id}`);
+    } catch (e: any) {
+      showError(e.message || "Failed to onboard medication");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <ScrollView style={styles.container}>
       <FlowScreenHeader
-        title="Medication Catalog"
-        subtitle="Browse prescriptions, topicals, and other tracked medications"
+        title="Add Medication"
+        subtitle="Search or onboard a new medication with AI"
       />
 
-      <CatalogSearchInput value={search} onChangeText={setSearch} />
-      <CatalogSection
-        title="Medications"
-        items={medications.map((item) => ({
-          id: item.id,
-          name: item.name,
-          category: item.category,
-          href: `/medication/${item.id}`,
-          iconName: "medkit",
-        }))}
-        emptyText="No medications matched your search."
-      />
+      <View style={styles.card}>
+        <Text style={styles.label}>Medication Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="e.g., Finasteride 1mg, Tretinoin, Metformin"
+          placeholderTextColor={colors.textPlaceholder}
+          value={name}
+          onChangeText={setName}
+          autoFocus
+          autoCapitalize="words"
+          onSubmitEditing={handleOnboard}
+        />
+        <Text style={styles.hint}>
+          Enter the medication name. If it's already in our catalog, you'll see
+          its profile immediately. If it's new, our AI will generate a
+          comprehensive medication profile.
+        </Text>
+      </View>
 
-      <View style={{ height: 32 }} />
+      <Pressable
+        style={[
+          styles.onboardButton,
+          (!name.trim() || loading) && styles.onboardButtonDisabled,
+        ]}
+        onPress={handleOnboard}
+        disabled={!name.trim() || loading}
+      >
+        {loading ? (
+          <ActivityIndicator color={colors.white} />
+        ) : (
+          <>
+            <FontAwesome name="magic" size={16} color={colors.white} />
+            <Text style={styles.onboardButtonText}>Find or Generate Profile</Text>
+          </>
+        )}
+      </Pressable>
+
+      <View style={styles.infoSection}>
+        <Text style={styles.infoTitle}>What gets generated?</Text>
+        {[
+          "Drug class & mechanism of action",
+          "Typical dosages & frequency",
+          "Known drug interactions",
+          "Timing recommendations",
+          "Monitoring notes",
+          "Safety & contraindications",
+        ].map((item) => (
+          <View key={item} style={styles.infoItem}>
+            <FontAwesome name="check" size={14} color={colors.success} />
+            <Text style={styles.infoText}>{item}</Text>
+          </View>
+        ))}
+      </View>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  card: {
+    backgroundColor: colors.white,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: colors.black,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  label: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: colors.textPrimary,
+    backgroundColor: colors.backgroundSecondary,
+  },
+  hint: { fontSize: 13, color: colors.textMuted, marginTop: 10, lineHeight: 18 },
+  onboardButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primary,
+    marginHorizontal: 16,
+    marginBottom: 24,
+    paddingVertical: 14,
+    borderRadius: 10,
+    gap: 8,
+  },
+  onboardButtonDisabled: { opacity: 0.5 },
+  onboardButtonText: { color: colors.white, fontSize: 16, fontWeight: "600" },
+  infoSection: { paddingHorizontal: 20, paddingBottom: 32 },
+  infoTitle: { fontSize: 16, fontWeight: "600", color: colors.textSecondary, marginBottom: 12 },
+  infoItem: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
+  infoText: { fontSize: 14, color: colors.textSecondary },
 });

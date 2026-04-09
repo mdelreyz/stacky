@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { auth as authApi, setToken } from "@/lib/api";
+import { clearAllCache, clearWriteQueue } from "@/lib/cache";
+import { loadToken, saveToken, clearToken } from "@/lib/token-store";
 import type { User } from "@/lib/api";
 
 interface AuthContextType {
@@ -32,14 +34,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for stored token on mount
-    // For now, just set loading to false (no persistent storage yet)
-    setIsLoading(false);
+    let cancelled = false;
+
+    loadToken()
+      .then(async (stored) => {
+        if (cancelled || !stored) return;
+        setToken(stored);
+        try {
+          const me = await authApi.me();
+          if (!cancelled) setUser(me);
+        } catch {
+          // Token expired or invalid — clear it
+          setToken(null);
+          await clearToken();
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const result = await authApi.login(email, password);
     setToken(result.access_token);
+    await saveToken(result.access_token);
     setUser(result.user);
   }, []);
 
@@ -52,14 +74,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }) => {
       const result = await authApi.signup(data);
       setToken(result.access_token);
+      await saveToken(result.access_token);
       setUser(result.user);
     },
     []
   );
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
     setToken(null);
     setUser(null);
+    await clearToken();
+    await clearAllCache();
+    await clearWriteQueue();
   }, []);
 
   const refreshProfile = useCallback(async () => {

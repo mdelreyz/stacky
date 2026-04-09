@@ -9,6 +9,7 @@ import {
 import { useFocusEffect } from "expo-router";
 
 import { colors } from "@/constants/Colors";
+import { cached, enqueueWrite, invalidateCache } from "@/lib/cache";
 import { dailyPlan as dailyPlanApi } from "@/lib/api";
 import { CycleAlertsCard } from "@/components/today/CycleAlertsCard";
 import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
@@ -39,8 +40,8 @@ export default function TodayScreen() {
 
     try {
       const [planResult, trackingResult] = await Promise.allSettled([
-        dailyPlanApi.get(date),
-        trackingApi.overview({ days: 14, endDate: date }),
+        cached(`daily-plan:${date}`, () => dailyPlanApi.get(date), 15 * 60 * 1000),
+        cached(`tracking:${date}`, () => trackingApi.overview({ days: 14, endDate: date }), 30 * 60 * 1000),
       ]);
 
       if (planResult.status === "rejected") {
@@ -116,10 +117,28 @@ export default function TodayScreen() {
                 peptide: dailyPlanApi.updatePeptideAdherence,
               };
               const updateAdherence = adherenceByType[item.type] ?? dailyPlanApi.updateSupplementAdherence;
-              await updateAdherence(item.id, {
-                status,
-                date: selectedDate,
-              });
+              try {
+                await updateAdherence(item.id, {
+                  status,
+                  date: selectedDate,
+                });
+              } catch {
+                // Offline — queue the write for later
+                const typePathMap: Record<string, string> = {
+                  supplement: "supplements",
+                  medication: "medications",
+                  therapy: "therapies",
+                  peptide: "peptides",
+                };
+                const typePath = typePathMap[item.type] ?? "supplements";
+                await enqueueWrite({
+                  path: `/api/v1/users/me/adherence/${typePath}/${item.id}`,
+                  method: "POST",
+                  body: JSON.stringify({ status, date: selectedDate }),
+                });
+              }
+              // Invalidate cache so next fetch gets fresh data
+              await invalidateCache(`daily-plan:${selectedDate}`);
               await loadPlan(selectedDate, true);
             } catch (error) {
               showError("Failed to update adherence");

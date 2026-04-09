@@ -20,6 +20,7 @@ import {
   userSupplements as userSupplementsApi,
   userTherapies as userTherapiesApi,
 } from "@/lib/api";
+import { cached } from "@/lib/cache";
 import { showError } from "@/lib/errors";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { describeTherapySettings, formatLastCompletedAt, readTherapySettings } from "@/lib/therapy-settings";
@@ -63,15 +64,15 @@ export default function ProtocolsScreen() {
         myPeptidesRes,
       ] =
         await Promise.allSettled([
-          protocolsApi.list(),
-          supplementsApi.list({ search: search || undefined }),
-          medicationsApi.list({ search: search || undefined }),
-          therapiesApi.list({ search: search || undefined }),
-          peptidesApi.list({ search: search || undefined }),
-          userSupplementsApi.list(),
-          userMedicationsApi.list(),
-          userTherapiesApi.list(),
-          userPeptidesApi.list(),
+          cached("protocols:stacks", () => protocolsApi.list()),
+          cached(`catalog:supplements:${search}`, () => supplementsApi.list({ search: search || undefined })),
+          cached(`catalog:medications:${search}`, () => medicationsApi.list({ search: search || undefined })),
+          cached(`catalog:therapies:${search}`, () => therapiesApi.list({ search: search || undefined })),
+          cached(`catalog:peptides:${search}`, () => peptidesApi.list({ search: search || undefined })),
+          cached("user:supplements", () => userSupplementsApi.list()),
+          cached("user:medications", () => userMedicationsApi.list()),
+          cached("user:therapies", () => userTherapiesApi.list()),
+          cached("user:peptides", () => userPeptidesApi.list()),
         ]);
       if (stacksRes.status === "fulfilled") setStacks(stacksRes.value.items);
       if (supplementCatalogRes.status === "fulfilled") setSupplementCatalog(supplementCatalogRes.value.items);

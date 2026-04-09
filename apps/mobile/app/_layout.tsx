@@ -12,6 +12,7 @@ import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { NetworkProvider } from "@/contexts/NetworkContext";
 
 export { ErrorBoundary } from "expo-router";
 
@@ -43,7 +44,9 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <RootLayoutNav />
+      <NetworkProvider>
+        <RootLayoutNav />
+      </NetworkProvider>
     </AuthProvider>
   );
 }
@@ -130,6 +133,34 @@ function RootLayoutNav() {
         <Stack.Screen
           name="protocol/[id]"
           options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="peptide/[id]"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="peptide/[id]/schedule"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="user-peptide/[id]"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="profile/preferences"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="profile/safety"
+          options={{ headerShown: false, presentation: "modal" }}
+        />
+        <Stack.Screen
+          name="recommendations"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="wizard"
+          options={{ headerShown: false }}
         />
         <Stack.Screen
           name="tracking"
