@@ -109,12 +109,13 @@ export default function TodayScreen() {
           onUpdateAdherence={async (item, status) => {
             setPendingActionItemId(item.id);
             try {
-              const updateAdherence =
-                item.type === "supplement"
-                  ? dailyPlanApi.updateSupplementAdherence
-                  : item.type === "medication"
-                    ? dailyPlanApi.updateMedicationAdherence
-                    : dailyPlanApi.updateTherapyAdherence;
+              const adherenceByType: Record<string, typeof dailyPlanApi.updateSupplementAdherence> = {
+                supplement: dailyPlanApi.updateSupplementAdherence,
+                medication: dailyPlanApi.updateMedicationAdherence,
+                therapy: dailyPlanApi.updateTherapyAdherence,
+                peptide: dailyPlanApi.updatePeptideAdherence,
+              };
+              const updateAdherence = adherenceByType[item.type] ?? dailyPlanApi.updateSupplementAdherence;
               await updateAdherence(item.id, {
                 status,
                 date: selectedDate,

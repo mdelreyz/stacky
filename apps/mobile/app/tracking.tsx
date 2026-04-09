@@ -15,7 +15,7 @@ export default function TrackingScreen() {
   const { endDate } = useLocalSearchParams<{ endDate?: string }>();
   const [overview, setOverview] = useState<TrackingOverview | null>(null);
   const [loading, setLoading] = useState(true);
-  const [itemTypeFilter, setItemTypeFilter] = useState<"supplement" | "medication" | "therapy" | null>(null);
+  const [itemTypeFilter, setItemTypeFilter] = useState<"supplement" | "medication" | "therapy" | "peptide" | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -81,6 +81,11 @@ export default function TrackingScreen() {
             label="Modalities"
             selected={itemTypeFilter === "therapy"}
             onPress={() => setItemTypeFilter("therapy")}
+          />
+          <FilterChip
+            label="Peptides"
+            selected={itemTypeFilter === "peptide"}
+            onPress={() => setItemTypeFilter("peptide")}
           />
         </View>
         <View style={styles.summaryGrid}>

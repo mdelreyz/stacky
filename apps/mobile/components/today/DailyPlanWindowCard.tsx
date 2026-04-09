@@ -73,7 +73,9 @@ function AdherenceActions({
             ? "Saving..."
             : item.type === "therapy"
               ? "Complete"
-              : "Take"}
+              : item.type === "peptide"
+                ? "Administer"
+                : "Take"}
         </Text>
       </Pressable>
       <Pressable
