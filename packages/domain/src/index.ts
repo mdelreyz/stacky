@@ -42,9 +42,26 @@ export type {
   SupplementAdherenceResult,
 } from "./daily-plan";
 export type {
+  BatchAdherenceItemResult,
+  BatchAdherenceResponse,
   TrackingEvent,
   TrackingItemStat,
   TrackingOverview,
   TrackingSuggestion,
 } from "./tracking";
+export type {
+  AppliedItem,
+  ApplyRecommendationsResponse,
+  HealthGoal,
+  InteractionCheckResponse,
+  InteractionMode,
+  InteractionSeverity,
+  InteractionType,
+  InteractionWarning,
+  RecommendationItemType,
+  RecommendationResponse,
+  RecommendedItem,
+  UserPreferences,
+  UserPreferencesUpdate,
+} from "./preferences";
 export type { User, AuthResponse } from "./user";

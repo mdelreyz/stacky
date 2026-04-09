@@ -13,6 +13,7 @@ from app.routes.therapies import router as therapies_router
 from app.routes.tracking import router as tracking_router
 from app.routes.user_medications import router as user_medications_router
 from app.routes.user_peptides import router as user_peptides_router
+from app.routes.user_preferences import router as user_preferences_router
 from app.routes.user_supplements import router as user_supplements_router
 from app.routes.user_therapies import router as user_therapies_router
 
@@ -31,4 +32,5 @@ v1_router.include_router(user_peptides_router)
 v1_router.include_router(protocols_router)
 v1_router.include_router(daily_plan_router)
 v1_router.include_router(adherence_router)
+v1_router.include_router(user_preferences_router)
 v1_router.include_router(tracking_router)

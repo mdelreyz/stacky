@@ -9,11 +9,20 @@ from app.auth import get_current_user
 from app.database import get_session
 from app.models.adherence import AdherenceLog
 from app.models.user import User
+from app.models.protocol import Protocol, ProtocolItem
 from app.models.user_medication import UserMedication
 from app.models.user_peptide import UserPeptide
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
-from app.schemas.adherence import AdherenceResponse, AdherenceUpdateRequest
+from sqlalchemy.orm import selectinload
+
+from app.schemas.adherence import (
+    AdherenceResponse,
+    AdherenceUpdateRequest,
+    BatchAdherenceItemResult,
+    BatchAdherenceRequest,
+    BatchAdherenceResponse,
+)
 from app.services.regimen_schedule import (
     adherence_day_bounds,
     adherence_regime_snapshot_for_item,
@@ -284,4 +293,155 @@ async def upsert_peptide_adherence(
         current_user=current_user,
         data=data,
         session=session,
+    )
+
+
+def _protocol_with_items_query(user_id: uuid.UUID, protocol_id: uuid.UUID):
+    return (
+        select(Protocol)
+        .where(Protocol.id == protocol_id, Protocol.user_id == user_id, Protocol.is_active.is_(True))
+        .options(
+            selectinload(Protocol.items)
+            .selectinload(ProtocolItem.user_supplement)
+            .selectinload(UserSupplement.supplement),
+            selectinload(Protocol.items)
+            .selectinload(ProtocolItem.user_medication)
+            .selectinload(UserMedication.medication),
+            selectinload(Protocol.items)
+            .selectinload(ProtocolItem.user_therapy)
+            .selectinload(UserTherapy.therapy),
+            selectinload(Protocol.items)
+            .selectinload(ProtocolItem.user_peptide)
+            .selectinload(UserPeptide.peptide),
+        )
+    )
+
+
+def _resolve_protocol_item(item: ProtocolItem):
+    """Return (item_type, user_item, item_name, dosage_snapshot, settings_snapshot) for a protocol item."""
+    if item.item_type == "supplement" and item.user_supplement is not None:
+        us = item.user_supplement
+        return (
+            "supplement",
+            us,
+            us.supplement.name,
+            {"amount": float(us.dosage_amount), "unit": us.dosage_unit},
+            None,
+        )
+    if item.item_type == "medication" and item.user_medication is not None:
+        um = item.user_medication
+        return (
+            "medication",
+            um,
+            um.medication.name,
+            {"amount": float(um.dosage_amount), "unit": um.dosage_unit},
+            None,
+        )
+    if item.item_type == "therapy" and item.user_therapy is not None:
+        ut = item.user_therapy
+        therapy_settings = {"duration_minutes": ut.duration_minutes, **(ut.settings or {})}
+        therapy_settings.pop("last_completed_at", None)
+        return ("therapy", ut, ut.therapy.name, None, therapy_settings)
+    if item.item_type == "peptide" and item.user_peptide is not None:
+        up = item.user_peptide
+        return (
+            "peptide",
+            up,
+            up.peptide.name,
+            {"amount": float(up.dosage_amount), "unit": up.dosage_unit},
+            None,
+        )
+    return None
+
+
+@router.post("/protocols/{protocol_id}", response_model=BatchAdherenceResponse)
+async def batch_protocol_adherence(
+    protocol_id: uuid.UUID,
+    data: BatchAdherenceRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(_protocol_with_items_query(current_user.id, protocol_id))
+    protocol = result.scalar_one_or_none()
+    if protocol is None:
+        raise HTTPException(status_code=404, detail="Protocol not found")
+
+    target_date, _user_tz = resolve_user_date(data.date, current_user.timezone)
+    schedule_context = await load_regimen_schedule_context(current_user)
+
+    individual_request = AdherenceUpdateRequest(
+        status=data.status, date=data.date, skip_reason=data.skip_reason
+    )
+
+    items_marked: list[BatchAdherenceItemResult] = []
+    items_not_due: list[str] = []
+    therapies_to_update: list[tuple] = []
+
+    for protocol_item in protocol.items:
+        resolved = _resolve_protocol_item(protocol_item)
+        if resolved is None:
+            continue
+
+        item_type, user_item, item_name, dosage_snapshot, settings_snapshot = resolved
+
+        if not user_item.is_active:
+            items_not_due.append(item_name)
+            continue
+
+        if not is_regimen_item_scheduled_for_date(
+            schedule_context, item_type=item_type, item=user_item, target_date=target_date
+        ):
+            items_not_due.append(item_name)
+            continue
+
+        regimes_snapshot = adherence_regime_snapshot_for_item(
+            schedule_context, item_type=item_type, item=user_item, target_date=target_date
+        )
+
+        adherence_result = await _upsert_adherence(
+            item_type=item_type,
+            item_id=user_item.id,
+            take_window=user_item.take_window,
+            item_name_snapshot=item_name,
+            regimes_snapshot=regimes_snapshot,
+            dosage_snapshot=dosage_snapshot,
+            settings_snapshot=settings_snapshot,
+            current_user=current_user,
+            data=individual_request,
+            session=session,
+        )
+
+        items_marked.append(
+            BatchAdherenceItemResult(
+                item_id=adherence_result.item_id,
+                item_type=item_type,
+                item_name=item_name,
+                status=data.status,
+                scheduled_at=adherence_result.scheduled_at,
+                taken_at=adherence_result.taken_at,
+                skip_reason=adherence_result.skip_reason,
+            )
+        )
+
+        if item_type == "therapy" and data.status == "taken" and adherence_result.taken_at is not None:
+            therapies_to_update.append((user_item, adherence_result.taken_at))
+
+    for user_therapy, taken_at in therapies_to_update:
+        next_settings = dict(user_therapy.settings or {})
+        next_settings["last_completed_at"] = taken_at.isoformat()
+        user_therapy.settings = next_settings
+
+    if therapies_to_update:
+        await session.commit()
+
+    if not items_marked:
+        raise HTTPException(status_code=400, detail="No items in this protocol are scheduled for that date")
+
+    return BatchAdherenceResponse(
+        protocol_id=str(protocol.id),
+        protocol_name=protocol.name,
+        date=target_date,
+        status=data.status,
+        items_marked=items_marked,
+        items_not_due=items_not_due,
     )

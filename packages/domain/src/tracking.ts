@@ -49,3 +49,22 @@ export interface TrackingSuggestion {
   headline: string;
   recommendation: string;
 }
+
+export interface BatchAdherenceItemResult {
+  item_id: string;
+  item_type: "supplement" | "medication" | "therapy" | "peptide";
+  item_name: string;
+  status: "taken" | "skipped";
+  scheduled_at: string;
+  taken_at: string | null;
+  skip_reason: string | null;
+}
+
+export interface BatchAdherenceResponse {
+  protocol_id: string;
+  protocol_name: string;
+  date: string;
+  status: "taken" | "skipped";
+  items_marked: BatchAdherenceItemResult[];
+  items_not_due: string[];
+}

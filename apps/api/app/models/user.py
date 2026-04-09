@@ -32,3 +32,4 @@ class User(Base):
     user_peptides = relationship("UserPeptide", back_populates="user")
     nutrition_cycles = relationship("NutritionCycle", back_populates="user")
     protocols = relationship("Protocol", back_populates="user")
+    preferences = relationship("UserPreferences", back_populates="user", uselist=False)

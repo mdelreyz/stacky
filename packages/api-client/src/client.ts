@@ -1,13 +1,20 @@
 import type {
   AdherenceResult,
   AIProfileStatus,
+  ApplyRecommendationsResponse,
   AuthResponse,
+  BatchAdherenceResponse,
   DailyPlan,
+  HealthGoal,
+  InteractionCheckResponse,
   Medication,
   NutritionCycle,
   NutritionPhase,
+  Peptide,
   Protocol,
   ProtocolSchedule,
+  RecommendationItemType,
+  RecommendationResponse,
   Supplement,
   SupplementRefillRequest,
   SupplementAIProfile,
@@ -16,6 +23,9 @@ import type {
   User,
   UserMedication,
   UserMedicationUpdate,
+  UserPeptide,
+  UserPeptideUpdate,
+  UserPreferences,
   UserSupplement,
   UserSupplementUpdate,
   UserTherapy,
@@ -166,6 +176,34 @@ export class ProtocolsAPI {
     });
   }
 
+  async updatePeptideAdherence(
+    itemId: string,
+    data: {
+      status: "taken" | "skipped";
+      date?: string;
+      skip_reason?: string;
+    }
+  ): Promise<AdherenceResult> {
+    return this.request(`/api/v1/users/me/adherence/peptides/${itemId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async batchProtocolAdherence(
+    protocolId: string,
+    data: {
+      status: "taken" | "skipped";
+      date?: string;
+      skip_reason?: string;
+    }
+  ): Promise<BatchAdherenceResponse> {
+    return this.request(`/api/v1/users/me/adherence/protocols/${protocolId}`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
   async listNutrition(params?: {
     page?: number;
     page_size?: number;
@@ -239,6 +277,7 @@ export class ProtocolsAPI {
     user_supplement_ids: string[];
     user_medication_ids?: string[];
     user_therapy_ids?: string[];
+    user_peptide_ids?: string[];
   }): Promise<Protocol> {
     return this.request("/api/v1/users/me/protocols", {
       method: "POST",
@@ -256,6 +295,7 @@ export class ProtocolsAPI {
       user_supplement_ids?: string[];
       user_medication_ids?: string[];
       user_therapy_ids?: string[];
+      user_peptide_ids?: string[];
     }
   ): Promise<Protocol> {
     return this.request(`/api/v1/users/me/protocols/${id}`, {
@@ -273,7 +313,7 @@ export class ProtocolsAPI {
   async getTrackingOverview(params?: {
     days?: number;
     end_date?: string;
-    item_type?: "supplement" | "medication" | "therapy";
+    item_type?: "supplement" | "medication" | "therapy" | "peptide";
   }): Promise<TrackingOverview> {
     const query = new URLSearchParams();
     if (params?.days) query.set("days", String(params.days));
@@ -343,6 +383,23 @@ export class ProtocolsAPI {
 
   async getMedication(id: string): Promise<Medication> {
     return this.request(`/api/v1/medications/${id}`);
+  }
+
+  async onboardMedication(data: {
+    name: string;
+    category?: string;
+    form?: string;
+  }): Promise<{
+    id: string;
+    name: string;
+    status: AIProfileStatus;
+    ai_profile: Record<string, unknown> | null;
+    ai_error: string | null;
+  }> {
+    return this.request("/api/v1/medications/onboard", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   }
 
   async onboardSupplement(data: {
@@ -501,6 +558,157 @@ export class ProtocolsAPI {
     return this.request(`/api/v1/users/me/medications/${id}`, {
       method: "DELETE",
     });
+  }
+
+  // Peptides catalog
+  async listPeptides(params?: {
+    page?: number;
+    page_size?: number;
+    search?: string;
+    category?: string;
+  }): Promise<PaginatedResponse<Peptide>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.page_size) query.set("page_size", String(params.page_size));
+    if (params?.search) query.set("search", params.search);
+    if (params?.category) query.set("category", params.category);
+    const qs = query.toString();
+    return this.request(`/api/v1/peptides${qs ? `?${qs}` : ""}`);
+  }
+
+  async getPeptide(id: string): Promise<Peptide> {
+    return this.request(`/api/v1/peptides/${id}`);
+  }
+
+  // User peptides
+  async listUserPeptides(params?: {
+    page?: number;
+    active_only?: boolean;
+  }): Promise<PaginatedResponse<UserPeptide>> {
+    const query = new URLSearchParams();
+    if (params?.page) query.set("page", String(params.page));
+    if (params?.active_only !== undefined) query.set("active_only", String(params.active_only));
+    const qs = query.toString();
+    return this.request(`/api/v1/users/me/peptides${qs ? `?${qs}` : ""}`);
+  }
+
+  async addUserPeptide(data: {
+    peptide_id: string;
+    dosage_amount: number;
+    dosage_unit: string;
+    frequency?: string;
+    take_window?: string;
+    route?: string;
+    reconstitution?: Record<string, unknown>;
+    storage_notes?: string;
+    notes?: string;
+    started_at: string;
+  }): Promise<UserPeptide> {
+    return this.request("/api/v1/users/me/peptides", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async getUserPeptide(id: string): Promise<UserPeptide> {
+    return this.request(`/api/v1/users/me/peptides/${id}`);
+  }
+
+  async updateUserPeptide(
+    id: string,
+    data: UserPeptideUpdate
+  ): Promise<UserPeptide> {
+    return this.request(`/api/v1/users/me/peptides/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async removeUserPeptide(id: string): Promise<void> {
+    return this.request(`/api/v1/users/me/peptides/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  // User preferences
+  async getPreferences(): Promise<UserPreferences> {
+    return this.request("/api/v1/users/me/preferences");
+  }
+
+  async upsertPreferences(data: {
+    interaction_mode?: string;
+    max_supplements_per_day?: number | null;
+    max_tablets_per_day?: number | null;
+    max_medications?: number | null;
+    exercise_blocks_per_week?: number | null;
+    exercise_minutes_per_day?: number | null;
+    primary_goals?: HealthGoal[] | null;
+    focus_concerns?: string[] | null;
+    excluded_ingredients?: string[] | null;
+    age?: number | null;
+    biological_sex?: "male" | "female" | "other" | null;
+    notes?: string | null;
+  }): Promise<UserPreferences> {
+    return this.request("/api/v1/users/me/preferences", {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updatePreferences(data: {
+    interaction_mode?: string;
+    max_supplements_per_day?: number | null;
+    max_tablets_per_day?: number | null;
+    max_medications?: number | null;
+    exercise_blocks_per_week?: number | null;
+    exercise_minutes_per_day?: number | null;
+    primary_goals?: HealthGoal[] | null;
+    focus_concerns?: string[] | null;
+    excluded_ingredients?: string[] | null;
+    age?: number | null;
+    biological_sex?: "male" | "female" | "other" | null;
+    notes?: string | null;
+  }): Promise<UserPreferences> {
+    return this.request("/api/v1/users/me/preferences", {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
+  }
+
+  // AI Recommendations
+  async getRecommendations(data: {
+    max_items?: number;
+    goals?: HealthGoal[];
+    focus_concern?: string;
+    item_types?: RecommendationItemType[];
+    exclude_current?: boolean;
+  }): Promise<RecommendationResponse> {
+    return this.request("/api/v1/users/me/preferences/recommendations", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async applyRecommendations(data: {
+    items: {
+      catalog_id: string;
+      item_type: RecommendationItemType;
+      dosage_amount?: number;
+      dosage_unit?: string;
+      take_window?: string;
+      frequency?: string;
+    }[];
+    protocol_name?: string;
+    started_at?: string;
+  }): Promise<ApplyRecommendationsResponse> {
+    return this.request("/api/v1/users/me/preferences/recommendations/apply", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async checkInteractions(): Promise<InteractionCheckResponse> {
+    return this.request("/api/v1/users/me/preferences/interactions");
   }
 }
 
