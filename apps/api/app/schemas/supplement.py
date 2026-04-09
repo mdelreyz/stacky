@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 from app.models.supplement import SupplementCategory
-from app.models.user_supplement import Frequency, TakeWindow
+from app.models.enums import Frequency, TakeWindow
 
 # ---------- Supplement catalog ----------
 
@@ -16,6 +16,8 @@ class SupplementResponse(BaseModel):
     category: SupplementCategory
     form: str | None
     description: str | None
+    goals: list[str] | None
+    mechanism_tags: list[str] | None
     ai_profile: dict | None
     ai_status: Literal["ready", "generating", "failed"]
     ai_error: str | None

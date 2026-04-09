@@ -25,7 +25,7 @@ def create_supplement(name: str, ai_profile=None):
         async with async_session_factory() as session:
             supplement = Supplement(
                 name=name,
-                category=SupplementCategory.nootropic,
+                category=SupplementCategory.other,
                 ai_profile=ai_profile,
             )
             session.add(supplement)

@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, T
 import { Link, useFocusEffect } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import { ActiveProtocolItemsSection } from "@/components/protocols/ActiveProtocolItemsSection";
 import { CatalogSearchInput } from "@/components/protocols/CatalogSearchInput";
 import { CatalogSection } from "@/components/protocols/CatalogSection";
@@ -16,6 +17,7 @@ import {
   userSupplements as userSupplementsApi,
   userTherapies as userTherapiesApi,
 } from "@/lib/api";
+import { showError } from "@/lib/errors";
 import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { describeTherapySettings, formatLastCompletedAt, readTherapySettings } from "@/lib/therapy-settings";
 import type {
@@ -51,7 +53,7 @@ export default function ProtocolsScreen() {
         myMedicationsRes,
         myTherapiesRes,
       ] =
-        await Promise.all([
+        await Promise.allSettled([
           protocolsApi.list(),
           supplementsApi.list({ search: search || undefined }),
           medicationsApi.list({ search: search || undefined }),
@@ -60,15 +62,17 @@ export default function ProtocolsScreen() {
           userMedicationsApi.list(),
           userTherapiesApi.list(),
         ]);
-      setStacks(stacksRes.items);
-      setSupplementCatalog(supplementCatalogRes.items);
-      setMedicationCatalog(medicationCatalogRes.items);
-      setTherapyCatalog(therapyCatalogRes.items);
-      setMySupplements(mySupplementsRes.items);
-      setMyMedications(myMedicationsRes.items);
-      setMyTherapies(myTherapiesRes.items);
+      if (stacksRes.status === "fulfilled") setStacks(stacksRes.value.items);
+      if (supplementCatalogRes.status === "fulfilled") setSupplementCatalog(supplementCatalogRes.value.items);
+      if (medicationCatalogRes.status === "fulfilled") setMedicationCatalog(medicationCatalogRes.value.items);
+      if (therapyCatalogRes.status === "fulfilled") setTherapyCatalog(therapyCatalogRes.value.items);
+      if (mySupplementsRes.status === "fulfilled") setMySupplements(mySupplementsRes.value.items);
+      if (myMedicationsRes.status === "fulfilled") setMyMedications(myMedicationsRes.value.items);
+      if (myTherapiesRes.status === "fulfilled") setMyTherapies(myTherapiesRes.value.items);
+      const allRejected = [stacksRes, supplementCatalogRes, medicationCatalogRes, therapyCatalogRes, mySupplementsRes, myMedicationsRes, myTherapiesRes].every((r) => r.status === "rejected");
+      if (allRejected) showError("Failed to load protocols");
     } catch (error) {
-      console.error("Failed to fetch protocol data", error);
+      showError("Failed to load protocols");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -84,7 +88,7 @@ export default function ProtocolsScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -205,6 +209,7 @@ export default function ProtocolsScreen() {
 
       <CatalogSection
         title="Modality Catalog"
+        categoryFilter
         items={therapyCatalog.map((item) => ({
           id: item.id,
           name: item.name,
@@ -221,11 +226,11 @@ export default function ProtocolsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   header: { padding: 20, paddingTop: 10 },
-  title: { fontSize: 28, fontWeight: "700", color: "#212529" },
-  subtitle: { fontSize: 14, color: "#6c757d", marginTop: 4 },
+  title: { fontSize: 28, fontWeight: "700", color: colors.textPrimary },
+  subtitle: { fontSize: 14, color: colors.gray, marginTop: 4 },
   alertCard: {
     backgroundColor: "#fff4e6",
     marginHorizontal: 16,
@@ -248,7 +253,7 @@ const styles = StyleSheet.create({
   },
   alertBody: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     lineHeight: 18,
   },
 });

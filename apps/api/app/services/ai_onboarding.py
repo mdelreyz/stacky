@@ -12,6 +12,7 @@ from sqlalchemy import select
 
 from app.config import settings
 from app.database import async_session_factory
+from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
 
 logger = logging.getLogger(__name__)
@@ -136,44 +137,47 @@ async def _get_status_redis():
         return None
 
 
-def _status_key(supplement_id: str) -> str:
-    return f"supplement-ai-status:{supplement_id}"
+def _status_key(item_id: str, kind: str = "supplement") -> str:
+    return f"{kind}-ai-status:{item_id}"
 
 
 async def set_ai_status(
-    supplement_id: str,
+    item_id: str,
     status: AIProfileStatus,
     error: str | None = None,
+    kind: str = "supplement",
 ) -> None:
     payload = json.dumps({"status": status, "error": error})
+    cache_key = _status_key(item_id, kind)
     redis_client = await _get_status_redis()
     if redis_client:
-        await redis_client.setex(_status_key(supplement_id), _STATUS_TTL_SECONDS, payload)
+        await redis_client.setex(cache_key, _STATUS_TTL_SECONDS, payload)
         return
 
-    _status_cache[supplement_id] = {
+    _status_cache[cache_key] = {
         "status": status,
         "error": error,
         "expires_at": time.time() + _STATUS_TTL_SECONDS,
     }
 
 
-async def get_ai_status(supplement_id: str) -> tuple[AIProfileStatus, str | None] | None:
+async def get_ai_status(item_id: str, kind: str = "supplement") -> tuple[AIProfileStatus, str | None] | None:
+    cache_key = _status_key(item_id, kind)
     redis_client = await _get_status_redis()
     if redis_client:
-        raw = await redis_client.get(_status_key(supplement_id))
+        raw = await redis_client.get(cache_key)
         if not raw:
             return None
         data = json.loads(raw)
         return data["status"], data.get("error")
 
-    cached = _status_cache.get(supplement_id)
+    cached = _status_cache.get(cache_key)
     if not cached:
         return None
 
     expires_at = cached.get("expires_at")
     if isinstance(expires_at, (int, float)) and time.time() >= expires_at:
-        _status_cache.pop(supplement_id, None)
+        _status_cache.pop(cache_key, None)
         return None
 
     return cached["status"], cached.get("error")  # type: ignore[return-value]
@@ -184,6 +188,17 @@ async def resolve_ai_status(supplement: Supplement) -> tuple[AIProfileStatus, st
         return "ready", None
 
     status = await get_ai_status(str(supplement.id))
+    if status is not None:
+        return status
+
+    return "generating", None
+
+
+async def resolve_medication_ai_status(medication: Medication) -> tuple[AIProfileStatus, str | None]:
+    if medication.ai_profile:
+        return "ready", None
+
+    status = await get_ai_status(str(medication.id), kind="medication")
     if status is not None:
         return status
 
@@ -250,6 +265,88 @@ def generate_supplement_profile(name: str, category: str | None, form: str | Non
     return profile.model_dump(mode="json")
 
 
+class MedicationAIProfile(BaseModel):
+    common_names: list[str]
+    category: MedicationCategory
+    drug_class: str
+    mechanism_of_action: str
+    typical_dosages: list[DosageRecommendation]
+    forms: list[str]
+    bioavailability: BioavailabilityProfile
+    half_life: HalfLifeProfile
+    timing_recommendations: TimingRecommendations
+    known_interactions: list[KnownInteraction]
+    contraindications: list[str]
+    side_effects: list[str]
+    monitoring_notes: str
+    safety_notes: str
+    evidence_quality: Literal["strong", "moderate", "limited", "emerging"]
+    sources_summary: str
+
+    model_config = ConfigDict(extra="forbid")
+
+
+def _build_medication_prompt(name: str, category: str | None, form: str | None) -> str:
+    category_line = category or "other"
+    form_line = form or "unknown"
+    return f"""
+Generate a structured medication profile for a health protocol management app.
+
+Medication name: {name}
+Requested category: {category_line}
+Requested form: {form_line}
+
+Requirements:
+- Use evidence-grounded, clinician-facing language.
+- Keep every field populated. Use empty arrays when needed, never null except where the schema allows it.
+- Prefer the allowed take windows only: morning_fasted, morning_with_food, midday, afternoon, evening, bedtime.
+- Keep interaction and contraindication names machine-friendly with snake_case strings.
+- Include drug_class (e.g. "mTOR inhibitor", "biguanide", "alpha-glucosidase inhibitor").
+- Include monitoring_notes with relevant lab markers and monitoring intervals.
+- Do not mention that this content was AI-generated.
+""".strip()
+
+
+def generate_medication_profile(name: str, category: str | None, form: str | None) -> dict:
+    if not settings.anthropic_api_key:
+        raise AIProfileGenerationError("Anthropic API key is not configured.")
+
+    client = Anthropic(api_key=settings.anthropic_api_key)
+    response = client.messages.create(
+        model=settings.ai_model,
+        max_tokens=2400,
+        temperature=0.2,
+        system=(
+            "You generate medication reference data for a health app. "
+            "Return only structured output that matches the provided schema."
+        ),
+        messages=[{"role": "user", "content": _build_medication_prompt(name, category, form)}],
+        output_config={
+            "effort": "low",
+            "format": {
+                "type": "json_schema",
+                "schema": MedicationAIProfile.model_json_schema(),
+            },
+        },
+    )
+
+    payload = "".join(block.text for block in response.content if getattr(block, "type", None) == "text").strip()
+    if not payload:
+        raise AIProfileGenerationError("Anthropic returned an empty response.")
+
+    try:
+        parsed = json.loads(payload)
+    except json.JSONDecodeError as exc:
+        raise AIProfileGenerationError("Anthropic returned invalid JSON.") from exc
+
+    try:
+        profile = MedicationAIProfile.model_validate(parsed)
+    except ValidationError as exc:
+        raise AIProfileGenerationError("Anthropic returned an invalid medication profile schema.") from exc
+
+    return profile.model_dump(mode="json")
+
+
 def _public_error_message(exc: Exception) -> str:
     if isinstance(exc, AIProfileGenerationError):
         return str(exc)
@@ -290,3 +387,39 @@ async def run_ai_onboarding_job(supplement_id: str) -> None:
 
 def run_ai_onboarding_job_sync(supplement_id: str) -> None:
     asyncio.run(run_ai_onboarding_job(supplement_id))
+
+
+async def run_medication_ai_onboarding_job(medication_id: str) -> None:
+    medication_uuid = uuid.UUID(medication_id)
+
+    async with async_session_factory() as session:
+        result = await session.execute(select(Medication).where(Medication.id == medication_uuid))
+        medication = result.scalar_one_or_none()
+        if medication is None:
+            logger.warning("Skipped AI onboarding for missing medication %s", medication_id)
+            return
+
+        await set_ai_status(medication_id, "generating", kind="medication")
+
+        try:
+            profile = await asyncio.to_thread(
+                generate_medication_profile,
+                medication.name,
+                medication.category.value if medication.category else None,
+                medication.form,
+            )
+            medication.ai_profile = profile
+            medication.ai_generated_at = datetime.now(timezone.utc)
+            await session.commit()
+        except Exception as exc:
+            await session.rollback()
+            message = _public_error_message(exc)
+            await set_ai_status(medication_id, "failed", message, kind="medication")
+            logger.exception("AI onboarding failed for medication %s", medication_id)
+            return
+
+    await set_ai_status(medication_id, "ready", kind="medication")
+
+
+def run_medication_ai_onboarding_job_sync(medication_id: str) -> None:
+    asyncio.run(run_medication_ai_onboarding_job(medication_id))

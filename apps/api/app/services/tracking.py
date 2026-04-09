@@ -7,7 +7,9 @@ from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
 from app.models.user import User
 from app.models.user_medication import UserMedication
-from app.models.user_supplement import TakeWindow, UserSupplement
+from app.models.enums import TakeWindow
+from app.models.user_peptide import UserPeptide
+from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.services.daily_plan import adherence_status_for_logs
 from app.services.regimen_schedule import (
@@ -17,14 +19,16 @@ from app.services.regimen_schedule import (
     scheduled_regimen_items_for_date,
 )
 
-TrackingItemType = Literal["supplement", "medication", "therapy"]
+TrackingItemType = Literal["supplement", "medication", "therapy", "peptide"]
 
 
-def _item_name(item: UserSupplement | UserMedication | UserTherapy) -> str:
+def _item_name(item: UserSupplement | UserMedication | UserTherapy | UserPeptide) -> str:
     if isinstance(item, UserSupplement):
         return item.supplement.name
     if isinstance(item, UserMedication):
         return item.medication.name
+    if isinstance(item, UserPeptide):
+        return item.peptide.name
     return item.therapy.name
 
 
@@ -38,6 +42,7 @@ def _item_type_label(item_type: TrackingItemType | None) -> str:
         "supplement": "supplement plan",
         "medication": "medication plan",
         "therapy": "modality plan",
+        "peptide": "peptide plan",
     }[item_type]
 
 

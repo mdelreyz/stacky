@@ -13,6 +13,7 @@ from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.supplement import SupplementOnboardRequest, SupplementOnboardResponse, SupplementResponse
 from app.services.ai_onboarding import resolve_ai_status, run_ai_onboarding_job_sync, set_ai_status
+from app.services.pagination import paginate, paginated_response
 from app.tasks.ai_onboarding import generate_ai_profile
 
 router = APIRouter(prefix="/supplements", tags=["supplements"])
@@ -27,6 +28,8 @@ async def _serialize_supplement(supplement: Supplement) -> SupplementResponse:
         category=supplement.category,
         form=supplement.form,
         description=supplement.description,
+        goals=supplement.goals,
+        mechanism_tags=supplement.mechanism_tags,
         ai_profile=supplement.ai_profile,
         ai_status=ai_status,
         ai_error=ai_error,
@@ -52,25 +55,16 @@ async def list_supplements(
     session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
-    base_query = select(Supplement)
+    query = select(Supplement).order_by(Supplement.name)
     if search:
-        base_query = base_query.where(Supplement.name.ilike(f"%{search}%"))
+        query = query.where(Supplement.name.ilike(f"%{search}%"))
     if category:
-        base_query = base_query.where(Supplement.category == category)
+        query = query.where(Supplement.category == category)
 
-    count_result = await session.execute(select(func.count()).select_from(base_query.subquery()))
-    total = count_result.scalar_one()
-
-    offset = (page - 1) * page_size
-    result = await session.execute(base_query.order_by(Supplement.name).offset(offset).limit(page_size))
-    supplements = list(result.scalars().all())
-
-    return PaginatedResponse(
-        items=list(await asyncio.gather(*(_serialize_supplement(s) for s in supplements))),
-        total=total,
-        page=page,
-        page_size=page_size,
-        has_more=(offset + page_size) < total,
+    rows, total, has_more = await paginate(session, query, page, page_size)
+    return paginated_response(
+        items=list(await asyncio.gather(*(_serialize_supplement(s) for s in rows))),
+        total=total, page=page, page_size=page_size, has_more=has_more,
     )
 
 

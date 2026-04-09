@@ -1,7 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
+import { FormButtons } from "@/components/forms/FormButtons";
+import { OptionGrid } from "@/components/forms/OptionGrid";
 import {
   AVAILABLE_SCHEDULE_FREQUENCIES,
   AVAILABLE_SCHEDULE_WINDOWS,
@@ -63,9 +66,7 @@ export function DoseScheduleForm({
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Frequency</Text>
         <OptionGrid
-          options={FREQUENCY_OPTIONS.filter((option) =>
-            AVAILABLE_SCHEDULE_FREQUENCIES.includes(option.value)
-          )}
+          options={FREQUENCY_OPTIONS.filter((o) => AVAILABLE_SCHEDULE_FREQUENCIES.includes(o.value))}
           selected={state.frequency}
           onSelect={(value) => setState((current) => ({ ...current, frequency: value as ScheduleFrequency }))}
         />
@@ -74,13 +75,9 @@ export function DoseScheduleForm({
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Take Window</Text>
         <OptionGrid
-          options={TAKE_WINDOW_OPTIONS.filter((option) =>
-            AVAILABLE_SCHEDULE_WINDOWS.includes(option.value)
-          )}
+          options={TAKE_WINDOW_OPTIONS.filter((o) => AVAILABLE_SCHEDULE_WINDOWS.includes(o.value))}
           selected={state.takeWindow}
-          onSelect={(value) =>
-            setState((current) => ({ ...current, takeWindow: value as ScheduleTakeWindow }))
-          }
+          onSelect={(value) => setState((current) => ({ ...current, takeWindow: value as ScheduleTakeWindow }))}
         />
 
         <Pressable
@@ -90,7 +87,7 @@ export function DoseScheduleForm({
           <FontAwesome
             name={state.withFood ? "check-square-o" : "square-o"}
             size={18}
-            color={state.withFood ? "#2b8a3e" : "#868e96"}
+            color={state.withFood ? colors.success : colors.textMuted}
           />
           <Text style={styles.toggleText}>Take with food</Text>
         </Pressable>
@@ -104,45 +101,18 @@ export function DoseScheduleForm({
           value={state.notes}
           onChangeText={(value) => setState((current) => ({ ...current, notes: value }))}
           placeholder="Optional reminders or notes"
-          placeholderTextColor="#adb5bd"
+          placeholderTextColor={colors.textPlaceholder}
         />
       </View>
 
-      <Pressable
-        style={[styles.primaryButton, saving && styles.buttonDisabled]}
-        onPress={onSubmit}
-        disabled={saving}
-      >
-        {saving ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <>
-            <FontAwesome name="check" size={16} color="#fff" />
-            <Text style={styles.primaryButtonText}>{primaryLabel}</Text>
-          </>
-        )}
-      </Pressable>
-
-      {secondaryLabel && onSecondaryAction ? (
-        <Pressable
-          style={[
-            styles.secondaryButton,
-            secondaryVariant === "danger" ? styles.secondaryDanger : styles.secondaryNeutral,
-            saving && styles.buttonDisabled,
-          ]}
-          onPress={onSecondaryAction}
-          disabled={saving}
-        >
-          <Text
-            style={[
-              styles.secondaryButtonText,
-              secondaryVariant === "danger" ? styles.secondaryDangerText : styles.secondaryNeutralText,
-            ]}
-          >
-            {secondaryLabel}
-          </Text>
-        </Pressable>
-      ) : null}
+      <FormButtons
+        saving={saving}
+        primaryLabel={primaryLabel}
+        onSubmit={onSubmit}
+        secondaryLabel={secondaryLabel}
+        secondaryVariant={secondaryVariant}
+        onSecondaryAction={onSecondaryAction}
+      />
     </>
   );
 }
@@ -150,48 +120,14 @@ export function DoseScheduleForm({
 export type SupplementScheduleState = DoseScheduleState;
 export const SupplementScheduleForm = DoseScheduleForm;
 
-function OptionGrid({
-  options,
-  selected,
-  onSelect,
-}: {
-  options: readonly { value: string; label: string }[];
-  selected: string;
-  onSelect: (value: string) => void;
-}) {
-  return (
-    <View style={styles.optionGrid}>
-      {options.map((option) => (
-        <Pressable
-          key={option.value}
-          style={[
-            styles.optionChip,
-            selected === option.value && styles.optionChipSelected,
-          ]}
-          onPress={() => onSelect(option.value)}
-        >
-          <Text
-            style={[
-              styles.optionChipText,
-              selected === option.value && styles.optionChipTextSelected,
-            ]}
-          >
-            {option.label}
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -200,7 +136,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
     marginBottom: 12,
   },
   dosageRow: {
@@ -209,41 +145,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     fontSize: 16,
-    color: "#212529",
+    color: colors.textPrimary,
   },
   amountInput: { flex: 0.8 },
   unitInput: { flex: 1.2 },
   notesInput: {
     minHeight: 96,
     textAlignVertical: "top",
-  },
-  optionGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  optionChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 999,
-    backgroundColor: "#f1f3f5",
-  },
-  optionChipSelected: {
-    backgroundColor: "#d0ebff",
-  },
-  optionChipText: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#495057",
-  },
-  optionChipTextSelected: {
-    color: "#1864ab",
   },
   toggleRow: {
     flexDirection: "row",
@@ -252,53 +166,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
   },
   toggleRowActive: {
-    backgroundColor: "#ebfbee",
+    backgroundColor: colors.successLight,
   },
   toggleText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#343a40",
+    color: colors.grayDark,
   },
-  primaryButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    marginHorizontal: 16,
-    backgroundColor: "#228be6",
-    paddingVertical: 14,
-    borderRadius: 12,
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
-  },
-  secondaryButton: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    paddingVertical: 14,
-    borderRadius: 12,
-    alignItems: "center",
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: "700",
-  },
-  secondaryDanger: {
-    backgroundColor: "#fff5f5",
-  },
-  secondaryDangerText: {
-    color: "#c92a2a",
-  },
-  secondaryNeutral: {
-    backgroundColor: "#f1f3f5",
-  },
-  secondaryNeutralText: {
-    color: "#495057",
-  },
-  buttonDisabled: { opacity: 0.6 },
 });

@@ -1,0 +1,866 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protocols — User Guide</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --glass-bg: #f0f4fa;
+    --glass-border: #dce4ef;
+    --glass-shadow: 0 4px 20px rgba(31, 38, 135, 0.08);
+    --text-primary: #212529;
+    --text-secondary: #495057;
+    --text-muted: #868e96;
+    --accent: #228be6;
+    --accent-light: #e7f5ff;
+    --success: #2b8a3e;
+    --success-light: #ebfbee;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+    background: #f4f7fb;
+  }
+
+  .page {
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 48px 32px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Page breaks for PDF */
+  .page-break { page-break-before: always; }
+
+  /* --- Cover --- */
+  .cover {
+    text-align: center;
+    padding: 100px 32px 80px;
+  }
+  .cover-logo {
+    width: 80px; height: 80px;
+    background: linear-gradient(135deg, var(--accent) 0%, #7950f2 100%);
+    border-radius: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 32px;
+    box-shadow: 0 12px 40px rgba(34, 139, 230, 0.3);
+  }
+  .cover-logo svg { width: 40px; height: 40px; fill: white; }
+  .cover h1 {
+    font-size: 42px;
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+    color: #1c7ed6;
+  }
+  .cover .tagline {
+    font-size: 18px;
+    color: var(--text-secondary);
+    font-weight: 400;
+    margin-bottom: 40px;
+  }
+  .cover .version {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: #edf0f5;
+    border: 1px solid var(--glass-border);
+    display: inline-block;
+    padding: 6px 16px;
+    border-radius: 100px;
+  }
+
+  /* --- Glass Card --- */
+  .glass {
+    background: linear-gradient(135deg, #eef2f9 0%, #f5f7fc 50%, #f0f3fa 100%);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-bottom: 24px;
+    box-shadow: var(--glass-shadow);
+  }
+  .glass-sm {
+    padding: 20px 24px;
+    border-radius: 12px;
+  }
+
+  /* --- Section Headers --- */
+  .section-number {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 4px;
+  }
+  h2 {
+    font-size: 26px;
+    font-weight: 700;
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+  h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .section-intro {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin-bottom: 20px;
+  }
+
+  /* --- Feature Row --- */
+  .feature-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+  .feature-card {
+    flex: 1;
+    min-width: 200px;
+    background: #f8f9fd;
+    border: 1px solid #e4e8f0;
+    border-radius: 12px;
+    padding: 20px;
+  }
+  .feature-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-bottom: 12px;
+  }
+  .feature-icon.blue { background: #e7f5ff; }
+  .feature-icon.green { background: #ebfbee; }
+  .feature-icon.purple { background: #f3f0ff; }
+  .feature-icon.orange { background: #fff4e6; }
+  .feature-icon.pink { background: #fff0f6; }
+  .feature-icon.teal { background: #e6fcf5; }
+
+  .feature-card h4 {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .feature-card p {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  /* --- Screen Mock --- */
+  .screen-mock {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 2px solid #e9ecef;
+    overflow: hidden;
+    margin: 20px auto;
+    max-width: 320px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+  }
+  .screen-statusbar {
+    height: 24px;
+    background: #f8f9fa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .screen-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid #e9ecef;
+    font-weight: 600;
+    font-size: 16px;
+    text-align: center;
+  }
+  .screen-body {
+    padding: 16px;
+    min-height: 200px;
+  }
+  .screen-tab-bar {
+    display: flex;
+    border-top: 1px solid #e9ecef;
+    padding: 8px 0 6px;
+    background: #fafafa;
+  }
+  .screen-tab {
+    flex: 1;
+    text-align: center;
+    font-size: 10px;
+    color: var(--text-muted);
+  }
+  .screen-tab.active { color: var(--accent); font-weight: 600; }
+  .screen-tab-icon {
+    font-size: 16px;
+    display: block;
+    margin-bottom: 2px;
+  }
+
+  /* --- Mock UI elements --- */
+  .mock-card {
+    background: #f8f9fa;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 8px;
+  }
+  .mock-card-title {
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+  .mock-card-meta {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .mock-badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 100px;
+    margin-right: 4px;
+  }
+  .mock-badge.blue { background: #e7f5ff; color: #1c7ed6; }
+  .mock-badge.green { background: #ebfbee; color: #2b8a3e; }
+  .mock-badge.orange { background: #fff4e6; color: #e8590c; }
+  .mock-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+  }
+  .mock-check-box {
+    width: 16px; height: 16px;
+    border-radius: 4px;
+    border: 1.5px solid #dee2e6;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+  }
+  .mock-check-box.done {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+  }
+
+  /* --- Steps / Flow --- */
+  .flow {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    margin: 20px 0;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    flex: 1;
+    min-width: 140px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--accent);
+    color: white;
+    font-weight: 700;
+    font-size: 16px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+  .flow-step h4 { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .flow-step p { font-size: 12px; color: var(--text-secondary); }
+  .flow-arrow {
+    align-self: center;
+    color: var(--text-muted);
+    font-size: 20px;
+    margin-top: -20px;
+  }
+
+  /* --- Table --- */
+  .info-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin: 12px 0;
+  }
+  .info-table th {
+    text-align: left;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-bottom: 2px solid #e9ecef;
+    color: var(--text-secondary);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .info-table td {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f1f3f5;
+  }
+  .info-table tr:last-child td { border-bottom: none; }
+
+  /* --- Callout --- */
+  .callout {
+    display: flex;
+    gap: 12px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    margin: 16px 0;
+    font-size: 14px;
+  }
+  .callout.info { background: #e7f5ff; border-left: 3px solid var(--accent); }
+  .callout.success { background: #ebfbee; border-left: 3px solid var(--success); }
+  .callout.warning { background: #fff4e6; border-left: 3px solid #e8590c; }
+  .callout-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+  .callout-text { color: var(--text-secondary); line-height: 1.5; }
+
+  /* --- Category Grid --- */
+  .cat-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .cat-pill {
+    background: #f8f9fd;
+    border: 1px solid #e4e8f0;
+    border-radius: 10px;
+    padding: 10px 14px;
+    text-align: center;
+  }
+  .cat-pill-icon { font-size: 22px; margin-bottom: 4px; }
+  .cat-pill-label { font-size: 11px; font-weight: 600; color: var(--text-secondary); text-transform: capitalize; }
+
+  /* --- Footer --- */
+  .footer {
+    text-align: center;
+    padding: 40px 0 20px;
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  /* Print / PDF tweaks */
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .glass { box-shadow: none; }
+    .screen-mock { box-shadow: none; }
+    .page { padding: 32px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Cloud decorations (solid, PDF-safe) -->
+<div style="position: fixed; top: -60px; right: -80px; width: 400px; height: 200px; background: radial-gradient(ellipse, #e8f0fb 0%, transparent 70%); border-radius: 50%; z-index: 0; pointer-events: none;"></div>
+<div style="position: fixed; bottom: 100px; left: -100px; width: 350px; height: 180px; background: radial-gradient(ellipse, #edf1fc 0%, transparent 70%); border-radius: 50%; z-index: 0; pointer-events: none;"></div>
+<div style="position: fixed; top: 40%; right: -50px; width: 300px; height: 150px; background: radial-gradient(ellipse, #f0eefb 0%, transparent 70%); border-radius: 50%; z-index: 0; pointer-events: none;"></div>
+
+<!-- ===== COVER ===== -->
+<div class="page">
+  <div class="cover">
+    <div class="cover-logo">
+      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <h1>Protocols</h1>
+    <p class="tagline">Your personal health protocol management system</p>
+    <span class="version">User Guide &middot; v1.0</span>
+  </div>
+</div>
+
+<!-- ===== 1. GETTING STARTED ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 01</div>
+  <h2>Getting Started</h2>
+  <p class="section-intro">Protocols helps you organize, schedule, and track your entire health stack &mdash; supplements, medications, therapies, and nutrition &mdash; in one place.</p>
+
+  <div class="glass">
+    <h3>Create Your Account</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-step-num">1</div>
+        <h4>Sign Up</h4>
+        <p>Enter your name, email, and password to create an account.</p>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="flow-step-num">2</div>
+        <h4>Set Location</h4>
+        <p>Add your city for UV-based sunscreen guidance.</p>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="flow-step-num">3</div>
+        <h4>Build Stack</h4>
+        <p>Browse the catalog and add items to your personal protocol.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass glass-sm">
+    <h3>Your Four Tabs</h3>
+    <p class="section-intro" style="margin-bottom: 12px;">The app is organized around four main views, accessible from the bottom tab bar.</p>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon blue">&#128197;</div>
+        <h4>Today</h4>
+        <p>Your daily action plan &mdash; what to take, when, and what's done.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">&#128203;</div>
+        <h4>Protocols</h4>
+        <p>Browse the catalog, manage your items, and build protocol stacks.</p>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon green">&#127860;</div>
+        <h4>Nutrition</h4>
+        <p>Macro profiles, named diets, elimination phases, and food rules.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon orange">&#128100;</div>
+        <h4>Profile</h4>
+        <p>Your account, location settings, and preferences.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 2. TODAY SCREEN ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 02</div>
+  <h2>Today &mdash; Your Daily Plan</h2>
+  <p class="section-intro">Every morning, Protocols generates a personalized daily plan based on your active supplements, medications, therapies, and nutrition cycle.</p>
+
+  <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+    <div class="screen-mock" style="flex-shrink: 0;">
+      <div class="screen-statusbar">9:41 AM</div>
+      <div class="screen-header">Today</div>
+      <div class="screen-body">
+        <div style="font-size: 13px; font-weight: 600; color: #868e96; margin-bottom: 8px;">MORNING &middot; FASTED</div>
+        <div class="mock-check">
+          <span class="mock-check-box done">&#10003;</span>
+          <span>NAC 600mg</span>
+        </div>
+        <div class="mock-check">
+          <span class="mock-check-box done">&#10003;</span>
+          <span>Zinc Picolinate 30mg</span>
+        </div>
+        <div class="mock-check">
+          <span class="mock-check-box"></span>
+          <span>Probiotics 10B CFU</span>
+        </div>
+        <div style="font-size: 13px; font-weight: 600; color: #868e96; margin: 12px 0 8px;">MORNING &middot; WITH FOOD</div>
+        <div class="mock-check">
+          <span class="mock-check-box"></span>
+          <span>Vitamin D3 5000 IU</span>
+        </div>
+        <div class="mock-check">
+          <span class="mock-check-box"></span>
+          <span>Omega-3 Fish Oil 2g</span>
+        </div>
+        <div class="mock-check">
+          <span class="mock-check-box"></span>
+          <span>Infrared Panel 16 min</span>
+        </div>
+        <div style="margin-top: 12px;">
+          <div class="mock-badge green">2/6 done</div>
+          <div class="mock-badge blue">4 remaining</div>
+        </div>
+      </div>
+      <div class="screen-tab-bar">
+        <div class="screen-tab active"><span class="screen-tab-icon">&#128197;</span>Today</div>
+        <div class="screen-tab"><span class="screen-tab-icon">&#128203;</span>Protocols</div>
+        <div class="screen-tab"><span class="screen-tab-icon">&#127860;</span>Nutrition</div>
+        <div class="screen-tab"><span class="screen-tab-icon">&#128100;</span>Profile</div>
+      </div>
+    </div>
+
+    <div style="flex: 1; min-width: 260px;">
+      <div class="glass glass-sm">
+        <h3>Time Windows</h3>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Your day is divided into scheduling windows. Each item appears in the window you assigned during setup.</p>
+        <table class="info-table">
+          <tr><td><strong>Morning Fasted</strong></td><td>Before your first meal</td></tr>
+          <tr><td><strong>Morning w/ Food</strong></td><td>With breakfast</td></tr>
+          <tr><td><strong>Midday</strong></td><td>Around lunch</td></tr>
+          <tr><td><strong>Afternoon</strong></td><td>Post-lunch block</td></tr>
+          <tr><td><strong>Evening</strong></td><td>With dinner</td></tr>
+          <tr><td><strong>Bedtime</strong></td><td>Before sleep</td></tr>
+        </table>
+      </div>
+
+      <div class="callout info">
+        <span class="callout-icon">&#128161;</span>
+        <span class="callout-text">Swipe between dates using the date header at the top of the Today screen. You can look back at any past day to review adherence.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass" style="margin-top: 16px;">
+    <h3>Smart Cards on Today</h3>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon teal">&#9888;&#65039;</div>
+        <h4>Interaction Warnings</h4>
+        <p>Automatically flags supplement and medication interactions based on AI profiles.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon pink">&#9728;&#65039;</div>
+        <h4>Skincare Guidance</h4>
+        <p>UV index and sunscreen reminders based on your saved location.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon green">&#128200;</div>
+        <h4>Tracking Summary</h4>
+        <p>14-day adherence trend showing your consistency over time.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 3. PROTOCOLS SCREEN ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 03</div>
+  <h2>Protocols &mdash; Your Health Stack</h2>
+  <p class="section-intro">The Protocols tab is your command center for managing supplements, medications, therapies, and protocol stacks.</p>
+
+  <div class="glass">
+    <h3>Three Pillars</h3>
+    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">Everything in your health stack falls into one of three categories:</p>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon green">&#128138;</div>
+        <h4>Supplements</h4>
+        <p>Vitamins, minerals, adaptogens, and nutraceuticals with AI-generated profiles covering dosing, timing, interactions, and synergies.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon blue">&#128137;</div>
+        <h4>Medications</h4>
+        <p>Prescription and OTC medications including topicals. Track dosage, frequency, and monitoring notes.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">&#128302;</div>
+        <h4>Therapies</h4>
+        <p>Devices, treatments, practices, and routines &mdash; from cold plunges and saunas to meditation, skincare, and training sessions.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass">
+    <h3>Therapy Categories</h3>
+    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 12px;">Therapies span a wide range of health domains, organized by category:</p>
+    <div class="cat-grid">
+      <div class="cat-pill"><div class="cat-pill-icon">&#128293;</div><div class="cat-pill-label">Thermal</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#128161;</div><div class="cat-pill-label">Light</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#127939;</div><div class="cat-pill-label">Movement</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#127788;&#65039;</div><div class="cat-pill-label">Breathwork</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#9889;</div><div class="cat-pill-label">Electrical</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#129782;</div><div class="cat-pill-label">Manual</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#127925;</div><div class="cat-pill-label">Sound</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#10024;</div><div class="cat-pill-label">Skincare</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#128135;</div><div class="cat-pill-label">Haircare</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#129657;</div><div class="cat-pill-label">Recovery</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#129504;</div><div class="cat-pill-label">Cognitive</div></div>
+      <div class="cat-pill"><div class="cat-pill-icon">&#9679;</div><div class="cat-pill-label">Other</div></div>
+    </div>
+  </div>
+
+  <div class="glass glass-sm">
+    <h3>How to Add an Item</h3>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-step-num">1</div>
+        <h4>Browse</h4>
+        <p>Search the catalog or scroll categories on the Protocols tab.</p>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="flow-step-num">2</div>
+        <h4>View Profile</h4>
+        <p>Tap an item to see its AI-generated profile with dosing, timing, and interactions.</p>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="flow-step-num">3</div>
+        <h4>Add &amp; Schedule</h4>
+        <p>Tap "Add to My Stack" and configure your personal dosage, frequency, and time window.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 4. PROTOCOL STACKS ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 04</div>
+  <h2>Protocol Stacks</h2>
+  <p class="section-intro">Group related items into named stacks for organized protocol management.</p>
+
+  <div class="glass">
+    <h3>What Are Stacks?</h3>
+    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">A protocol stack is a named collection of supplements, medications, and therapies that work together toward a specific goal.</p>
+
+    <div class="feature-row">
+      <div class="feature-card">
+        <h4>&#128218; Sleep Stack</h4>
+        <p>Magnesium Glycinate + Ashwagandha + Muse Meditation + Box Breathing</p>
+        <div style="margin-top: 8px;"><span class="mock-badge green">Active</span></div>
+      </div>
+      <div class="feature-card">
+        <h4>&#128170; Performance Stack</h4>
+        <p>Creatine + Zone 2 Cardio + EMOM Pull-Ups + Compression Boots</p>
+        <div style="margin-top: 8px;"><span class="mock-badge green">Active</span></div>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-card">
+        <h4>&#10024; Skin Protocol</h4>
+        <p>Retinoid + LED Face Mask + Gua Sha + Microneedling + Infrared Panel</p>
+        <div style="margin-top: 8px;"><span class="mock-badge blue">Scheduled</span></div>
+      </div>
+      <div class="feature-card">
+        <h4>&#128135; Hair Protocol</h4>
+        <p>Finasteride + Minoxidil + Dermaroller Scalp + LED Hair Cap</p>
+        <div style="margin-top: 8px;"><span class="mock-badge green">Active</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout success">
+    <span class="callout-icon">&#10003;</span>
+    <span class="callout-text"><strong>Tip:</strong> Items can belong to multiple stacks. Your "Morning Fasted" supplement might appear in both your Sleep Stack and your Performance Stack.</span>
+  </div>
+
+  <div class="glass glass-sm">
+    <h3>Stack Activation</h3>
+    <p style="font-size: 14px; color: var(--text-secondary);">Stacks can be <strong>active</strong> (items show in your daily plan), <strong>scheduled</strong> (will activate on a future date), or <strong>inactive</strong>. Toggle stack status to quickly enable or disable entire protocols without losing your configuration.</p>
+  </div>
+</div>
+
+<!-- ===== 5. AI PROFILES ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 05</div>
+  <h2>AI-Powered Profiles</h2>
+  <p class="section-intro">Every supplement and therapy in the catalog includes a detailed AI-generated profile to help you make informed decisions.</p>
+
+  <div class="glass">
+    <h3>What's in a Supplement Profile?</h3>
+    <table class="info-table">
+      <thead><tr><th>Section</th><th>What It Tells You</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Mechanism</strong></td><td>How the substance works in your body at a biochemical level.</td></tr>
+        <tr><td><strong>Dosages</strong></td><td>Typical dose ranges for different goals (maintenance, deficiency, performance).</td></tr>
+        <tr><td><strong>Timing</strong></td><td>Best time windows, whether to take with food, and what to avoid.</td></tr>
+        <tr><td><strong>Interactions</strong></td><td>Known interactions with medications and other supplements with severity levels.</td></tr>
+        <tr><td><strong>Synergies</strong></td><td>Beneficial pairings and why they work better together.</td></tr>
+        <tr><td><strong>Cycling</strong></td><td>Whether periodic breaks are recommended and suggested patterns.</td></tr>
+        <tr><td><strong>Safety</strong></td><td>Contraindications, side effects, and safety considerations.</td></tr>
+        <tr><td><strong>Evidence</strong></td><td>Quality rating (strong/moderate) with key research citations.</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="glass glass-sm">
+    <h3>Therapy Session Templates</h3>
+    <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 12px;">Each therapy includes a session template with recommended duration, frequency, and step-by-step instructions. Customize session settings when you add a therapy to your stack.</p>
+    <div class="feature-row">
+      <div class="feature-card">
+        <h4>&#129482; Cold Plunge</h4>
+        <p style="font-size: 12px;"><strong>Default:</strong> 5 min &middot; Daily &middot; Morning<br><strong>Template:</strong> 2-5 min full immersion at 3-7&deg;C</p>
+      </div>
+      <div class="feature-card">
+        <h4>&#128161; Infrared Panel</h4>
+        <p style="font-size: 12px;"><strong>Default:</strong> 16 min &middot; Daily &middot; Morning<br><strong>Template:</strong> 4 min per side or 5 min front-only block</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 6. NUTRITION ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 06</div>
+  <h2>Nutrition Plans</h2>
+  <p class="section-intro">Create and track macro profiles, named diets, elimination phases, and custom food rules alongside your supplement and therapy protocols.</p>
+
+  <div class="glass">
+    <h3>Nutrition Cycle Types</h3>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon green">&#127814;</div>
+        <h4>Standard Diet</h4>
+        <p>Set daily macro targets (protein, carbs, fat) and caloric goals.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon orange">&#128293;</div>
+        <h4>Cut / Bulk</h4>
+        <p>Caloric surplus or deficit phases with target macros and duration.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">&#128300;</div>
+        <h4>Elimination</h4>
+        <p>Track food sensitivities with systematic elimination and reintroduction.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="glass glass-sm">
+    <h3>Phase Tracking</h3>
+    <p style="font-size: 14px; color: var(--text-secondary);">Nutrition plans appear in the Today screen's nutrition phase card, showing your current cycle status, days remaining, and macro targets. The app tracks active vs. completed cycles so you can review your nutrition history.</p>
+  </div>
+</div>
+
+<!-- ===== 7. TRACKING ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 07</div>
+  <h2>Adherence Tracking</h2>
+  <p class="section-intro">Monitor your consistency and build healthy habits with built-in adherence tracking.</p>
+
+  <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+    <div style="flex: 1; min-width: 280px;">
+      <div class="glass">
+        <h3>How Tracking Works</h3>
+        <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;">When you check off an item in your daily plan, an adherence event is recorded with a timestamp. The tracking summary card on Today shows your rolling 14-day adherence rate.</p>
+
+        <div class="callout info" style="margin: 12px 0;">
+          <span class="callout-icon">&#128202;</span>
+          <span class="callout-text">Tap the tracking summary card to see a detailed breakdown of adherence by item, category, and time window.</span>
+        </div>
+      </div>
+
+      <div class="glass glass-sm">
+        <h3>Cycle Alerts</h3>
+        <p style="font-size: 14px; color: var(--text-secondary);">For supplements with cycling recommendations (like Ashwagandha's 8-on/2-off pattern), the app tracks your cycle position and alerts you when it's time to take a break or resume.</p>
+      </div>
+    </div>
+
+    <div class="screen-mock" style="flex-shrink: 0;">
+      <div class="screen-statusbar">9:41 AM</div>
+      <div class="screen-header">Tracking</div>
+      <div class="screen-body">
+        <div style="text-align: center; margin-bottom: 12px;">
+          <div style="font-size: 36px; font-weight: 700; color: #2b8a3e;">87%</div>
+          <div style="font-size: 12px; color: #868e96;">14-day adherence</div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-card-title">Supplements</div>
+          <div style="background: #ebfbee; height: 8px; border-radius: 4px; margin-top: 6px;">
+            <div style="background: #2b8a3e; height: 8px; border-radius: 4px; width: 92%;"></div>
+          </div>
+          <div class="mock-card-meta" style="margin-top: 4px;">92% &middot; 10 items</div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-card-title">Therapies</div>
+          <div style="background: #e7f5ff; height: 8px; border-radius: 4px; margin-top: 6px;">
+            <div style="background: #228be6; height: 8px; border-radius: 4px; width: 78%;"></div>
+          </div>
+          <div class="mock-card-meta" style="margin-top: 4px;">78% &middot; 6 items</div>
+        </div>
+        <div class="mock-card">
+          <div class="mock-card-title">Medications</div>
+          <div style="background: #f3f0ff; height: 8px; border-radius: 4px; margin-top: 6px;">
+            <div style="background: #7950f2; height: 8px; border-radius: 4px; width: 100%;"></div>
+          </div>
+          <div class="mock-card-meta" style="margin-top: 4px;">100% &middot; 3 items</div>
+        </div>
+      </div>
+      <div class="screen-tab-bar">
+        <div class="screen-tab"><span class="screen-tab-icon">&#128197;</span>Today</div>
+        <div class="screen-tab"><span class="screen-tab-icon">&#128203;</span>Protocols</div>
+        <div class="screen-tab"><span class="screen-tab-icon">&#127860;</span>Nutrition</div>
+        <div class="screen-tab"><span class="screen-tab-icon">&#128100;</span>Profile</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 8. PROFILE & SETTINGS ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 08</div>
+  <h2>Profile &amp; Settings</h2>
+  <p class="section-intro">Manage your account details, location preferences, and app settings.</p>
+
+  <div class="glass">
+    <h3>Your Profile</h3>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon blue">&#128205;</div>
+        <h4>Location &amp; UV</h4>
+        <p>Save your location to receive UV index-based sunscreen guidance on the Today screen.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon orange">&#128276;</div>
+        <h4>Notifications</h4>
+        <p>Configure reminders for supplement timing, therapy sessions, and cycle alerts.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">&#128275;</div>
+        <h4>Account</h4>
+        <p>Update your name, email, and password. Sign out or manage your session.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warning">
+    <span class="callout-icon">&#9888;&#65039;</span>
+    <span class="callout-text"><strong>Important:</strong> Protocols is a personal tracking tool, not medical advice. Always consult a healthcare professional before starting, stopping, or modifying any supplement, medication, or therapy regimen.</span>
+  </div>
+</div>
+
+<!-- ===== 9. QUICK REFERENCE ===== -->
+<div class="page page-break">
+  <div class="section-number">Section 09</div>
+  <h2>Quick Reference</h2>
+  <p class="section-intro">Common actions at a glance.</p>
+
+  <div class="glass">
+    <table class="info-table">
+      <thead><tr><th style="width: 40%;">I want to&hellip;</th><th>How</th></tr></thead>
+      <tbody>
+        <tr><td>See what to take today</td><td>Open the <strong>Today</strong> tab</td></tr>
+        <tr><td>Add a new supplement</td><td>Protocols tab &rarr; search or scroll &rarr; tap item &rarr; <strong>Add to My Stack</strong></td></tr>
+        <tr><td>Change a dosage or schedule</td><td>Protocols tab &rarr; My Items &rarr; tap item &rarr; <strong>Edit Schedule</strong></td></tr>
+        <tr><td>Create a protocol stack</td><td>Protocols tab &rarr; Stacks section &rarr; <strong>+ New Stack</strong></td></tr>
+        <tr><td>Mark an item as done</td><td>Today tab &rarr; tap the checkbox next to the item</td></tr>
+        <tr><td>Check my adherence</td><td>Today tab &rarr; scroll to <strong>Tracking Summary</strong> card</td></tr>
+        <tr><td>Set up a nutrition plan</td><td>Nutrition tab &rarr; <strong>+ New Plan</strong></td></tr>
+        <tr><td>Check UV / sunscreen need</td><td>Today tab &rarr; <strong>Skincare Guidance</strong> card (requires location)</td></tr>
+        <tr><td>Pause a supplement</td><td>Tap item &rarr; toggle <strong>Active</strong> off (keeps your schedule saved)</td></tr>
+        <tr><td>Flag item as out of stock</td><td>Tap supplement &rarr; toggle <strong>Out of Stock</strong></td></tr>
+        <tr><td>See interaction warnings</td><td>Today tab &rarr; <strong>Interaction Warnings</strong> card (auto-generated)</td></tr>
+        <tr><td>Review a past day</td><td>Today tab &rarr; tap date header &rarr; navigate to desired date</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<div class="page">
+  <div class="footer">
+    <p style="margin-bottom: 4px;">Protocols &middot; Personal Health Protocol Management</p>
+    <p>Built with care. Not medical advice. Always consult your healthcare provider.</p>
+  </div>
+</div>
+
+</body>
+</html>

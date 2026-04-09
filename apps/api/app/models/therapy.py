@@ -17,6 +17,10 @@ class TherapyCategory(str, enum.Enum):
     electrical = "electrical"
     manual = "manual"
     sound = "sound"
+    skincare = "skincare"
+    haircare = "haircare"
+    recovery = "recovery"
+    cognitive = "cognitive"
     other = "other"
 
 

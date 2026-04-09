@@ -48,7 +48,7 @@ export default function ManageNutritionPlanScreen() {
           notes: currentPhase?.notes ?? "",
         });
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to delete nutrition plan"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

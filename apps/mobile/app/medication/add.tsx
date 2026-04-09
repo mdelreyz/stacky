@@ -5,6 +5,7 @@ import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { CatalogSearchInput } from "@/components/protocols/CatalogSearchInput";
 import { CatalogSection } from "@/components/protocols/CatalogSection";
 import { medications as medicationsApi } from "@/lib/api";
+import { showError } from "@/lib/errors";
 import type { Medication } from "@/lib/api";
 
 export default function AddMedicationScreen() {
@@ -22,7 +23,7 @@ export default function AddMedicationScreen() {
           setMedications(response.items);
         }
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to search medications"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

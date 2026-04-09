@@ -39,18 +39,23 @@ export default function ManageProtocolScreen() {
     if (!id) return;
 
     let cancelled = false;
-    Promise.all([
+    Promise.allSettled([
       protocolsApi.get(id),
       userSupplementsApi.list(false),
       userMedicationsApi.list(false),
       userTherapiesApi.list(false),
     ])
-      .then(([nextProtocol, supplementsResponse, medicationsResponse, therapiesResponse]) => {
+      .then(([protocolResult, supplementsResult, medicationsResult, therapiesResult]) => {
         if (cancelled) return;
+        if (protocolResult.status === "rejected") {
+          showError("Failed to load protocol data");
+          return;
+        }
+        const nextProtocol = protocolResult.value;
         setProtocol(nextProtocol);
-        setSupplements(supplementsResponse.items);
-        setMedications(medicationsResponse.items);
-        setTherapies(therapiesResponse.items);
+        if (supplementsResult.status === "fulfilled") setSupplements(supplementsResult.value.items);
+        if (medicationsResult.status === "fulfilled") setMedications(medicationsResult.value.items);
+        if (therapiesResult.status === "fulfilled") setTherapies(therapiesResult.value.items);
         setFormState({
           name: nextProtocol.name,
           description: nextProtocol.description || "",
@@ -66,7 +71,6 @@ export default function ManageProtocolScreen() {
           schedule: protocolScheduleFromProtocol(nextProtocol),
         });
       })
-      .catch(console.error)
       .finally(() => {
         if (!cancelled) setLoading(false);
       });

@@ -10,6 +10,7 @@ from app.database import get_session
 from app.models.adherence import AdherenceLog
 from app.models.user import User
 from app.models.user_medication import UserMedication
+from app.models.user_peptide import UserPeptide
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.schemas.adherence import AdherenceResponse, AdherenceUpdateRequest
@@ -32,6 +33,8 @@ async def _upsert_adherence(
     take_window,
     item_name_snapshot: str,
     regimes_snapshot: list[str],
+    dosage_snapshot: dict | None = None,
+    settings_snapshot: dict | None = None,
     current_user: User,
     data: AdherenceUpdateRequest,
     session: AsyncSession,
@@ -65,6 +68,8 @@ async def _upsert_adherence(
     adherence_log.item_name_snapshot = item_name_snapshot
     adherence_log.take_window_snapshot = take_window.value if hasattr(take_window, "value") else str(take_window)
     adherence_log.regimes_snapshot = regimes_snapshot
+    adherence_log.dosage_snapshot = dosage_snapshot
+    adherence_log.settings_snapshot = settings_snapshot
     if data.status == "taken":
         adherence_log.taken_at = datetime.now(timezone.utc)
         adherence_log.skipped = False
@@ -125,6 +130,7 @@ async def upsert_supplement_adherence(
             item=user_supplement,
             target_date=target_date,
         ),
+        dosage_snapshot={"amount": float(user_supplement.dosage_amount), "unit": user_supplement.dosage_unit},
         current_user=current_user,
         data=data,
         session=session,
@@ -159,6 +165,12 @@ async def upsert_therapy_adherence(
     ):
         raise HTTPException(status_code=400, detail="This therapy is not scheduled for that date")
 
+    therapy_settings = {
+        "duration_minutes": user_therapy.duration_minutes,
+        **(user_therapy.settings or {}),
+    }
+    therapy_settings.pop("last_completed_at", None)
+
     response = await _upsert_adherence(
         item_type="therapy",
         item_id=user_therapy.id,
@@ -170,6 +182,7 @@ async def upsert_therapy_adherence(
             item=user_therapy,
             target_date=target_date,
         ),
+        settings_snapshot=therapy_settings,
         current_user=current_user,
         data=data,
         session=session,
@@ -221,6 +234,53 @@ async def upsert_medication_adherence(
             item=user_medication,
             target_date=target_date,
         ),
+        dosage_snapshot={"amount": float(user_medication.dosage_amount), "unit": user_medication.dosage_unit},
+        current_user=current_user,
+        data=data,
+        session=session,
+    )
+
+
+@router.post("/peptides/{user_peptide_id}", response_model=AdherenceResponse)
+async def upsert_peptide_adherence(
+    user_peptide_id: uuid.UUID,
+    data: AdherenceUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    result = await session.execute(
+        select(UserPeptide).where(
+            UserPeptide.id == user_peptide_id,
+            UserPeptide.user_id == current_user.id,
+            UserPeptide.is_active.is_(True),
+        )
+    )
+    user_peptide = result.scalar_one_or_none()
+    if user_peptide is None:
+        raise HTTPException(status_code=404, detail="User peptide not found")
+
+    target_date, _user_tz = resolve_user_date(data.date, current_user.timezone)
+    schedule_context = await load_regimen_schedule_context(current_user)
+    if not is_regimen_item_scheduled_for_date(
+        schedule_context,
+        item_type="peptide",
+        item=user_peptide,
+        target_date=target_date,
+    ):
+        raise HTTPException(status_code=400, detail="This peptide is not scheduled for that date")
+
+    return await _upsert_adherence(
+        item_type="peptide",
+        item_id=user_peptide.id,
+        take_window=user_peptide.take_window,
+        item_name_snapshot=user_peptide.peptide.name,
+        regimes_snapshot=adherence_regime_snapshot_for_item(
+            schedule_context,
+            item_type="peptide",
+            item=user_peptide,
+            target_date=target_date,
+        ),
+        dosage_snapshot={"amount": float(user_peptide.dosage_amount), "unit": user_peptide.dosage_unit},
         current_user=current_user,
         data=data,
         session=session,

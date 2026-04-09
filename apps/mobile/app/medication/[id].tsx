@@ -5,6 +5,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { medications as medicationsApi } from "@/lib/api";
+import { showError } from "@/lib/errors";
 import type { Medication, MedicationAIProfile } from "@/lib/api";
 
 function readCommonNames(aiProfile: MedicationAIProfile | null): string[] {
@@ -41,7 +42,7 @@ export default function MedicationDetailScreen() {
           setMedication(nextMedication);
         }
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load medication"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

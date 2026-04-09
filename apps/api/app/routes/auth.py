@@ -1,5 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
-from fastapi.responses import JSONResponse
+from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -22,10 +21,10 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 @router.post("/signup", response_model=SignupResponse, status_code=201)
 async def signup(
-    request: Request,
     data: SignupRequest,
+    response: Response,
     session: AsyncSession = Depends(get_session),
-) -> JSONResponse:
+) -> SignupResponse:
     result = await session.execute(select(User).where(User.email == data.email, User.deleted_at.is_(None)))
     if result.scalar_one_or_none() is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
@@ -45,36 +44,32 @@ async def signup(
     await session.refresh(user)
 
     access_token = create_access_token(str(user.id))
-    body = SignupResponse(
+    set_auth_cookie(response, access_token)
+    return SignupResponse(
         access_token=access_token,
         token_type="bearer",
         user=AuthUserResponse.model_validate(user),
     )
-    response = JSONResponse(content=body.model_dump(mode="json"), status_code=201)
-    set_auth_cookie(response, access_token)
-    return response
 
 
 @router.post("/login", response_model=LoginResponse)
 async def login(
-    request: Request,
     data: LoginRequest,
+    response: Response,
     session: AsyncSession = Depends(get_session),
-) -> JSONResponse:
+) -> LoginResponse:
     result = await session.execute(select(User).where(User.email == data.email, User.deleted_at.is_(None)))
     user = result.scalar_one_or_none()
     if user is None or not verify_password(data.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
 
     access_token = create_access_token(str(user.id))
-    body = LoginResponse(
+    set_auth_cookie(response, access_token)
+    return LoginResponse(
         access_token=access_token,
         token_type="bearer",
         user=AuthUserResponse.model_validate(user),
     )
-    response = JSONResponse(content=body.model_dump(mode="json"), status_code=200)
-    set_auth_cookie(response, access_token)
-    return response
 
 
 @router.get("/me", response_model=MeResponse)

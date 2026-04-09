@@ -1,6 +1,5 @@
 from app.models.adherence import AdherenceLog
-from app.models.cycling import CyclingSchedule
-from app.models.interaction import Interaction
+from app.models.enums import Frequency, TakeWindow
 from app.models.medication import Medication
 from app.models.nutrition_cycle import NutritionCycle
 from app.models.protocol import Protocol, ProtocolItem
@@ -21,8 +20,8 @@ __all__ = [
     "UserTherapy",
     "Protocol",
     "ProtocolItem",
-    "CyclingSchedule",
     "NutritionCycle",
-    "Interaction",
     "AdherenceLog",
+    "Frequency",
+    "TakeWindow",
 ]

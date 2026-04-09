@@ -10,10 +10,14 @@ from app.database import UUID, Base
 
 
 class MedicationCategory(str, enum.Enum):
-    prescription = "prescription"
-    otc = "otc"
-    topical = "topical"
-    injectable = "injectable"
+    longevity = "longevity"
+    metabolic = "metabolic"
+    hormonal = "hormonal"
+    cardiovascular = "cardiovascular"
+    cognitive = "cognitive"
+    dermatological = "dermatological"
+    anti_inflammatory = "anti_inflammatory"
+    antimicrobial = "antimicrobial"
     other = "other"
 
 

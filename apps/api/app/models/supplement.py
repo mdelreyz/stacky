@@ -10,18 +10,20 @@ from app.database import UUID, Base
 
 
 class SupplementCategory(str, enum.Enum):
-    vitamin = "vitamin"
-    mineral = "mineral"
-    herb = "herb"
-    amino_acid = "amino_acid"
-    nootropic = "nootropic"
-    hormone = "hormone"
-    probiotic = "probiotic"
-    enzyme = "enzyme"
-    fatty_acid = "fatty_acid"
-    antioxidant = "antioxidant"
-    adaptogen = "adaptogen"
-    peptide = "peptide"
+    """Primary category = the body system a supplement primarily affects (pick exactly one)."""
+
+    healthy_aging = "healthy_aging"
+    energy_mitochondria = "energy_mitochondria"
+    brain_mood_stress = "brain_mood_stress"
+    sleep_recovery = "sleep_recovery"
+    cardiovascular = "cardiovascular"
+    glucose_metabolic = "glucose_metabolic"
+    gut_digestion = "gut_digestion"
+    detox_binding = "detox_binding"
+    immune_antimicrobial = "immune_antimicrobial"
+    inflammation_antioxidant = "inflammation_antioxidant"
+    hormones_fertility = "hormones_fertility"
+    musculoskeletal = "musculoskeletal"
     other = "other"
 
 
@@ -39,6 +41,8 @@ class Supplement(Base):
     )
     form: Mapped[str | None] = mapped_column(String(100), nullable=True)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    goals: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    mechanism_tags: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
 
     # AI-generated profile (see ai_onboarding service for schema)
     ai_profile: Mapped[dict | None] = mapped_column(JSON, nullable=True)

@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -10,6 +10,7 @@ from app.database import get_session
 from app.models.protocol import Protocol, ProtocolItem
 from app.models.user import User
 from app.models.user_medication import UserMedication
+from app.models.user_peptide import UserPeptide
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.schemas.common import PaginatedResponse
@@ -20,12 +21,14 @@ from app.schemas.protocol import (
     ProtocolScheduleResponse,
     ProtocolUpdate,
 )
+from app.services.pagination import paginate, paginated_response
 from app.services.protocol_schedule import (
     protocol_is_currently_active,
     protocol_schedule_payload,
     protocol_schedule_summary,
 )
 from app.services.user_medication_serialization import serialize_user_medication
+from app.services.user_peptide_serialization import serialize_user_peptide
 from app.services.user_supplement_serialization import serialize_user_supplement
 from app.services.user_therapy_serialization import serialize_user_therapy
 
@@ -53,6 +56,7 @@ async def _serialize_protocol(protocol: Protocol, *, timezone_name: str | None) 
                 user_supplement=await serialize_user_supplement(item.user_supplement),
                 user_medication=await serialize_user_medication(item.user_medication),
                 user_therapy=await serialize_user_therapy(item.user_therapy),
+                user_peptide=await serialize_user_peptide(item.user_peptide),
                 sort_order=item.sort_order,
             )
         )
@@ -85,6 +89,9 @@ def _protocol_query_for_user(user_id: uuid.UUID):
             selectinload(Protocol.items)
             .selectinload(ProtocolItem.user_therapy)
             .selectinload(UserTherapy.therapy),
+            selectinload(Protocol.items)
+            .selectinload(ProtocolItem.user_peptide)
+            .selectinload(UserPeptide.peptide),
         )
     )
 
@@ -170,47 +177,90 @@ async def _resolve_user_medications(
     return [medications_by_id[item_id] for item_id in ordered_ids]
 
 
+async def _resolve_user_peptides(
+    session: AsyncSession,
+    current_user: User,
+    user_peptide_ids: list[uuid.UUID],
+) -> list[UserPeptide]:
+    ordered_ids = _dedupe_ids(user_peptide_ids, "peptides")
+    result = await session.execute(
+        select(UserPeptide)
+        .where(
+            UserPeptide.user_id == current_user.id,
+            UserPeptide.id.in_(ordered_ids),
+        )
+        .options(selectinload(UserPeptide.peptide))
+    )
+    user_peptides = list(result.scalars().all())
+    peptides_by_id = {user_peptide.id: user_peptide for user_peptide in user_peptides}
+
+    missing_ids = [item_id for item_id in ordered_ids if item_id not in peptides_by_id]
+    if missing_ids:
+        raise HTTPException(
+            status_code=400,
+            detail="Protocol items must reference items in your account",
+        )
+
+    return [peptides_by_id[item_id] for item_id in ordered_ids]
+
+
 async def _replace_protocol_items(
     session: AsyncSession,
     protocol: Protocol,
     user_supplement_ids: list[uuid.UUID],
     user_medication_ids: list[uuid.UUID],
     user_therapy_ids: list[uuid.UUID],
+    user_peptide_ids: list[uuid.UUID],
     current_user: User,
 ) -> None:
     user_supplements = await _resolve_user_supplements(session, current_user, user_supplement_ids)
     user_medications = await _resolve_user_medications(session, current_user, user_medication_ids)
     user_therapies = await _resolve_user_therapies(session, current_user, user_therapy_ids)
+    user_peptides = await _resolve_user_peptides(session, current_user, user_peptide_ids)
 
     await session.execute(delete(ProtocolItem).where(ProtocolItem.protocol_id == protocol.id))
 
-    for index, user_supplement in enumerate(user_supplements):
+    sort_idx = 0
+    for user_supplement in user_supplements:
         session.add(
             ProtocolItem(
                 protocol_id=protocol.id,
                 item_type="supplement",
                 user_supplement_id=user_supplement.id,
-                sort_order=index,
+                sort_order=sort_idx,
             )
         )
-    for index, user_medication in enumerate(user_medications, start=len(user_supplements)):
+        sort_idx += 1
+    for user_medication in user_medications:
         session.add(
             ProtocolItem(
                 protocol_id=protocol.id,
                 item_type="medication",
                 user_medication_id=user_medication.id,
-                sort_order=index,
+                sort_order=sort_idx,
             )
         )
-    for index, user_therapy in enumerate(user_therapies, start=len(user_supplements) + len(user_medications)):
+        sort_idx += 1
+    for user_therapy in user_therapies:
         session.add(
             ProtocolItem(
                 protocol_id=protocol.id,
                 item_type="therapy",
                 user_therapy_id=user_therapy.id,
-                sort_order=index,
+                sort_order=sort_idx,
             )
         )
+        sort_idx += 1
+    for user_peptide in user_peptides:
+        session.add(
+            ProtocolItem(
+                protocol_id=protocol.id,
+                item_type="peptide",
+                user_peptide_id=user_peptide.id,
+                sort_order=sort_idx,
+            )
+        )
+        sort_idx += 1
 
 
 def _apply_protocol_schedule(protocol: Protocol, schedule_data) -> None:
@@ -237,23 +287,14 @@ async def list_protocols(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    base_query = _protocol_query_for_user(current_user.id)
+    query = _protocol_query_for_user(current_user.id).order_by(Protocol.created_at.desc())
     if active_only:
-        base_query = base_query.where(Protocol.is_active.is_(True))
+        query = query.where(Protocol.is_active.is_(True))
 
-    count_result = await session.execute(select(func.count()).select_from(base_query.subquery()))
-    total = count_result.scalar_one()
-
-    offset = (page - 1) * page_size
-    result = await session.execute(base_query.order_by(Protocol.created_at.desc()).offset(offset).limit(page_size))
-    protocols = list(result.scalars().all())
-
-    return PaginatedResponse(
-        items=[await _serialize_protocol(protocol, timezone_name=current_user.timezone) for protocol in protocols],
-        total=total,
-        page=page,
-        page_size=page_size,
-        has_more=(offset + page_size) < total,
+    rows, total, has_more = await paginate(session, query, page, page_size)
+    return paginated_response(
+        items=[await _serialize_protocol(p, timezone_name=current_user.timezone) for p in rows],
+        total=total, page=page, page_size=page_size, has_more=has_more,
     )
 
 
@@ -278,7 +319,7 @@ async def create_protocol(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    if not data.user_supplement_ids and not data.user_medication_ids and not data.user_therapy_ids:
+    if not data.user_supplement_ids and not data.user_medication_ids and not data.user_therapy_ids and not data.user_peptide_ids:
         raise HTTPException(status_code=400, detail="Protocol must contain at least one item")
 
     protocol = Protocol(
@@ -295,6 +336,7 @@ async def create_protocol(
         data.user_supplement_ids,
         data.user_medication_ids,
         data.user_therapy_ids,
+        data.user_peptide_ids,
         current_user,
     )
     await session.commit()
@@ -324,6 +366,7 @@ async def update_protocol(
     user_supplement_ids = update_data.pop("user_supplement_ids", None)
     user_medication_ids = update_data.pop("user_medication_ids", None)
     user_therapy_ids = update_data.pop("user_therapy_ids", None)
+    user_peptide_ids = update_data.pop("user_peptide_ids", None)
     update_data.pop("schedule", None)
     for key, value in update_data.items():
         setattr(protocol, key, value)
@@ -331,7 +374,8 @@ async def update_protocol(
     if "schedule" in data.model_fields_set:
         _apply_protocol_schedule(protocol, data.schedule)
 
-    if user_supplement_ids is not None or user_medication_ids is not None or user_therapy_ids is not None:
+    any_items_changed = any(ids is not None for ids in [user_supplement_ids, user_medication_ids, user_therapy_ids, user_peptide_ids])
+    if any_items_changed:
         resolved_user_supplement_ids = user_supplement_ids
         if resolved_user_supplement_ids is None:
             resolved_user_supplement_ids = [
@@ -353,7 +397,14 @@ async def update_protocol(
                 for item in protocol.items
                 if item.item_type == "therapy" and item.user_therapy_id is not None
             ]
-        if not resolved_user_supplement_ids and not resolved_user_medication_ids and not resolved_user_therapy_ids:
+        resolved_user_peptide_ids = user_peptide_ids
+        if resolved_user_peptide_ids is None:
+            resolved_user_peptide_ids = [
+                item.user_peptide_id
+                for item in protocol.items
+                if item.item_type == "peptide" and item.user_peptide_id is not None
+            ]
+        if not resolved_user_supplement_ids and not resolved_user_medication_ids and not resolved_user_therapy_ids and not resolved_user_peptide_ids:
             raise HTTPException(status_code=400, detail="Protocol must contain at least one item")
         await _replace_protocol_items(
             session,
@@ -361,6 +412,7 @@ async def update_protocol(
             resolved_user_supplement_ids,
             resolved_user_medication_ids,
             resolved_user_therapy_ids,
+            resolved_user_peptide_ids,
             current_user,
         )
 

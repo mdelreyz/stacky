@@ -5,7 +5,7 @@ from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Numeric, Strin
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import UUID, Base
-from app.models.user_supplement import Frequency, TakeWindow
+from app.models.enums import Frequency, TakeWindow
 
 
 class UserMedication(Base):

@@ -25,9 +25,10 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
-    # Relationships
-    user_supplements = relationship("UserSupplement", back_populates="user", lazy="selectin")
-    user_medications = relationship("UserMedication", back_populates="user", lazy="selectin")
-    user_therapies = relationship("UserTherapy", back_populates="user", lazy="selectin")
-    nutrition_cycles = relationship("NutritionCycle", back_populates="user", lazy="selectin")
-    protocols = relationship("Protocol", back_populates="user", lazy="selectin")
+    # Relationships (lazy-loaded; use selectinload() in queries when needed)
+    user_supplements = relationship("UserSupplement", back_populates="user")
+    user_medications = relationship("UserMedication", back_populates="user")
+    user_therapies = relationship("UserTherapy", back_populates="user")
+    user_peptides = relationship("UserPeptide", back_populates="user")
+    nutrition_cycles = relationship("NutritionCycle", back_populates="user")
+    protocols = relationship("Protocol", back_populates="user")

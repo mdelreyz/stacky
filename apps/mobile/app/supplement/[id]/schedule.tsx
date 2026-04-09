@@ -57,7 +57,7 @@ export default function ScheduleSupplementScreen() {
           notes: "",
         });
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load supplement catalogs"))
       .finally(() => {
         if (!cancelled) setLoading(false);
       });

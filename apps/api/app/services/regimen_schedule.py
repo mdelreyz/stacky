@@ -12,7 +12,9 @@ from app.database import async_session_factory
 from app.models.protocol import Protocol, ProtocolItem
 from app.models.user import User
 from app.models.user_medication import UserMedication
-from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
+from app.models.enums import Frequency, TakeWindow
+from app.models.user_peptide import UserPeptide
+from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.services.protocol_schedule import protocol_has_schedule, protocol_is_available_on_date
 
@@ -25,7 +27,7 @@ WINDOW_TIMES = {
     TakeWindow.bedtime: time(22, 0),
 }
 
-ScheduleItem: TypeAlias = UserSupplement | UserMedication | UserTherapy
+ScheduleItem: TypeAlias = UserSupplement | UserMedication | UserTherapy | UserPeptide
 ItemType: TypeAlias = str
 
 
@@ -42,6 +44,7 @@ class RegimenScheduleContext:
     user_supplements: list[UserSupplement]
     user_medications: list[UserMedication]
     user_therapies: list[UserTherapy]
+    user_peptides: list[UserPeptide]
     protocols_by_item_key: dict[tuple[str, str], list[Protocol]]
 
 
@@ -129,6 +132,17 @@ async def load_regimen_schedule_context(user: User) -> RegimenScheduleContext:
         )
         user_therapies = list(therapies_result.scalars().all())
 
+        peptides_result = await session.execute(
+            select(UserPeptide)
+            .options(selectinload(UserPeptide.peptide))
+            .where(
+                UserPeptide.user_id == user.id,
+                UserPeptide.is_active.is_(True),
+            )
+            .order_by(UserPeptide.take_window, UserPeptide.created_at)
+        )
+        user_peptides = list(peptides_result.scalars().all())
+
         protocols_result = await session.execute(
             select(Protocol)
             .where(
@@ -152,6 +166,7 @@ async def load_regimen_schedule_context(user: User) -> RegimenScheduleContext:
         user_supplements=user_supplements,
         user_medications=user_medications,
         user_therapies=user_therapies,
+        user_peptides=user_peptides,
         protocols_by_item_key=dict(protocols_by_item_key),
     )
 
@@ -214,6 +229,7 @@ def scheduled_regimen_items_for_date(
     scheduled_items.extend(_scheduled_items_for_type(context, "supplement", context.user_supplements, target_date))
     scheduled_items.extend(_scheduled_items_for_type(context, "medication", context.user_medications, target_date))
     scheduled_items.extend(_scheduled_items_for_type(context, "therapy", context.user_therapies, target_date))
+    scheduled_items.extend(_scheduled_items_for_type(context, "peptide", context.user_peptides, target_date))
     return scheduled_items
 
 
@@ -248,4 +264,6 @@ def _protocol_item_id(item: ProtocolItem) -> str | None:
         return str(item.user_medication_id)
     if item.item_type == "therapy" and item.user_therapy_id is not None:
         return str(item.user_therapy_id)
+    if item.item_type == "peptide" and item.user_peptide_id is not None:
+        return str(item.user_peptide_id)
     return None

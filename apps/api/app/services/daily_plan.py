@@ -10,7 +10,8 @@ from app.models.adherence import AdherenceLog
 from app.models.nutrition_cycle import NutritionCycle
 from app.models.user import User
 from app.models.user_medication import UserMedication
-from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
+from app.models.enums import Frequency, TakeWindow
+from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.services.nutrition_cycles import nutrition_cycle_alert, serialize_active_nutrition_phase
 from app.services.regimen_schedule import (
@@ -240,6 +241,7 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
     due_supplements = [item.item for item in scheduled_items if item.item_type == "supplement"]
     due_medications = [item.item for item in scheduled_items if item.item_type == "medication"]
     due_therapies = [item.item for item in scheduled_items if item.item_type == "therapy"]
+    due_peptides = [item.item for item in scheduled_items if item.item_type == "peptide"]
     active_regimes_by_item = {
         (item.item_type, str(item.item.id)): item.active_protocol_names for item in scheduled_items
     }
@@ -306,6 +308,25 @@ async def build_daily_plan(user: User, target_date: date | None = None) -> dict:
                     "is_on_cycle": True,
                     "adherence_status": adherence_status_for_logs(
                         adherence_index.get(("therapy", str(item.id)), [])
+                    ),
+                }
+            )
+        for item in due_peptides:
+            if item.take_window != window:
+                continue
+
+            route_label = f" ({item.route})" if item.route else ""
+            items.append(
+                {
+                    "id": str(item.id),
+                    "name": item.peptide.name,
+                    "type": "peptide",
+                    "details": f"{item.dosage_amount:g} {item.dosage_unit}{route_label}",
+                    "instructions": item.notes or "",
+                    "regimes": active_regimes_by_item.get(("peptide", str(item.id)), []),
+                    "is_on_cycle": True,
+                    "adherence_status": adherence_status_for_logs(
+                        adherence_index.get(("peptide", str(item.id)), [])
                     ),
                 }
             )

@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { supplements as supplementsApi } from "@/lib/api";
+import { showError } from "@/lib/errors";
 import type { Supplement } from "@/lib/api";
 import { SupplementAIProfileContent } from "@/components/supplement-detail/SupplementAIProfileContent";
 import { SupplementDetailHero } from "@/components/supplement-detail/SupplementDetailHero";
@@ -42,7 +43,7 @@ export default function SupplementDetailScreen() {
           }, POLL_INTERVAL_MS);
         }
       } catch (error) {
-        console.error(error);
+        showError("Failed to load supplement");
       } finally {
         if (!cancelled && !silent) {
           setLoading(false);

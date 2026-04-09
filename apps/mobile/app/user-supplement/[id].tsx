@@ -53,7 +53,7 @@ export default function ManageUserSupplementScreen() {
         });
         setIsOutOfStock(nextUserSupplement.is_out_of_stock);
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load supplement"))
       .finally(() => {
         if (!cancelled) setLoading(false);
       });

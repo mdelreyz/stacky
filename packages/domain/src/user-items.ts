@@ -1,4 +1,5 @@
 import type { Medication } from "./medication";
+import type { Peptide } from "./peptide";
 import type { Supplement } from "./supplement";
 import type { Therapy } from "./therapy";
 
@@ -77,4 +78,69 @@ export interface UserTherapy {
   started_at: string;
   ended_at: string | null;
   created_at: string;
+}
+
+export interface UserSupplementUpdate {
+  dosage_amount?: number;
+  dosage_unit?: string;
+  frequency?: Frequency;
+  take_window?: TakeWindow;
+  with_food?: boolean;
+  is_out_of_stock?: boolean;
+  notes?: string | null;
+  is_active?: boolean;
+  ended_at?: string | null;
+}
+
+export interface UserMedicationUpdate {
+  dosage_amount?: number;
+  dosage_unit?: string;
+  frequency?: Frequency;
+  take_window?: TakeWindow;
+  with_food?: boolean;
+  notes?: string | null;
+  is_active?: boolean;
+  ended_at?: string | null;
+}
+
+export interface UserPeptide {
+  id: string;
+  peptide: Peptide;
+  dosage_amount: number;
+  dosage_unit: string;
+  frequency: Frequency;
+  take_window: TakeWindow;
+  with_food: boolean;
+  route: string | null;
+  reconstitution: Record<string, unknown> | null;
+  storage_notes: string | null;
+  notes: string | null;
+  is_active: boolean;
+  started_at: string;
+  ended_at: string | null;
+  created_at: string;
+}
+
+export interface UserTherapyUpdate {
+  duration_minutes?: number;
+  frequency?: Frequency;
+  take_window?: TakeWindow;
+  settings?: Record<string, unknown> | null;
+  notes?: string | null;
+  is_active?: boolean;
+  ended_at?: string | null;
+}
+
+export interface UserPeptideUpdate {
+  dosage_amount?: number;
+  dosage_unit?: string;
+  frequency?: Frequency;
+  take_window?: TakeWindow;
+  with_food?: boolean;
+  route?: string | null;
+  reconstitution?: Record<string, unknown> | null;
+  storage_notes?: string | null;
+  notes?: string | null;
+  is_active?: boolean;
+  ended_at?: string | null;
 }

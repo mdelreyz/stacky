@@ -1,8 +1,9 @@
-import type { ComponentProps } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useState, type ComponentProps } from "react";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { ProtocolsSectionHeader } from "./ProtocolsSectionHeader";
 
 type IconName = ComponentProps<typeof FontAwesome>["name"];
@@ -20,20 +21,56 @@ export function CatalogSection({
   title,
   items,
   emptyText,
+  categoryFilter,
 }: {
   title: string;
   items: CatalogListItem[];
   emptyText: string;
+  categoryFilter?: boolean;
 }) {
+  const [activeCategory, setActiveCategory] = useState<string | null>(null);
+
+  const categories = categoryFilter
+    ? [...new Set(items.map((item) => item.category))].sort()
+    : [];
+
+  const filtered = activeCategory
+    ? items.filter((item) => item.category === activeCategory)
+    : items;
+
   return (
     <>
       <ProtocolsSectionHeader title={title} />
-      {items.length === 0 ? (
+      {categories.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipRow}
+          contentContainerStyle={styles.chipContent}
+        >
+          <Pressable
+            style={[styles.chip, !activeCategory && styles.chipActive]}
+            onPress={() => setActiveCategory(null)}
+          >
+            <Text style={[styles.chipText, !activeCategory && styles.chipTextActive]}>All</Text>
+          </Pressable>
+          {categories.map((cat) => (
+            <Pressable
+              key={cat}
+              style={[styles.chip, activeCategory === cat && styles.chipActive]}
+              onPress={() => setActiveCategory(activeCategory === cat ? null : cat)}
+            >
+              <Text style={[styles.chipText, activeCategory === cat && styles.chipTextActive]}>{cat}</Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+      {filtered.length === 0 ? (
         <View style={styles.emptyCard}>
           <Text style={styles.emptyText}>{emptyText}</Text>
         </View>
       ) : (
-        items.map((item) => (
+        filtered.map((item) => (
           <Link key={item.id} href={item.href} asChild>
             <Pressable style={styles.card}>
               <View style={styles.infoRow}>
@@ -60,6 +97,36 @@ export function CatalogSection({
 }
 
 const styles = StyleSheet.create({
+  chipRow: {
+    marginBottom: 8,
+    marginHorizontal: 16,
+  },
+  chipContent: {
+    gap: 6,
+    paddingRight: 8,
+  },
+  chip: {
+    backgroundColor: colors.surface,
+    borderRadius: 999,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  chipActive: {
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.primary,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: colors.textSecondary,
+    textTransform: "capitalize",
+  },
+  chipTextActive: {
+    color: colors.primaryDarker,
+    fontWeight: "600",
+  },
   emptyCard: {
     backgroundColor: "#fff",
     marginHorizontal: 16,

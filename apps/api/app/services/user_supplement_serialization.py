@@ -16,6 +16,8 @@ async def serialize_user_supplement(user_supplement: UserSupplement | None) -> U
             category=user_supplement.supplement.category,
             form=user_supplement.supplement.form,
             description=user_supplement.supplement.description,
+            goals=user_supplement.supplement.goals,
+            mechanism_tags=user_supplement.supplement.mechanism_tags,
             ai_profile=user_supplement.supplement.ai_profile,
             ai_status=ai_status,
             ai_error=ai_error,

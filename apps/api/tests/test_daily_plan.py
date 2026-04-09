@@ -9,7 +9,8 @@ from app.models.nutrition_cycle import NutritionCycle
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.therapy import Therapy, TherapyCategory
 from app.models.user_medication import UserMedication
-from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
+from app.models.enums import Frequency, TakeWindow
+from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 
 
@@ -91,7 +92,7 @@ def create_medication(name: str, ai_profile=None):
         async with async_session_factory() as session:
             medication = Medication(
                 name=name,
-                category=MedicationCategory.prescription,
+                category=MedicationCategory.other,
                 form="tablet",
                 ai_profile=ai_profile,
                 is_verified=True,

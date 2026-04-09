@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
@@ -18,6 +18,7 @@ from app.schemas.supplement import (
     UserSupplementUpdate,
 )
 from app.services.daily_plan import resolve_user_date
+from app.services.pagination import paginate, paginated_response
 from app.services.user_supplement_serialization import serialize_user_supplement
 
 router = APIRouter(prefix="/users/me/supplements", tags=["user-supplements"])
@@ -57,23 +58,14 @@ async def list_user_supplements(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    base_query = select(UserSupplement).where(UserSupplement.user_id == current_user.id)
+    query = select(UserSupplement).where(UserSupplement.user_id == current_user.id).order_by(UserSupplement.created_at.desc())
     if active_only:
-        base_query = base_query.where(UserSupplement.is_active.is_(True))
+        query = query.where(UserSupplement.is_active.is_(True))
 
-    count_result = await session.execute(select(func.count()).select_from(base_query.subquery()))
-    total = count_result.scalar_one()
-
-    offset = (page - 1) * page_size
-    result = await session.execute(base_query.order_by(UserSupplement.created_at.desc()).offset(offset).limit(page_size))
-    user_supplements = list(result.scalars().all())
-
-    return PaginatedResponse(
-        items=[await serialize_user_supplement(us) for us in user_supplements],
-        total=total,
-        page=page,
-        page_size=page_size,
-        has_more=(offset + page_size) < total,
+    rows, total, has_more = await paginate(session, query, page, page_size)
+    return paginated_response(
+        items=[await serialize_user_supplement(us) for us in rows],
+        total=total, page=page, page_size=page_size, has_more=has_more,
     )
 
 

@@ -1,10 +1,11 @@
 import uuid
 from datetime import date, datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from app.models.medication import MedicationCategory
-from app.models.user_supplement import Frequency, TakeWindow
+from app.models.enums import Frequency, TakeWindow
 
 
 class MedicationResponse(BaseModel):
@@ -14,8 +15,26 @@ class MedicationResponse(BaseModel):
     form: str | None
     description: str | None
     ai_profile: dict | None
+    ai_status: Literal["ready", "generating", "failed"]
+    ai_error: str | None
     ai_generated_at: datetime | None
     is_verified: bool
+
+    model_config = {"from_attributes": True}
+
+
+class MedicationOnboardRequest(BaseModel):
+    name: str = Field(..., min_length=1, max_length=255)
+    category: MedicationCategory | None = None
+    form: str | None = None
+
+
+class MedicationOnboardResponse(BaseModel):
+    id: uuid.UUID
+    name: str
+    status: Literal["ready", "generating", "failed"]
+    ai_profile: dict | None
+    ai_error: str | None
 
     model_config = {"from_attributes": True}
 

@@ -6,7 +6,8 @@ from app.models.adherence import AdherenceLog
 from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.user_medication import UserMedication
-from app.models.user_supplement import TakeWindow, UserSupplement
+from app.models.enums import TakeWindow
+from app.models.user_supplement import UserSupplement
 
 
 def signup(client) -> tuple[dict[str, str], str]:
@@ -38,7 +39,7 @@ def create_supplement(name: str):
 def create_medication(name: str):
     async def _create():
         async with async_session_factory() as session:
-            medication = Medication(name=name, category=MedicationCategory.prescription, form="tablet")
+            medication = Medication(name=name, category=MedicationCategory.other, form="tablet")
             session.add(medication)
             await session.commit()
             await session.refresh(medication)

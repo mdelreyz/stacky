@@ -19,7 +19,7 @@ export interface TakeWindowPlan {
 export interface DailyPlanItem {
   id: string;
   name: string;
-  type: "supplement" | "medication" | "therapy";
+  type: "supplement" | "medication" | "therapy" | "peptide";
   details: string | null;
   instructions: string;
   regimes: string[];

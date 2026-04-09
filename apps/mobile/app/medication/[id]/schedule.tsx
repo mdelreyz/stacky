@@ -50,7 +50,7 @@ export default function ScheduleMedicationScreen() {
           notes: "",
         });
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load medication catalogs"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

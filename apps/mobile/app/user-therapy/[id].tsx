@@ -54,7 +54,7 @@ export default function ManageUserTherapyScreen() {
           notes: nextUserTherapy.notes || "",
         });
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load therapy"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

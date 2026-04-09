@@ -1,4 +1,4 @@
-import type { UserMedication, UserSupplement, UserTherapy } from "./user-items";
+import type { UserMedication, UserPeptide, UserSupplement, UserTherapy } from "./user-items";
 
 export type ProtocolScheduleType = "manual" | "date_range" | "week_of_month";
 
@@ -24,9 +24,10 @@ export interface Protocol {
 
 export interface ProtocolItem {
   id: string;
-  item_type: "supplement" | "medication" | "therapy";
+  item_type: "supplement" | "medication" | "therapy" | "peptide";
   user_supplement: UserSupplement | null;
   user_medication: UserMedication | null;
   user_therapy: UserTherapy | null;
+  user_peptide: UserPeptide | null;
   sort_order: number;
 }

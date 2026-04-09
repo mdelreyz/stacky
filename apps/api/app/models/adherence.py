@@ -22,6 +22,8 @@ class AdherenceLog(Base):
     item_name_snapshot: Mapped[str | None] = mapped_column(String(255), nullable=True)
     take_window_snapshot: Mapped[str | None] = mapped_column(String(40), nullable=True)
     regimes_snapshot: Mapped[list[str] | None] = mapped_column(JSON, nullable=True)
+    dosage_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    settings_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     scheduled_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     taken_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     skipped: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

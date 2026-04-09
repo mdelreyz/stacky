@@ -2,6 +2,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import { MACRO_LEVEL_OPTIONS, NUTRITION_CYCLE_TYPE_OPTIONS } from "@/lib/nutrition";
 import type { MacroLevel, NutritionCycleType, NutritionPhase } from "@/lib/api";
 
@@ -128,7 +129,7 @@ export function NutritionPlanForm({
             <FontAwesome
               name={state.useMacroProfile ? "check-square-o" : "square-o"}
               size={18}
-              color={state.useMacroProfile ? "#2b8a3e" : "#868e96"}
+              color={state.useMacroProfile ? colors.success : colors.textMuted}
             />
             <Text style={styles.toggleText}>Track macros</Text>
           </Pressable>
@@ -177,7 +178,7 @@ export function NutritionPlanForm({
           value={state.notes}
           onChangeText={(value) => setState((current) => ({ ...current, notes: value }))}
           placeholder="Optional notes"
-          placeholderTextColor="#adb5bd"
+          placeholderTextColor={colors.textPlaceholder}
         />
       </View>
 
@@ -187,10 +188,10 @@ export function NutritionPlanForm({
         disabled={saving}
       >
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.white} />
         ) : (
           <>
-            <FontAwesome name="check" size={16} color="#fff" />
+            <FontAwesome name="check" size={16} color={colors.white} />
             <Text style={styles.primaryButtonText}>{primaryLabel}</Text>
           </>
         )}
@@ -271,12 +272,12 @@ function patternPlaceholder(cycleType: NutritionCycleType): string {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -285,18 +286,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
     marginBottom: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     fontSize: 16,
-    color: "#212529",
+    color: colors.textPrimary,
   },
   spacedInput: {
     marginTop: 12,
@@ -307,7 +308,7 @@ const styles = StyleSheet.create({
   },
   helperText: {
     fontSize: 12,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 8,
     lineHeight: 18,
   },
@@ -320,7 +321,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: "#f1f3f5",
+    backgroundColor: colors.surface,
   },
   optionChipSelected: {
     backgroundColor: "#d0ebff",
@@ -328,10 +329,10 @@ const styles = StyleSheet.create({
   optionChipText: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#495057",
+    color: colors.textSecondary,
   },
   optionChipTextSelected: {
-    color: "#1864ab",
+    color: colors.primaryDarker,
   },
   toggleHeader: {
     gap: 4,
@@ -342,15 +343,15 @@ const styles = StyleSheet.create({
     gap: 10,
     padding: 12,
     borderRadius: 10,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
   },
   toggleRowActive: {
-    backgroundColor: "#ebfbee",
+    backgroundColor: colors.successLight,
   },
   toggleText: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#495057",
+    color: colors.textSecondary,
   },
   macroGrid: {
     gap: 16,
@@ -361,12 +362,12 @@ const styles = StyleSheet.create({
   macroLabel: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#495057",
+    color: colors.textSecondary,
   },
   primaryButton: {
     marginHorizontal: 16,
     borderRadius: 12,
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     alignItems: "center",
     flexDirection: "row",
@@ -374,7 +375,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "700",
     fontSize: 15,
   },
@@ -383,12 +384,12 @@ const styles = StyleSheet.create({
     marginTop: 12,
     marginBottom: 8,
     borderRadius: 12,
-    backgroundColor: "#fff5f5",
+    backgroundColor: colors.dangerLight,
     paddingVertical: 14,
     alignItems: "center",
   },
   secondaryButtonText: {
-    color: "#c92a2a",
+    color: colors.dangerDark,
     fontWeight: "700",
     fontSize: 15,
   },

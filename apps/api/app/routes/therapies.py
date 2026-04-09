@@ -1,7 +1,7 @@
 import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import func, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
@@ -10,6 +10,7 @@ from app.models.therapy import Therapy
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.therapy import TherapyResponse
+from app.services.pagination import paginate, paginated_response
 
 router = APIRouter(prefix="/therapies", tags=["therapies"])
 
@@ -23,25 +24,16 @@ async def list_therapies(
     session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
-    base_query = select(Therapy)
+    query = select(Therapy).order_by(Therapy.name)
     if search:
-        base_query = base_query.where(Therapy.name.ilike(f"%{search}%"))
+        query = query.where(Therapy.name.ilike(f"%{search}%"))
     if category:
-        base_query = base_query.where(Therapy.category == category)
+        query = query.where(Therapy.category == category)
 
-    count_result = await session.execute(select(func.count()).select_from(base_query.subquery()))
-    total = count_result.scalar_one()
-
-    offset = (page - 1) * page_size
-    result = await session.execute(base_query.order_by(Therapy.name).offset(offset).limit(page_size))
-    therapies = list(result.scalars().all())
-
-    return PaginatedResponse(
-        items=[TherapyResponse.model_validate(therapy) for therapy in therapies],
-        total=total,
-        page=page,
-        page_size=page_size,
-        has_more=(offset + page_size) < total,
+    rows, total, has_more = await paginate(session, query, page, page_size)
+    return paginated_response(
+        items=[TherapyResponse.model_validate(t) for t in rows],
+        total=total, page=page, page_size=page_size, has_more=has_more,
     )
 
 

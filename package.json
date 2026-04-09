@@ -2,7 +2,9 @@
   "name": "protocols",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.33.0",
   "scripts": {
+    "build": "turbo build",
     "dev:mobile": "cd apps/mobile && npx expo start",
     "build:mobile": "cd apps/mobile && npx expo export",
     "lint": "turbo lint",
@@ -11,5 +13,8 @@
   "devDependencies": {
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "puppeteer": "^24.40.0"
   }
 }

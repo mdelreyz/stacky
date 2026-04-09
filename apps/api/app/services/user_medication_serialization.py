@@ -1,11 +1,13 @@
 from app.models.user_medication import UserMedication
 from app.schemas.medication import MedicationResponse, UserMedicationResponse
+from app.services.ai_onboarding import resolve_medication_ai_status
 
 
 async def serialize_user_medication(user_medication: UserMedication | None) -> UserMedicationResponse | None:
     if user_medication is None:
         return None
 
+    ai_status, ai_error = await resolve_medication_ai_status(user_medication.medication)
     return UserMedicationResponse(
         id=user_medication.id,
         medication=MedicationResponse(
@@ -15,6 +17,8 @@ async def serialize_user_medication(user_medication: UserMedication | None) -> U
             form=user_medication.medication.form,
             description=user_medication.medication.description,
             ai_profile=user_medication.medication.ai_profile,
+            ai_status=ai_status,
+            ai_error=ai_error,
             ai_generated_at=user_medication.medication.ai_generated_at,
             is_verified=user_medication.medication.is_verified,
         ),

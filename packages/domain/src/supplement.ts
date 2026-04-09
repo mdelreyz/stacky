@@ -1,16 +1,16 @@
 export type SupplementCategory =
-  | "vitamin"
-  | "mineral"
-  | "herb"
-  | "amino_acid"
-  | "nootropic"
-  | "hormone"
-  | "probiotic"
-  | "enzyme"
-  | "fatty_acid"
-  | "antioxidant"
-  | "adaptogen"
-  | "peptide"
+  | "healthy_aging"
+  | "energy_mitochondria"
+  | "brain_mood_stress"
+  | "sleep_recovery"
+  | "cardiovascular"
+  | "glucose_metabolic"
+  | "gut_digestion"
+  | "detox_binding"
+  | "immune_antimicrobial"
+  | "inflammation_antioxidant"
+  | "hormones_fertility"
+  | "musculoskeletal"
   | "other";
 
 export interface Supplement {
@@ -19,6 +19,8 @@ export interface Supplement {
   category: SupplementCategory;
   form: string | null;
   description: string | null;
+  goals: string[] | null;
+  mechanism_tags: string[] | null;
   ai_profile: SupplementAIProfile | null;
   ai_status: AIProfileStatus;
   ai_error: string | null;

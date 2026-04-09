@@ -3,7 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
-from app.models.user_supplement import TakeWindow
+from app.models.enums import TakeWindow
 from app.schemas.nutrition import ActiveNutritionPhaseResponse
 
 

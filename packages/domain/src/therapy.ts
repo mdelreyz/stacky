@@ -6,6 +6,10 @@ export type TherapyCategory =
   | "electrical"
   | "manual"
   | "sound"
+  | "skincare"
+  | "haircare"
+  | "recovery"
+  | "cognitive"
   | "other";
 
 export interface Therapy {

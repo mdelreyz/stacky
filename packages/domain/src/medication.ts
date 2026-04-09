@@ -1,8 +1,12 @@
 export type MedicationCategory =
-  | "prescription"
-  | "otc"
-  | "topical"
-  | "injectable"
+  | "longevity"
+  | "metabolic"
+  | "hormonal"
+  | "cardiovascular"
+  | "cognitive"
+  | "dermatological"
+  | "anti_inflammatory"
+  | "antimicrobial"
   | "other";
 
 export interface MedicationAIProfile {

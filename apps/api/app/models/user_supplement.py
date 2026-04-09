@@ -1,4 +1,3 @@
-import enum
 import uuid
 from datetime import date, datetime
 
@@ -6,24 +5,7 @@ from sqlalchemy import Boolean, Date, DateTime, Enum, ForeignKey, Numeric, Strin
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import UUID, Base
-
-
-class Frequency(str, enum.Enum):
-    daily = "daily"
-    twice_daily = "twice_daily"
-    three_times_daily = "three_times_daily"
-    weekly = "weekly"
-    every_other_day = "every_other_day"
-    as_needed = "as_needed"
-
-
-class TakeWindow(str, enum.Enum):
-    morning_fasted = "morning_fasted"
-    morning_with_food = "morning_with_food"
-    midday = "midday"
-    afternoon = "afternoon"
-    evening = "evening"
-    bedtime = "bedtime"
+from app.models.enums import Frequency, TakeWindow
 
 
 class UserSupplement(Base):

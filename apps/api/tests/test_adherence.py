@@ -9,7 +9,8 @@ from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.therapy import Therapy, TherapyCategory
 from app.models.user_medication import UserMedication
-from app.models.user_supplement import Frequency, TakeWindow, UserSupplement
+from app.models.enums import Frequency, TakeWindow
+from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 
 
@@ -54,7 +55,7 @@ def create_therapy(name: str):
 def create_medication(name: str):
     async def _create():
         async with async_session_factory() as session:
-            medication = Medication(name=name, category=MedicationCategory.prescription, form="tablet")
+            medication = Medication(name=name, category=MedicationCategory.other, form="tablet")
             session.add(medication)
             await session.commit()
             await session.refresh(medication)
@@ -304,6 +305,40 @@ def test_mark_therapy_taken_updates_daily_plan(client):
     refreshed_user_therapy = fetch_user_therapy(user_therapy_id)
     assert isinstance(refreshed_user_therapy.settings, dict)
     assert "last_completed_at" in refreshed_user_therapy.settings
+
+
+def test_adherence_snapshots_dosage_and_settings(client):
+    headers, user_id = signup(client)
+
+    supplement_id = create_supplement("Snapshot Supplement")
+    user_supplement_id = create_user_supplement(user_id, supplement_id)
+
+    response = client.post(
+        f"/api/v1/users/me/adherence/supplements/{user_supplement_id}",
+        json={"status": "taken", "date": "2026-04-08"},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    log = fetch_logs()[0]
+    assert log.dosage_snapshot == {"amount": 2.0, "unit": "capsules"}
+    assert log.settings_snapshot is None
+
+    therapy_id = create_therapy("Snapshot Therapy")
+    user_therapy_id = create_user_therapy(user_id, therapy_id)
+
+    response = client.post(
+        f"/api/v1/users/me/adherence/therapies/{user_therapy_id}",
+        json={"status": "taken", "date": "2026-04-08"},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    logs = fetch_logs()
+    therapy_log = next(log for log in logs if log.item_type == "therapy")
+    assert therapy_log.settings_snapshot is not None
+    assert therapy_log.settings_snapshot["duration_minutes"] == 20
+    assert therapy_log.settings_snapshot["session_details"] == "Full body"
+    assert "last_completed_at" not in therapy_log.settings_snapshot
+    assert therapy_log.dosage_snapshot is None
 
 
 def test_mark_medication_taken_updates_daily_plan(client):

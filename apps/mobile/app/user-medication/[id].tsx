@@ -40,7 +40,7 @@ export default function ManageUserMedicationScreen() {
           notes: nextUserMedication.notes || "",
         });
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load medication"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

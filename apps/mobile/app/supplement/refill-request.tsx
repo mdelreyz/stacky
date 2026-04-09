@@ -3,6 +3,7 @@ import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-nat
 
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { userSupplements as userSupplementsApi } from "@/lib/api";
+import { showError } from "@/lib/errors";
 import type { SupplementRefillRequest } from "@/lib/api";
 
 export default function SupplementRefillRequestScreen() {
@@ -18,7 +19,7 @@ export default function SupplementRefillRequestScreen() {
           setRefillRequest(response);
         }
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load refill request"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

@@ -39,8 +39,8 @@ def create_medication(name: str, category: MedicationCategory = MedicationCatego
 
 def test_list_medications_supports_search_and_get(client):
     headers = auth_headers(client)
-    finasteride_id = create_medication("Finasteride", MedicationCategory.prescription)
-    create_medication("Topical Minoxidil 5%", MedicationCategory.topical)
+    finasteride_id = create_medication("Finasteride", MedicationCategory.dermatological)
+    create_medication("Topical Minoxidil 5%", MedicationCategory.dermatological)
 
     list_response = client.get("/api/v1/medications?search=fin", headers=headers)
     assert list_response.status_code == 200
@@ -48,4 +48,4 @@ def test_list_medications_supports_search_and_get(client):
 
     get_response = client.get(f"/api/v1/medications/{finasteride_id}", headers=headers)
     assert get_response.status_code == 200
-    assert get_response.json()["category"] == "prescription"
+    assert get_response.json()["category"] == "dermatological"

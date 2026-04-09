@@ -7,11 +7,22 @@ export type {
   SupplementRefillRequestItem,
 } from "./supplement";
 export type { Medication, MedicationAIProfile, MedicationCategory } from "./medication";
+export type { Peptide, PeptideCategory } from "./peptide";
 export type { Therapy, TherapyCategory } from "./therapy";
-export type { UserMedication, UserSupplement, UserTherapy, Frequency, TakeWindow } from "./user-items";
+export type {
+  UserMedication,
+  UserMedicationUpdate,
+  UserPeptide,
+  UserPeptideUpdate,
+  UserSupplement,
+  UserSupplementUpdate,
+  UserTherapy,
+  UserTherapyUpdate,
+  Frequency,
+  TakeWindow,
+} from "./user-items";
 export { FREQUENCY_VALUES, TAKE_WINDOW_VALUES, isFrequency, isTakeWindow } from "./user-items";
 export type { Protocol, ProtocolItem, ProtocolSchedule, ProtocolScheduleType } from "./protocol";
-export type { CyclingSchedule, CycleType, CyclePhase } from "./cycling";
 export type {
   ActiveNutritionPhase,
   MacroLevel,
@@ -36,5 +47,4 @@ export type {
   TrackingOverview,
   TrackingSuggestion,
 } from "./tracking";
-export type { Interaction, InteractionType, Severity } from "./interaction";
 export type { User, AuthResponse } from "./user";

@@ -64,7 +64,7 @@ export default function ScheduleTherapyScreen() {
           notes: "",
         });
       })
-      .catch(console.error)
+      .catch(() => showError("Failed to load therapy catalogs"))
       .finally(() => {
         if (!cancelled) {
           setLoading(false);

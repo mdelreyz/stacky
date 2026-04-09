@@ -54,7 +54,7 @@ def create_therapy(name: str):
 def create_medication(name: str):
     async def _create():
         async with async_session_factory() as session:
-            medication = Medication(name=name, category=MedicationCategory.prescription, form="tablet")
+            medication = Medication(name=name, category=MedicationCategory.other, form="tablet")
             session.add(medication)
             await session.commit()
             await session.refresh(medication)

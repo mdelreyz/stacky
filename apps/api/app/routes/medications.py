@@ -1,6 +1,8 @@
+import asyncio
+import logging
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -9,9 +11,37 @@ from app.database import get_session
 from app.models.medication import Medication
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
-from app.schemas.medication import MedicationResponse
+from app.schemas.medication import MedicationOnboardRequest, MedicationOnboardResponse, MedicationResponse
+from app.services.ai_onboarding import resolve_medication_ai_status, run_medication_ai_onboarding_job_sync, set_ai_status
+from app.services.pagination import paginate, paginated_response
+from app.tasks.ai_onboarding import generate_medication_ai_profile
 
 router = APIRouter(prefix="/medications", tags=["medications"])
+logger = logging.getLogger(__name__)
+
+
+async def _serialize_medication(medication: Medication) -> MedicationResponse:
+    ai_status, ai_error = await resolve_medication_ai_status(medication)
+    return MedicationResponse(
+        id=medication.id,
+        name=medication.name,
+        category=medication.category,
+        form=medication.form,
+        description=medication.description,
+        ai_profile=medication.ai_profile,
+        ai_status=ai_status,
+        ai_error=ai_error,
+        ai_generated_at=medication.ai_generated_at,
+        is_verified=medication.is_verified,
+    )
+
+
+def _dispatch_medication_ai_onboarding(medication_id: uuid.UUID, background_tasks: BackgroundTasks) -> None:
+    try:
+        generate_medication_ai_profile.delay(str(medication_id))
+    except Exception:
+        logger.warning("Celery dispatch failed for medication %s, using in-process fallback", medication_id, exc_info=True)
+        background_tasks.add_task(run_medication_ai_onboarding_job_sync, str(medication_id))
 
 
 @router.get("", response_model=PaginatedResponse[MedicationResponse])
@@ -23,25 +53,16 @@ async def list_medications(
     session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
-    base_query = select(Medication)
+    query = select(Medication).order_by(Medication.name)
     if search:
-        base_query = base_query.where(Medication.name.ilike(f"%{search}%"))
+        query = query.where(Medication.name.ilike(f"%{search}%"))
     if category:
-        base_query = base_query.where(Medication.category == category)
+        query = query.where(Medication.category == category)
 
-    count_result = await session.execute(select(func.count()).select_from(base_query.subquery()))
-    total = count_result.scalar_one()
-
-    offset = (page - 1) * page_size
-    result = await session.execute(base_query.order_by(Medication.name).offset(offset).limit(page_size))
-    medications = list(result.scalars().all())
-
-    return PaginatedResponse(
-        items=[MedicationResponse.model_validate(medication) for medication in medications],
-        total=total,
-        page=page,
-        page_size=page_size,
-        has_more=(offset + page_size) < total,
+    rows, total, has_more = await paginate(session, query, page, page_size)
+    return paginated_response(
+        items=list(await asyncio.gather(*(_serialize_medication(m) for m in rows))),
+        total=total, page=page, page_size=page_size, has_more=has_more,
     )
 
 
@@ -55,4 +76,48 @@ async def get_medication(
     medication = result.scalar_one_or_none()
     if not medication:
         raise HTTPException(status_code=404, detail="Medication not found")
-    return MedicationResponse.model_validate(medication)
+    return await _serialize_medication(medication)
+
+
+@router.post("/onboard", response_model=MedicationOnboardResponse, status_code=201)
+async def onboard_medication(
+    data: MedicationOnboardRequest,
+    background_tasks: BackgroundTasks,
+    session: AsyncSession = Depends(get_session),
+    _current_user: User = Depends(get_current_user),
+):
+    result = await session.execute(select(Medication).where(func.lower(Medication.name) == data.name.lower()))
+    existing = result.scalar_one_or_none()
+    if existing:
+        status, error = await resolve_medication_ai_status(existing)
+        if not existing.ai_profile and status != "generating":
+            await set_ai_status(str(existing.id), "generating", kind="medication")
+            _dispatch_medication_ai_onboarding(existing.id, background_tasks)
+            status, error = "generating", None
+        return MedicationOnboardResponse(
+            id=existing.id,
+            name=existing.name,
+            status=status,
+            ai_profile=existing.ai_profile,
+            ai_error=error,
+        )
+
+    medication = Medication(
+        name=data.name,
+        category=data.category or "other",
+        form=data.form,
+    )
+    session.add(medication)
+    await session.commit()
+    await session.refresh(medication)
+
+    await set_ai_status(str(medication.id), "generating", kind="medication")
+    _dispatch_medication_ai_onboarding(medication.id, background_tasks)
+
+    return MedicationOnboardResponse(
+        id=medication.id,
+        name=medication.name,
+        status="generating",
+        ai_profile=None,
+        ai_error=None,
+    )

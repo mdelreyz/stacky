@@ -54,6 +54,9 @@ class ProtocolItem(Base):
     user_therapy_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(), ForeignKey("user_therapies.id", ondelete="CASCADE"), nullable=True
     )
+    user_peptide_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(), ForeignKey("user_peptides.id", ondelete="CASCADE"), nullable=True
+    )
     sort_order: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
@@ -62,3 +65,4 @@ class ProtocolItem(Base):
     user_supplement = relationship("UserSupplement", lazy="selectin")
     user_medication = relationship("UserMedication", lazy="selectin")
     user_therapy = relationship("UserTherapy", lazy="selectin")
+    user_peptide = relationship("UserPeptide", lazy="selectin")

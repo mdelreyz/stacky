@@ -12,19 +12,23 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from app.database import Base, async_session_factory, engine
 from app.models.medication import Medication
+from app.models.peptide import Peptide
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
+from scripts.seed_supplement_catalog import SUPPLEMENT_CATALOG
 
 
 SUPPLEMENTS = [
     {
         "name": "Vitamin D3",
-        "category": "vitamin",
+        "category": "immune_antimicrobial",
         "form": "softgel",
+        "goals": ["bone health", "immunity"],
+        "mechanism_tags": [],
         "description": "Essential fat-soluble vitamin for bone health, immunity, and mood regulation.",
         "ai_profile": {
             "common_names": ["Vitamin D3", "Cholecalciferol", "Vitamin D"],
-            "category": "vitamin",
+            "category": "immune_antimicrobial",
             "mechanism_of_action": "Converted to calcidiol (25-OH-D) in the liver, then to calcitriol (1,25-dihydroxyvitamin D) in the kidneys. Calcitriol acts as a hormone, binding to vitamin D receptors (VDR) in nearly every cell, regulating calcium absorption, immune function, and gene expression.",
             "typical_dosages": [
                 {"amount": 2000, "unit": "IU", "frequency": "daily", "context": "maintenance"},
@@ -63,12 +67,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Magnesium Glycinate",
-        "category": "mineral",
+        "category": "sleep_recovery",
         "form": "capsule",
+        "goals": ["sleep", "stress"],
+        "mechanism_tags": ["neuroprotective"],
         "description": "Highly bioavailable form of magnesium chelated with glycine. Supports sleep, muscle relaxation, and stress reduction.",
         "ai_profile": {
             "common_names": ["Magnesium Glycinate", "Magnesium Bisglycinate", "Chelated Magnesium"],
-            "category": "mineral",
+            "category": "sleep_recovery",
             "mechanism_of_action": "Magnesium is a cofactor in 600+ enzymatic reactions. Glycinate form provides the amino acid glycine, which has calming effects via NMDA receptor modulation. Supports GABA activity, ATP production, and muscle/nerve function.",
             "typical_dosages": [
                 {"amount": 200, "unit": "mg", "frequency": "daily", "context": "general_supplementation"},
@@ -104,12 +110,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Omega-3 Fish Oil",
-        "category": "fatty_acid",
+        "category": "cardiovascular",
         "form": "softgel",
+        "goals": ["cognitive", "joints"],
+        "mechanism_tags": ["anti-inflammatory"],
         "description": "Essential fatty acids EPA and DHA for cardiovascular health, brain function, and inflammation reduction.",
         "ai_profile": {
             "common_names": ["Omega-3", "Fish Oil", "EPA/DHA"],
-            "category": "fatty_acid",
+            "category": "cardiovascular",
             "mechanism_of_action": "EPA and DHA incorporate into cell membranes, modulating inflammation via prostaglandin/leukotriene pathways. EPA resolves inflammation; DHA is critical for brain structure and neuronal signaling.",
             "typical_dosages": [
                 {"amount": 1000, "unit": "mg", "frequency": "daily", "context": "general_health_combined_epa_dha"},
@@ -137,12 +145,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Ashwagandha KSM-66",
-        "category": "adaptogen",
+        "category": "hormones_fertility",
         "form": "capsule",
+        "goals": ["stress", "sleep"],
+        "mechanism_tags": ["adaptogen", "hormone modulation"],
         "description": "Standardized ashwagandha extract for stress reduction, cortisol management, and hormonal balance.",
         "ai_profile": {
             "common_names": ["Ashwagandha", "KSM-66", "Withania somnifera", "Indian Ginseng"],
-            "category": "adaptogen",
+            "category": "hormones_fertility",
             "mechanism_of_action": "Modulates the HPA axis, reducing cortisol output. Active withanolides mimic GABA, promote BDNF expression, and may inhibit acetylcholinesterase. Adaptogenic: normalizes stress response without sedation at typical doses.",
             "typical_dosages": [
                 {"amount": 300, "unit": "mg", "frequency": "twice_daily", "context": "stress_reduction"},
@@ -171,12 +181,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Zinc Picolinate",
-        "category": "mineral",
+        "category": "immune_antimicrobial",
         "form": "capsule",
+        "goals": ["skin & appearance", "performance"],
+        "mechanism_tags": ["antimicrobial"],
         "description": "Highly bioavailable zinc for immune function, testosterone support, and wound healing.",
         "ai_profile": {
             "common_names": ["Zinc Picolinate", "Zinc", "Chelated Zinc"],
-            "category": "mineral",
+            "category": "immune_antimicrobial",
             "mechanism_of_action": "Cofactor in 300+ enzymes. Essential for immune cell development (T-cells, NK cells), protein synthesis, DNA repair, and hormone production including testosterone and thyroid hormones.",
             "typical_dosages": [
                 {"amount": 15, "unit": "mg", "frequency": "daily", "context": "maintenance"},
@@ -205,12 +217,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Creatine Monohydrate",
-        "category": "amino_acid",
+        "category": "musculoskeletal",
         "form": "powder",
+        "goals": ["performance", "cognitive"],
+        "mechanism_tags": ["mitochondrial support"],
         "description": "Most studied sports supplement. Supports ATP regeneration, muscle strength, and cognitive function.",
         "ai_profile": {
             "common_names": ["Creatine Monohydrate", "Creatine", "CreaPure"],
-            "category": "amino_acid",
+            "category": "musculoskeletal",
             "mechanism_of_action": "Stored as phosphocreatine in muscles and brain. Donates phosphate groups to regenerate ATP during high-intensity efforts. Also acts as an intracellular osmolyte (cell volumization) and neuroprotectant.",
             "typical_dosages": [
                 {"amount": 5, "unit": "g", "frequency": "daily", "context": "standard_dose"},
@@ -234,12 +248,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "NAC (N-Acetyl Cysteine)",
-        "category": "amino_acid",
+        "category": "detox_binding",
         "form": "capsule",
+        "goals": [],
+        "mechanism_tags": ["antioxidant", "detox support"],
         "description": "Precursor to glutathione, the body's master antioxidant. Supports liver detox, respiratory health, and mood.",
         "ai_profile": {
             "common_names": ["NAC", "N-Acetyl Cysteine", "N-Acetylcysteine"],
-            "category": "amino_acid",
+            "category": "detox_binding",
             "mechanism_of_action": "Rate-limiting precursor for glutathione (GSH) synthesis. Also modulates glutamate via the cystine-glutamate antiporter, mucolytic (thins mucus), chelates heavy metals, and supports liver phase II detoxification.",
             "typical_dosages": [
                 {"amount": 600, "unit": "mg", "frequency": "daily", "context": "antioxidant_maintenance"},
@@ -267,12 +283,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Vitamin K2 MK-7",
-        "category": "vitamin",
+        "category": "cardiovascular",
         "form": "softgel",
+        "goals": ["bone health"],
+        "mechanism_tags": [],
         "description": "Fat-soluble vitamin that directs calcium to bones and away from arteries. Essential D3 companion.",
         "ai_profile": {
             "common_names": ["Vitamin K2", "MK-7", "Menaquinone-7"],
-            "category": "vitamin",
+            "category": "cardiovascular",
             "mechanism_of_action": "Activates osteocalcin (directs calcium into bones) and matrix GLA protein (prevents calcium deposition in arteries). MK-7 has the longest half-life of K2 forms.",
             "typical_dosages": [
                 {"amount": 100, "unit": "mcg", "frequency": "daily", "context": "standard_with_d3"},
@@ -299,12 +317,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Curcumin (Turmeric Extract)",
-        "category": "herb",
+        "category": "inflammation_antioxidant",
         "form": "capsule",
+        "goals": ["joints"],
+        "mechanism_tags": ["anti-inflammatory", "antioxidant"],
         "description": "Potent anti-inflammatory compound from turmeric. Targets NF-kB and COX-2 pathways.",
         "ai_profile": {
             "common_names": ["Curcumin", "Turmeric Extract", "Curcuma longa"],
-            "category": "herb",
+            "category": "inflammation_antioxidant",
             "mechanism_of_action": "Inhibits NF-kB (master inflammatory transcription factor), COX-2, and LOX enzymes. Also activates Nrf2 (antioxidant response), modulates BDNF, and has anti-amyloid properties.",
             "typical_dosages": [
                 {"amount": 500, "unit": "mg", "frequency": "daily", "context": "general_anti_inflammatory"},
@@ -332,12 +352,14 @@ SUPPLEMENTS = [
     },
     {
         "name": "Probiotics (Multi-Strain)",
-        "category": "probiotic",
+        "category": "gut_digestion",
         "form": "capsule",
+        "goals": ["immunity"],
+        "mechanism_tags": ["gut microbiome modulation"],
         "description": "Live beneficial bacteria for gut microbiome support, immune modulation, and digestive health.",
         "ai_profile": {
             "common_names": ["Probiotics", "Multi-Strain Probiotics", "Lactobacillus/Bifidobacterium"],
-            "category": "probiotic",
+            "category": "gut_digestion",
             "mechanism_of_action": "Colonize the gut, competing with pathogenic bacteria. Produce short-chain fatty acids (butyrate), modulate immune response via gut-associated lymphoid tissue (GALT), and support intestinal barrier integrity.",
             "typical_dosages": [
                 {"amount": 10, "unit": "billion_CFU", "frequency": "daily", "context": "maintenance"},
@@ -510,7 +532,7 @@ THERAPIES = [
     },
     {
         "name": "Microneedling",
-        "category": "manual",
+        "category": "skincare",
         "description": "Periodic skin protocol for texture, collagen support, and resurfacing routines.",
         "ai_profile": {
             "tags": ["skin", "microneedling", "collagen"],
@@ -522,7 +544,7 @@ THERAPIES = [
     },
     {
         "name": "CO2 Resurfacing",
-        "category": "light",
+        "category": "skincare",
         "description": "Infrequent resurfacing treatment placeholder for planning annual or seasonal skin protocols.",
         "ai_profile": {
             "tags": ["skin", "co2", "resurfacing", "aesthetic"],
@@ -532,12 +554,270 @@ THERAPIES = [
             "session_template": "Procedure planning and aftercare tracking block",
         },
     },
+    # --- Skincare ---
+    {
+        "name": "Chemical Peel",
+        "category": "skincare",
+        "description": "Periodic acid-based exfoliation for skin texture, tone, and collagen stimulation.",
+        "ai_profile": {
+            "tags": ["skin", "chemical_peel", "exfoliation", "aesthetic"],
+            "default_duration_minutes": 15,
+            "default_frequency": "weekly",
+            "default_take_window": "evening",
+            "session_template": "Apply peel, timed contact, neutralize, moisturize",
+        },
+    },
+    {
+        "name": "LED Face Mask",
+        "category": "skincare",
+        "description": "At-home LED light therapy mask session targeting acne, inflammation, or collagen production.",
+        "ai_profile": {
+            "tags": ["skin", "led", "light_therapy", "face_mask"],
+            "default_duration_minutes": 10,
+            "default_frequency": "daily",
+            "default_take_window": "evening",
+            "session_template": "10 min red/NIR or blue light mask session",
+        },
+    },
+    {
+        "name": "Gua Sha Facial",
+        "category": "skincare",
+        "description": "Facial massage using a gua sha stone for lymphatic drainage, sculpting, and circulation.",
+        "ai_profile": {
+            "tags": ["skin", "gua_sha", "facial_massage", "lymphatic"],
+            "default_duration_minutes": 10,
+            "default_frequency": "daily",
+            "default_take_window": "morning_with_food",
+            "session_template": "Upward and outward strokes with serum or oil",
+        },
+    },
+    {
+        "name": "Retinoid Application",
+        "category": "skincare",
+        "description": "Evening topical retinoid routine for skin renewal, anti-aging, and texture improvement.",
+        "ai_profile": {
+            "tags": ["skin", "retinoid", "tretinoin", "anti_aging"],
+            "default_duration_minutes": 5,
+            "default_frequency": "every_other_day",
+            "default_take_window": "bedtime",
+            "session_template": "Cleanse, wait, apply pea-sized amount, moisturize",
+        },
+    },
+    # --- Haircare ---
+    {
+        "name": "Scalp Massage",
+        "category": "haircare",
+        "description": "Manual or device-assisted scalp massage for blood flow stimulation and hair follicle health.",
+        "ai_profile": {
+            "tags": ["hair", "scalp_massage", "circulation", "follicle_health"],
+            "default_duration_minutes": 5,
+            "default_frequency": "daily",
+            "default_take_window": "evening",
+            "session_template": "5 min fingertip or scalp massager circular motions",
+        },
+    },
+    {
+        "name": "LED Hair Cap",
+        "category": "haircare",
+        "description": "Low-level laser therapy cap session for hair growth stimulation and follicle support.",
+        "ai_profile": {
+            "tags": ["hair", "lllt", "led_cap", "hair_growth"],
+            "default_duration_minutes": 20,
+            "default_frequency": "every_other_day",
+            "default_take_window": "evening",
+            "session_template": "20 min device-timed LLLT session",
+        },
+    },
+    {
+        "name": "PRP Scalp Treatment",
+        "category": "haircare",
+        "description": "Platelet-rich plasma injection session for hair restoration. Track scheduling and aftercare.",
+        "ai_profile": {
+            "tags": ["hair", "prp", "injection", "hair_restoration"],
+            "default_duration_minutes": 45,
+            "default_frequency": "weekly",
+            "default_take_window": "morning_with_food",
+            "session_template": "Blood draw, centrifuge, scalp injection grid, aftercare",
+        },
+    },
+    {
+        "name": "Dermaroller Scalp",
+        "category": "haircare",
+        "description": "Microneedling the scalp with a dermaroller to enhance topical absorption and stimulate follicles.",
+        "ai_profile": {
+            "tags": ["hair", "dermaroller", "microneedling", "scalp"],
+            "default_duration_minutes": 10,
+            "default_frequency": "weekly",
+            "default_take_window": "evening",
+            "session_template": "Roll scalp in sections, apply minoxidil 24h later",
+        },
+    },
+    # --- Recovery ---
+    {
+        "name": "Cold Plunge",
+        "category": "recovery",
+        "description": "Deliberate cold water immersion for recovery, dopamine, norepinephrine, and resilience training.",
+        "ai_profile": {
+            "tags": ["cold", "plunge", "ice_bath", "cold_exposure", "recovery"],
+            "default_duration_minutes": 5,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "2-5 min full immersion at 3-7°C",
+        },
+    },
+    {
+        "name": "Compression Boots",
+        "category": "recovery",
+        "description": "Pneumatic compression device session for lymphatic drainage, circulation, and muscle recovery.",
+        "ai_profile": {
+            "tags": ["compression", "normatec", "recovery", "lymphatic"],
+            "default_duration_minutes": 30,
+            "default_frequency": "daily",
+            "default_take_window": "evening",
+            "session_template": "30 min sequential compression at moderate intensity",
+        },
+    },
+    {
+        "name": "Contrast Therapy",
+        "category": "recovery",
+        "description": "Alternating hot and cold exposure for vascular pumping, recovery, and inflammation management.",
+        "ai_profile": {
+            "tags": ["contrast", "hot_cold", "sauna_plunge", "recovery"],
+            "default_duration_minutes": 30,
+            "default_frequency": "weekly",
+            "default_take_window": "afternoon",
+            "session_template": "3 rounds: 10 min sauna → 2 min cold plunge",
+        },
+    },
+    {
+        "name": "Foam Rolling",
+        "category": "recovery",
+        "description": "Self-myofascial release session for mobility, soreness reduction, and tissue quality.",
+        "ai_profile": {
+            "tags": ["foam_rolling", "myofascial", "recovery", "mobility"],
+            "default_duration_minutes": 15,
+            "default_frequency": "daily",
+            "default_take_window": "evening",
+            "session_template": "Major muscle groups, 60s per area, slow rolls",
+        },
+    },
+    # --- Cognitive ---
+    {
+        "name": "Focus Session",
+        "category": "cognitive",
+        "description": "Timed deep-work block with optional binaural beats or focus music for sustained attention training.",
+        "ai_profile": {
+            "tags": ["focus", "deep_work", "attention", "cognitive"],
+            "default_duration_minutes": 90,
+            "default_frequency": "daily",
+            "default_take_window": "morning_with_food",
+            "session_template": "90 min ultradian focus block, no interruptions",
+        },
+    },
+    {
+        "name": "Dual N-Back Training",
+        "category": "cognitive",
+        "description": "Working memory training exercise shown to improve fluid intelligence and executive function.",
+        "ai_profile": {
+            "tags": ["cognitive", "n_back", "working_memory", "brain_training"],
+            "default_duration_minutes": 20,
+            "default_frequency": "daily",
+            "default_take_window": "morning_with_food",
+            "session_template": "20 min progressive difficulty dual n-back rounds",
+        },
+    },
+    {
+        "name": "Journaling",
+        "category": "cognitive",
+        "description": "Structured writing practice for reflection, gratitude, or cognitive reframing.",
+        "ai_profile": {
+            "tags": ["journaling", "reflection", "gratitude", "cognitive"],
+            "default_duration_minutes": 10,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "Morning pages or structured gratitude/reflection prompts",
+        },
+    },
+    # --- Movement (additional) ---
+    {
+        "name": "Zone 2 Cardio",
+        "category": "movement",
+        "description": "Low-intensity aerobic session at conversational pace for mitochondrial health and fat oxidation.",
+        "ai_profile": {
+            "tags": ["cardio", "zone_2", "aerobic", "endurance"],
+            "default_duration_minutes": 45,
+            "default_frequency": "daily",
+            "default_take_window": "morning_with_food",
+            "session_template": "45 min walk, jog, or cycle at 60-70% max HR",
+        },
+    },
+    {
+        "name": "Strength Training",
+        "category": "movement",
+        "description": "Resistance training session for hypertrophy, strength, or power development.",
+        "ai_profile": {
+            "tags": ["training", "strength", "resistance", "hypertrophy"],
+            "default_duration_minutes": 60,
+            "default_frequency": "daily",
+            "default_take_window": "afternoon",
+            "session_template": "Compound lifts + accessories, RPE-based progression",
+        },
+    },
+    {
+        "name": "Mobility & Stretching",
+        "category": "movement",
+        "description": "Dedicated flexibility and joint mobility session for injury prevention and movement quality.",
+        "ai_profile": {
+            "tags": ["mobility", "stretching", "flexibility", "movement_prep"],
+            "default_duration_minutes": 15,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "Dynamic warm-up or static stretch flow, 30-60s per position",
+        },
+    },
+    {
+        "name": "Yoga",
+        "category": "movement",
+        "description": "Yoga practice session for flexibility, strength, balance, and mind-body integration.",
+        "ai_profile": {
+            "tags": ["yoga", "flexibility", "mind_body", "movement"],
+            "default_duration_minutes": 30,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "Vinyasa or Hatha flow, sun salutations to savasana",
+        },
+    },
+    # --- Breathwork (additional) ---
+    {
+        "name": "Wim Hof Breathing",
+        "category": "breathwork",
+        "description": "Cyclic hyperventilation and retention protocol for stress resilience and alkalinity training.",
+        "ai_profile": {
+            "tags": ["breathwork", "wim_hof", "hyperventilation", "cold_prep"],
+            "default_duration_minutes": 15,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "3 rounds: 30 power breaths → max retention → recovery breath",
+        },
+    },
+    {
+        "name": "Box Breathing",
+        "category": "breathwork",
+        "description": "Equal-ratio breathing protocol for parasympathetic activation, calm, and focus.",
+        "ai_profile": {
+            "tags": ["breathwork", "box_breathing", "nervous_system", "calm"],
+            "default_duration_minutes": 5,
+            "default_frequency": "daily",
+            "default_take_window": "morning_fasted",
+            "session_template": "4-4-4-4 cadence for 5 minutes",
+        },
+    },
 ]
 
 MEDICATIONS = [
     {
         "name": "Finasteride",
-        "category": "prescription",
+        "category": "dermatological",
         "form": "tablet",
         "description": "Oral 5-alpha-reductase inhibitor commonly used for hair-loss protocols.",
         "ai_profile": {
@@ -564,7 +844,7 @@ MEDICATIONS = [
     },
     {
         "name": "Topical Minoxidil 5%",
-        "category": "topical",
+        "category": "dermatological",
         "form": "foam",
         "description": "Topical vasodilator commonly used for scalp hair-loss protocols.",
         "ai_profile": {
@@ -584,7 +864,7 @@ MEDICATIONS = [
     },
     {
         "name": "Oral Minoxidil",
-        "category": "prescription",
+        "category": "dermatological",
         "form": "tablet",
         "description": "Low-dose oral minoxidil protocol sometimes used for hair-loss treatment.",
         "ai_profile": {
@@ -604,7 +884,7 @@ MEDICATIONS = [
     },
     {
         "name": "Ketoconazole Shampoo 2%",
-        "category": "topical",
+        "category": "dermatological",
         "form": "shampoo",
         "description": "Medicated shampoo often used as part of scalp or hair-loss routines.",
         "ai_profile": {
@@ -621,6 +901,214 @@ MEDICATIONS = [
             "monitoring_notes": "Track scalp dryness, dandruff, and wash frequency.",
             "safety_notes": "Avoid overuse if the scalp becomes irritated or overly dry.",
         },
+    },
+]
+
+MEDICATION_CATALOG = [
+    # ── Longevity ──────────────────────────────────────────────────────
+    {"name": "Rapamycin (Sirolimus)", "category": "longevity", "form": "tablet", "description": "mTOR inhibitor. Low-dose intermittent protocols (e.g., 5-6 mg weekly) investigated for geroprotection."},
+    {"name": "Metformin", "category": "metabolic", "form": "tablet", "description": "Biguanide that activates AMPK and reduces hepatic glucose production. TAME trial investigating longevity."},
+    {"name": "Acarbose", "category": "metabolic", "form": "tablet", "description": "Alpha-glucosidase inhibitor that slows carb digestion. Extended lifespan in male mice (ITP study)."},
+    {"name": "Dasatinib", "category": "longevity", "form": "tablet", "description": "Tyrosine kinase inhibitor used as a senolytic. Combined with quercetin in D+Q senolytic protocols."},
+    {"name": "Rilmenidine", "category": "longevity", "form": "tablet", "description": "Centrally-acting antihypertensive that induces autophagy. Emerging longevity research compound."},
+    {"name": "Canagliflozin", "category": "metabolic", "form": "tablet", "description": "SGLT2 inhibitor. Extended lifespan in male mice (ITP study). Promotes glycosuria and metabolic benefits."},
+    {"name": "Pioglitazone", "category": "metabolic", "form": "tablet", "description": "Thiazolidinedione (PPAR-gamma agonist) that improves insulin sensitivity. Investigated for neuroprotection."},
+    {"name": "Deprenyl (Selegiline)", "category": "longevity", "form": "tablet", "description": "MAO-B inhibitor. Low doses investigated for neuroprotection and lifespan extension."},
+    {"name": "Meclizine", "category": "longevity", "form": "tablet", "description": "Antihistamine that may activate hypoxia response pathways (HIF-1a). ITP study showed lifespan effects."},
+    # ── Hormonal ───────────────────────────────────────────────────────
+    {"name": "Bioidentical Testosterone", "category": "hormonal", "form": "cream", "description": "Testosterone replacement (cream/pellets) for age-related hypogonadism. Requires monitoring."},
+    {"name": "Estradiol (17-alpha)", "category": "hormonal", "form": "tablet", "description": "Non-feminizing estrogen form investigated for male longevity. ITP study showed lifespan extension."},
+    {"name": "Enclomiphene", "category": "hormonal", "form": "capsule", "description": "Selective estrogen receptor modulator that stimulates endogenous testosterone via LH/FSH."},
+    {"name": "DHEA", "category": "hormonal", "form": "capsule", "description": "Precursor hormone. Prescription in some countries, OTC in others. Supports testosterone and estrogen."},
+    {"name": "HGH (Somatotropin)", "category": "hormonal", "form": "injectable", "description": "Recombinant human growth hormone. Used for GH deficiency. Controversial for anti-aging."},
+    {"name": "Oxytocin (Nasal)", "category": "hormonal", "form": "nasal spray", "description": "Neuropeptide hormone administered intranasally for social bonding and stress research."},
+    # ── Cardiovascular ─────────────────────────────────────────────────
+    {"name": "Aspirin (Low-Dose)", "category": "cardiovascular", "form": "tablet", "description": "Antiplatelet agent. 81 mg daily for cardiovascular risk reduction in select populations."},
+    {"name": "Rosuvastatin", "category": "cardiovascular", "form": "tablet", "description": "HMG-CoA reductase inhibitor (statin). Most potent statin for LDL reduction."},
+    {"name": "Telmisartan", "category": "cardiovascular", "form": "tablet", "description": "ARB with PPAR-gamma activation. May have metabolic and longevity benefits beyond blood pressure."},
+    {"name": "Captopril", "category": "cardiovascular", "form": "tablet", "description": "ACE inhibitor. ITP study showed lifespan extension in male mice."},
+    {"name": "Ivabradine", "category": "cardiovascular", "form": "tablet", "description": "Selective If channel blocker that reduces heart rate without affecting blood pressure."},
+    {"name": "Verapamil", "category": "cardiovascular", "form": "tablet", "description": "Calcium channel blocker. Investigated for type 1 diabetes beta-cell preservation."},
+    {"name": "Hydralazine", "category": "cardiovascular", "form": "tablet", "description": "Vasodilator. Emerging longevity interest due to epigenetic effects at low doses."},
+    {"name": "Pentoxifylline", "category": "cardiovascular", "form": "tablet", "description": "Phosphodiesterase inhibitor that improves blood flow. Anti-inflammatory and anti-fibrotic properties."},
+    # ── Cognitive ──────────────────────────────────────────────────────
+    {"name": "Modafinil", "category": "cognitive", "form": "tablet", "description": "Eugeroic (wakefulness promoter). Off-label for cognitive enhancement."},
+    {"name": "Piracetam", "category": "cognitive", "form": "tablet", "description": "Original racetam nootropic. Modulates AMPA receptors and improves membrane fluidity."},
+    {"name": "Aniracetam", "category": "cognitive", "form": "capsule", "description": "Fat-soluble racetam with anxiolytic properties. Modulates AMPA and metabotropic glutamate receptors."},
+    {"name": "Nicotine (Patch/Gum)", "category": "cognitive", "form": "patch", "description": "Nicotinic acetylcholine receptor agonist. Low-dose transdermal investigated for cognitive enhancement."},
+    # ── Metabolic / GLP-1 ──────────────────────────────────────────────
+    {"name": "Tadalafil", "category": "cardiovascular", "form": "tablet", "description": "PDE5 inhibitor. Low-dose daily (2.5-5 mg) supports vascular health beyond erectile function."},
+    # ── Anti-inflammatory ──────────────────────────────────────────────
+    {"name": "Low-Dose Naltrexone", "category": "anti_inflammatory", "form": "capsule", "description": "Opioid antagonist at 1-4.5 mg. Modulates immune function via TLR4 and endorphin upregulation."},
+    {"name": "Colchicine (Low-Dose)", "category": "anti_inflammatory", "form": "tablet", "description": "Anti-inflammatory that inhibits tubulin polymerization. Low-dose reduces cardiovascular events."},
+    # ── Other ──────────────────────────────────────────────────────────
+    {"name": "Lithium (Rx)", "category": "cognitive", "form": "tablet", "description": "Mood stabilizer at Rx doses. Inhibits GSK-3beta, supports neuroprotection."},
+    {"name": "Methylene Blue", "category": "longevity", "form": "liquid", "description": "Mitochondrial electron carrier. Low doses (0.5-2 mg/kg) investigated for cognitive and mitochondrial support."},
+    {"name": "Emoxypine (Mexidol)", "category": "cognitive", "form": "tablet", "description": "Antioxidant and anxiolytic. Protects membranes from lipid peroxidation. Approved in Russia."},
+    {"name": "NAD+ (IV/IM)", "category": "longevity", "form": "injectable", "description": "Direct NAD+ administration via IV or intramuscular injection for rapid NAD+ repletion."},
+    {"name": "Glutathione (IV)", "category": "other", "form": "injectable", "description": "IV glutathione for direct antioxidant repletion. Bypasses oral bioavailability limitations."},
+]
+
+PEPTIDES = [
+    {
+        "name": "BPC-157",
+        "category": "recovery",
+        "form": "injectable",
+        "goals": ["joint health"],
+        "mechanism_tags": ["anti-inflammatory"],
+        "description": "Body Protection Compound. Promotes tendon, ligament, and gut healing via angiogenesis and growth factor modulation.",
+    },
+    {
+        "name": "TB-500 (Thymosin Beta-4)",
+        "category": "recovery",
+        "form": "injectable",
+        "goals": ["joint health"],
+        "mechanism_tags": ["anti-inflammatory"],
+        "description": "Promotes tissue repair, cell migration, and blood vessel formation. Supports wound and injury recovery.",
+    },
+    {
+        "name": "GHK-Cu",
+        "category": "cosmetic",
+        "form": "topical",
+        "goals": ["skin", "hair"],
+        "mechanism_tags": ["anti-inflammatory"],
+        "description": "Copper tripeptide that stimulates collagen, elastin, and glycosaminoglycan synthesis. Supports skin and hair.",
+    },
+    {
+        "name": "Epitalon (Epithalon)",
+        "category": "research",
+        "form": "injectable",
+        "goals": ["longevity"],
+        "mechanism_tags": ["epigenetic modulator"],
+        "description": "Tetrapeptide that activates telomerase, potentially extending telomere length. Anti-aging research peptide.",
+    },
+    {
+        "name": "DSIP (Delta Sleep-Inducing Peptide)",
+        "category": "therapeutic",
+        "form": "injectable",
+        "goals": ["sleep"],
+        "mechanism_tags": ["neuroprotective"],
+        "description": "Neuropeptide that modulates sleep architecture and promotes deeper delta-wave sleep.",
+    },
+    {
+        "name": "CJC-1295 / Ipamorelin",
+        "category": "performance",
+        "form": "injectable",
+        "goals": ["energy", "longevity"],
+        "mechanism_tags": [],
+        "description": "Growth hormone secretagogue combo. CJC-1295 (GHRH analog) + Ipamorelin (ghrelin mimetic) for pulsatile GH release.",
+    },
+    {
+        "name": "Tesamorelin",
+        "category": "performance",
+        "form": "injectable",
+        "goals": ["weight management"],
+        "mechanism_tags": [],
+        "description": "GHRH analog that stimulates natural GH production. FDA-approved for HIV-associated lipodystrophy.",
+    },
+    {
+        "name": "Sermorelin",
+        "category": "performance",
+        "form": "injectable",
+        "goals": ["energy", "longevity"],
+        "mechanism_tags": [],
+        "description": "GHRH analog that stimulates pituitary GH release. Used for anti-aging and body composition.",
+    },
+    {
+        "name": "PT-141 (Bremelanotide)",
+        "category": "therapeutic",
+        "form": "injectable",
+        "goals": [],
+        "mechanism_tags": [],
+        "description": "Melanocortin receptor agonist. FDA-approved for hypoactive sexual desire disorder in women.",
+    },
+    {
+        "name": "Selank",
+        "category": "therapeutic",
+        "form": "nasal",
+        "goals": ["stress", "cognitive performance"],
+        "mechanism_tags": ["neuroprotective"],
+        "description": "Synthetic tuftsin analog with anxiolytic and nootropic effects. Modulates GABA and serotonin.",
+    },
+    {
+        "name": "Semax",
+        "category": "therapeutic",
+        "form": "nasal",
+        "goals": ["cognitive performance"],
+        "mechanism_tags": ["neuroprotective"],
+        "description": "Synthetic ACTH analog that enhances BDNF expression. Used for cognitive enhancement and neuroprotection.",
+    },
+    {
+        "name": "Semaglutide",
+        "category": "therapeutic",
+        "form": "injectable",
+        "goals": ["weight management"],
+        "mechanism_tags": [],
+        "description": "GLP-1 receptor agonist. FDA-approved for weight management and type 2 diabetes.",
+    },
+    {
+        "name": "Tirzepatide",
+        "category": "therapeutic",
+        "form": "injectable",
+        "goals": ["weight management"],
+        "mechanism_tags": [],
+        "description": "Dual GIP/GLP-1 receptor agonist. FDA-approved for type 2 diabetes and weight management.",
+    },
+    {
+        "name": "LL-37",
+        "category": "therapeutic",
+        "form": "injectable",
+        "goals": ["immunity"],
+        "mechanism_tags": [],
+        "description": "Antimicrobial peptide (cathelicidin) that supports innate immune defense against bacteria, viruses, and biofilms.",
+    },
+    {
+        "name": "KPV",
+        "category": "therapeutic",
+        "form": "capsule",
+        "goals": ["gut health"],
+        "mechanism_tags": ["anti-inflammatory"],
+        "description": "Tripeptide derived from alpha-MSH with potent anti-inflammatory effects, particularly in the gut.",
+    },
+    {
+        "name": "Dihexa",
+        "category": "research",
+        "form": "capsule",
+        "goals": ["cognitive performance"],
+        "mechanism_tags": ["neuroprotective"],
+        "description": "Angiotensin IV analog that promotes neurogenesis and synaptogenesis. Research compound for cognitive enhancement.",
+    },
+    {
+        "name": "MOTS-c",
+        "category": "research",
+        "form": "injectable",
+        "goals": ["energy", "longevity"],
+        "mechanism_tags": ["mitochondrial support", "AMPK activator"],
+        "description": "Mitochondria-derived peptide that activates AMPK, improves glucose metabolism, and enhances exercise capacity.",
+    },
+    {
+        "name": "Humanin",
+        "category": "research",
+        "form": "injectable",
+        "goals": ["longevity"],
+        "mechanism_tags": ["mitochondrial support", "neuroprotective"],
+        "description": "Mitochondria-derived peptide with cytoprotective effects. Protects against age-related diseases.",
+    },
+    {
+        "name": "SS-31 (Elamipretide)",
+        "category": "research",
+        "form": "injectable",
+        "goals": ["energy", "longevity"],
+        "mechanism_tags": ["mitochondrial support"],
+        "description": "Targets cardiolipin in the inner mitochondrial membrane, restoring electron transport chain function.",
+    },
+    {
+        "name": "Pentosan Polysulfate (PPS)",
+        "category": "therapeutic",
+        "form": "injectable",
+        "goals": ["joint health"],
+        "mechanism_tags": ["anti-inflammatory"],
+        "description": "Semi-synthetic glycosaminoglycan that supports joint health and cartilage repair. Used in veterinary and human medicine.",
     },
 ]
 
@@ -649,20 +1137,30 @@ async def seed():
                 await session.execute(select(Medication.name))
             ).scalars().all()
         }
+        existing_peptide_names = {
+            name
+            for name in (
+                await session.execute(select(Peptide.name))
+            ).scalars().all()
+        }
 
         seeded_supplements = 0
-        for data in SUPPLEMENTS:
+        all_supplements = SUPPLEMENTS + SUPPLEMENT_CATALOG
+        for data in all_supplements:
             if data["name"] in existing_supplement_names:
                 continue
+            has_profile = data.get("ai_profile") is not None
             supplement = Supplement(
                 name=data["name"],
                 category=data["category"],
-                form=data["form"],
-                description=data["description"],
-                ai_profile=data["ai_profile"],
-                ai_profile_version=1,
-                ai_generated_at=now,
-                is_verified=True,
+                form=data.get("form"),
+                description=data.get("description"),
+                goals=data.get("goals"),
+                mechanism_tags=data.get("mechanism_tags"),
+                ai_profile=data.get("ai_profile"),
+                ai_profile_version=1 if has_profile else 0,
+                ai_generated_at=now if has_profile else None,
+                is_verified=has_profile,
             )
             session.add(supplement)
             seeded_supplements += 1
@@ -683,30 +1181,49 @@ async def seed():
             seeded_therapies += 1
 
         seeded_medications = 0
-        for data in MEDICATIONS:
+        all_medications = MEDICATIONS + MEDICATION_CATALOG
+        for data in all_medications:
             if data["name"] in existing_medication_names:
                 continue
+            has_profile = data.get("ai_profile") is not None
             medication = Medication(
                 name=data["name"],
                 category=data["category"],
-                form=data["form"],
-                description=data["description"],
-                ai_profile=data["ai_profile"],
-                ai_profile_version=1,
-                ai_generated_at=now,
-                is_verified=True,
+                form=data.get("form"),
+                description=data.get("description"),
+                ai_profile=data.get("ai_profile"),
+                ai_profile_version=1 if has_profile else 0,
+                ai_generated_at=now if has_profile else None,
+                is_verified=has_profile,
             )
             session.add(medication)
             seeded_medications += 1
+
+        seeded_peptides = 0
+        for data in PEPTIDES:
+            if data["name"] in existing_peptide_names:
+                continue
+            peptide = Peptide(
+                name=data["name"],
+                category=data["category"],
+                form=data.get("form"),
+                description=data.get("description"),
+                goals=data.get("goals"),
+                mechanism_tags=data.get("mechanism_tags"),
+            )
+            session.add(peptide)
+            seeded_peptides += 1
 
         await session.commit()
         supplement_count = (await session.execute(select(func.count()).select_from(Supplement))).scalar_one()
         therapy_count = (await session.execute(select(func.count()).select_from(Therapy))).scalar_one()
         medication_count = (await session.execute(select(func.count()).select_from(Medication))).scalar_one()
+        peptide_count = (await session.execute(select(func.count()).select_from(Peptide))).scalar_one()
         print(
             f"Seeded {seeded_supplements} new supplements, {seeded_medications} new medications, "
-            f"and {seeded_therapies} new therapies. Database now has {supplement_count} supplements, "
-            f"{medication_count} medications, and {therapy_count} therapies."
+            f"{seeded_therapies} new therapies, and {seeded_peptides} new peptides. "
+            f"Database now has {supplement_count} supplements, {medication_count} medications, "
+            f"{therapy_count} therapies, and {peptide_count} peptides."
         )
 
 

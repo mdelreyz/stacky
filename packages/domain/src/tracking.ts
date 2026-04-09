@@ -4,7 +4,7 @@ export interface TrackingOverview {
   window_days: number;
   start_date: string;
   end_date: string;
-  item_type_filter: "supplement" | "medication" | "therapy" | null;
+  item_type_filter: "supplement" | "medication" | "therapy" | "peptide" | null;
   scheduled_count: number;
   taken_count: number;
   skipped_count: number;
@@ -19,7 +19,7 @@ export interface TrackingOverview {
 export interface TrackingItemStat {
   item_id: string;
   item_name: string;
-  item_type: "supplement" | "medication" | "therapy";
+  item_type: "supplement" | "medication" | "therapy" | "peptide";
   take_window: TakeWindow;
   regimes: string[];
   scheduled_count: number;
@@ -33,7 +33,7 @@ export interface TrackingItemStat {
 export interface TrackingEvent {
   item_id: string;
   item_name: string;
-  item_type: "supplement" | "medication" | "therapy";
+  item_type: "supplement" | "medication" | "therapy" | "peptide";
   take_window: TakeWindow | null;
   status: "taken" | "skipped";
   scheduled_at: string;
@@ -45,7 +45,7 @@ export interface TrackingEvent {
 export interface TrackingSuggestion {
   item_id: string | null;
   item_name: string | null;
-  item_type: "supplement" | "medication" | "therapy" | "overall";
+  item_type: "supplement" | "medication" | "therapy" | "peptide" | "overall";
   headline: string;
   recommendation: string;
 }

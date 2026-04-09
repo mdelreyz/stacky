@@ -35,14 +35,21 @@ export default function AddProtocolScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([userSupplementsApi.list(), userMedicationsApi.list(), userTherapiesApi.list()])
-      .then(([supplementsResponse, medicationsResponse, therapiesResponse]) => {
+    Promise.allSettled([userSupplementsApi.list(), userMedicationsApi.list(), userTherapiesApi.list()])
+      .then(([supplementsResult, medicationsResult, therapiesResult]) => {
         if (cancelled) return;
-        setSupplements(supplementsResponse.items);
-        setMedications(medicationsResponse.items);
-        setTherapies(therapiesResponse.items);
+        if (
+          supplementsResult.status === "rejected" &&
+          medicationsResult.status === "rejected" &&
+          therapiesResult.status === "rejected"
+        ) {
+          showError("Failed to load user items");
+          return;
+        }
+        if (supplementsResult.status === "fulfilled") setSupplements(supplementsResult.value.items);
+        if (medicationsResult.status === "fulfilled") setMedications(medicationsResult.value.items);
+        if (therapiesResult.status === "fulfilled") setTherapies(therapiesResult.value.items);
       })
-      .catch(console.error)
       .finally(() => {
         if (!cancelled) setLoading(false);
       });

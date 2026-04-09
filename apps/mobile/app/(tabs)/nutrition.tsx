@@ -3,7 +3,9 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Link, useFocusEffect } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { nutrition as nutritionApi } from "@/lib/api";
+import { showError } from "@/lib/errors";
 import { formatNutritionPhaseSummary, getNutritionCycleTypeLabel } from "@/lib/nutrition";
 import type { NutritionCycle } from "@/lib/api";
 
@@ -17,7 +19,7 @@ export default function NutritionScreen() {
       const response = await nutritionApi.list({ active_only: false });
       setPlans(response.items);
     } catch (error) {
-      console.error("Failed to load nutrition plans", error);
+      showError("Failed to load nutrition plans");
     } finally {
       setLoading(false);
     }
@@ -32,7 +34,7 @@ export default function NutritionScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -48,7 +50,7 @@ export default function NutritionScreen() {
         </View>
         <Link href="/nutrition/add" asChild>
           <Pressable style={styles.addButton}>
-            <FontAwesome name="plus" size={14} color="#fff" />
+            <FontAwesome name="plus" size={14} color={colors.white} />
             <Text style={styles.addButtonText}>New</Text>
           </Pressable>
         </Link>
@@ -56,7 +58,7 @@ export default function NutritionScreen() {
 
       {plans.length === 0 ? (
         <View style={styles.emptyCard}>
-          <FontAwesome name="pie-chart" size={40} color="#dee2e6" style={{ marginBottom: 12 }} />
+          <FontAwesome name="pie-chart" size={40} color={colors.border} style={{ marginBottom: 12 }} />
           <Text style={styles.emptyText}>No nutrition plans configured</Text>
           <Text style={styles.emptyHint}>
             Build a macro profile, low FODMAP block, Atkins phase, or custom restriction plan and Today will surface the current phase.
@@ -106,13 +108,13 @@ export default function NutritionScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
   },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
   },
   header: {
     padding: 20,
@@ -128,11 +130,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: "700",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: 14,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 4,
     lineHeight: 20,
   },
@@ -140,24 +142,24 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
   },
   addButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontWeight: "700",
     fontSize: 13,
   },
   emptyCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 32,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -166,22 +168,22 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     fontWeight: "500",
-    color: "#868e96",
+    color: colors.textMuted,
   },
   emptyHint: {
     fontSize: 13,
-    color: "#adb5bd",
+    color: colors.textPlaceholder,
     textAlign: "center",
     marginTop: 8,
     lineHeight: 18,
   },
   planCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -199,11 +201,11 @@ const styles = StyleSheet.create({
   planName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   planMeta: {
     fontSize: 12,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 4,
   },
   statusPill: {
@@ -212,20 +214,20 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   activePill: {
-    backgroundColor: "#ebfbee",
+    backgroundColor: colors.successLight,
   },
   inactivePill: {
-    backgroundColor: "#f1f3f5",
+    backgroundColor: colors.surface,
   },
   statusText: {
     fontSize: 11,
     fontWeight: "700",
   },
   activeText: {
-    color: "#2b8a3e",
+    color: colors.success,
   },
   inactiveText: {
-    color: "#868e96",
+    color: colors.textMuted,
   },
   phaseName: {
     fontSize: 15,
@@ -235,19 +237,19 @@ const styles = StyleSheet.create({
   },
   summaryLine: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     marginTop: 6,
     lineHeight: 18,
   },
   notes: {
     fontSize: 13,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 8,
     lineHeight: 18,
   },
   transitionMeta: {
     fontSize: 12,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 10,
   },
 });

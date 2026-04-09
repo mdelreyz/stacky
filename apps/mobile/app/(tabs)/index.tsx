@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { dailyPlan as dailyPlanApi } from "@/lib/api";
 import { CycleAlertsCard } from "@/components/today/CycleAlertsCard";
 import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
@@ -50,11 +51,11 @@ export default function TodayScreen() {
       if (trackingResult.status === "fulfilled") {
         setTrackingOverview(trackingResult.value);
       } else {
-        console.error("Failed to load tracking overview", trackingResult.reason);
+        showError("Failed to load tracking overview");
         setTrackingOverview(null);
       }
     } catch (error) {
-      console.error("Failed to load daily plan", error);
+      showError("Failed to load daily plan");
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -70,7 +71,7 @@ export default function TodayScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -120,8 +121,7 @@ export default function TodayScreen() {
               });
               await loadPlan(selectedDate, true);
             } catch (error) {
-              console.error("Failed to update adherence", error);
-              showError("Failed to update completion status.");
+              showError("Failed to update adherence");
             } finally {
               setPendingActionItemId((current) => (current === item.id ? null : current));
             }
@@ -135,7 +135,7 @@ export default function TodayScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
   },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

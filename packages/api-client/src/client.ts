@@ -15,8 +15,11 @@ import type {
   TrackingOverview,
   User,
   UserMedication,
+  UserMedicationUpdate,
   UserSupplement,
+  UserSupplementUpdate,
   UserTherapy,
+  UserTherapyUpdate,
 } from "@protocols/domain";
 
 interface PaginatedResponse<T> {
@@ -393,7 +396,7 @@ export class ProtocolsAPI {
 
   async updateUserSupplement(
     id: string,
-    data: Record<string, unknown>
+    data: UserSupplementUpdate
   ): Promise<UserSupplement> {
     return this.request(`/api/v1/users/me/supplements/${id}`, {
       method: "PATCH",
@@ -439,7 +442,7 @@ export class ProtocolsAPI {
 
   async updateUserTherapy(
     id: string,
-    data: Record<string, unknown>
+    data: UserTherapyUpdate
   ): Promise<UserTherapy> {
     return this.request(`/api/v1/users/me/therapies/${id}`, {
       method: "PATCH",
@@ -486,7 +489,7 @@ export class ProtocolsAPI {
 
   async updateUserMedication(
     id: string,
-    data: Record<string, unknown>
+    data: UserMedicationUpdate
   ): Promise<UserMedication> {
     return this.request(`/api/v1/users/me/medications/${id}`, {
       method: "PATCH",

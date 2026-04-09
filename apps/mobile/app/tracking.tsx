@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useLocalSearchParams } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { tracking as trackingApi } from "@/lib/api";
 import { formatIsoDate } from "@/lib/date";
@@ -26,7 +27,6 @@ export default function TrackingScreen() {
         }
       })
       .catch((error: any) => {
-        console.error("Failed to load tracking overview", error);
         showError(error.message || "Failed to load tracking overview");
       })
       .finally(() => {
@@ -43,7 +43,7 @@ export default function TrackingScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -186,7 +186,7 @@ function SectionCard({
   return (
     <View style={styles.sectionCard}>
       <View style={styles.sectionHeader}>
-        <FontAwesome name={icon} size={15} color="#1c7ed6" />
+        <FontAwesome name={icon} size={15} color={colors.primaryDark} />
         <Text style={styles.sectionTitle}>{title}</Text>
       </View>
       {children}
@@ -207,7 +207,7 @@ function formatEventTimestamp(value: string): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
   },
   centered: {
     flex: 1,
@@ -215,12 +215,12 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   summaryCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -229,7 +229,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   summaryGrid: {
     flexDirection: "row",
@@ -247,47 +247,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 999,
-    backgroundColor: "#f1f3f5",
+    backgroundColor: colors.surface,
   },
   filterChipSelected: {
-    backgroundColor: "#e7f5ff",
+    backgroundColor: colors.primaryLight,
   },
   filterChipText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#495057",
+    color: colors.textSecondary,
   },
   filterChipTextSelected: {
-    color: "#1c7ed6",
+    color: colors.primaryDark,
   },
   metricCard: {
     flexBasis: "47%",
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     borderRadius: 10,
     padding: 14,
   },
   metricValue: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#1c7ed6",
+    color: colors.primaryDark,
   },
   metricLabel: {
     fontSize: 12,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 4,
   },
   summaryRange: {
     fontSize: 12,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 14,
   },
   sectionCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -302,33 +302,33 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
   },
   listRow: {
     paddingTop: 10,
     paddingBottom: 10,
     borderTopWidth: 1,
-    borderTopColor: "#f1f3f5",
+    borderTopColor: colors.surface,
   },
   listTitle: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   listMeta: {
     fontSize: 12,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 4,
   },
   listBody: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     lineHeight: 18,
     marginTop: 4,
   },
   emptyText: {
     fontSize: 13,
-    color: "#868e96",
+    color: colors.textMuted,
     lineHeight: 18,
   },
 });

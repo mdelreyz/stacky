@@ -1,7 +1,10 @@
 import type { Dispatch, SetStateAction } from "react";
+import { useCallback, useMemo } from "react";
 import { ActivityIndicator, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
+import { ItemSelectionList, type SelectableItem } from "@/components/protocols/ItemSelectionList";
 import { ProtocolScheduleSection } from "@/components/protocols/ProtocolScheduleSection";
 import type { UserMedication, UserSupplement, UserTherapy } from "@/lib/api";
 import type { ProtocolFormState } from "@/lib/protocol-schedule";
@@ -9,6 +12,35 @@ import { getFrequencyLabel, getTakeWindowLabel } from "@/lib/schedule";
 import { describeTherapySettings } from "@/lib/therapy-settings";
 
 export type { ProtocolFormState } from "@/lib/protocol-schedule";
+
+function toSupplementItem(s: UserSupplement): SelectableItem {
+  return {
+    id: s.id,
+    title: s.supplement.name,
+    meta: `${s.dosage_amount}${s.dosage_unit} \u00b7 ${getFrequencyLabel(s.frequency)} \u00b7 ${getTakeWindowLabel(s.take_window)}`,
+    is_active: s.is_active,
+  };
+}
+
+function toMedicationItem(m: UserMedication): SelectableItem {
+  return {
+    id: m.id,
+    title: m.medication.name,
+    meta: `${m.dosage_amount}${m.dosage_unit} \u00b7 ${getFrequencyLabel(m.frequency)} \u00b7 ${getTakeWindowLabel(m.take_window)}`,
+    is_active: m.is_active,
+  };
+}
+
+function toTherapyItem(t: UserTherapy): SelectableItem {
+  const detail = describeTherapySettings(t.settings);
+  return {
+    id: t.id,
+    title: t.therapy.name,
+    meta: `${t.duration_minutes ? `${t.duration_minutes} min \u00b7 ` : ""}${getFrequencyLabel(t.frequency)} \u00b7 ${getTakeWindowLabel(t.take_window)}`,
+    submeta: detail || undefined,
+    is_active: t.is_active,
+  };
+}
 
 export function ProtocolForm({
   state,
@@ -33,6 +65,22 @@ export function ProtocolForm({
   secondaryLabel?: string;
   onSecondaryAction?: () => void;
 }) {
+  const supplementItems = useMemo(() => supplements.map(toSupplementItem), [supplements]);
+  const medicationItems = useMemo(() => medications.map(toMedicationItem), [medications]);
+  const therapyItems = useMemo(() => therapies.map(toTherapyItem), [therapies]);
+
+  const toggleId = useCallback(
+    (key: "selectedUserSupplementIds" | "selectedUserMedicationIds" | "selectedUserTherapyIds", id: string) => {
+      setState((current) => ({
+        ...current,
+        [key]: current[key].includes(id)
+          ? current[key].filter((x) => x !== id)
+          : [...current[key], id],
+      }));
+    },
+    [setState],
+  );
+
   return (
     <>
       <View style={styles.card}>
@@ -42,7 +90,7 @@ export function ProtocolForm({
           value={state.name}
           onChangeText={(value) => setState((current) => ({ ...current, name: value }))}
           placeholder="Morning Stack"
-          placeholderTextColor="#adb5bd"
+          placeholderTextColor={colors.textPlaceholder}
         />
         <TextInput
           style={[styles.input, styles.notesInput]}
@@ -50,183 +98,35 @@ export function ProtocolForm({
           value={state.description}
           onChangeText={(value) => setState((current) => ({ ...current, description: value }))}
           placeholder="Optional context or goal for this stack"
-          placeholderTextColor="#adb5bd"
+          placeholderTextColor={colors.textPlaceholder}
         />
       </View>
 
       <ProtocolScheduleSection state={state} setState={setState} />
 
-      <View style={styles.card}>
-        <View style={styles.selectionHeader}>
-          <Text style={styles.sectionTitle}>Included Supplements</Text>
-          <Text style={styles.selectionCount}>{state.selectedUserSupplementIds.length} selected</Text>
-        </View>
-        <Text style={styles.helperText}>
-          Inactive supplements stay visible here so older stacks can be cleaned up without losing context.
-        </Text>
+      <ItemSelectionList
+        title="Included Supplements"
+        helperText="Inactive supplements stay visible here so older stacks can be cleaned up without losing context."
+        items={supplementItems}
+        selectedIds={state.selectedUserSupplementIds}
+        onToggle={(id) => toggleId("selectedUserSupplementIds", id)}
+      />
 
-        <View style={styles.optionList}>
-          {supplements.map((supplement) => {
-            const selected = state.selectedUserSupplementIds.includes(supplement.id);
-            const lockedInactive = !supplement.is_active && !selected;
-            return (
-              <Pressable
-                key={supplement.id}
-                style={[
-                  styles.optionRow,
-                  selected && styles.optionRowSelected,
-                  lockedInactive && styles.optionRowDisabled,
-                ]}
-                onPress={() => {
-                  if (lockedInactive) return;
-                  setState((current) => ({
-                    ...current,
-                    selectedUserSupplementIds: selected
-                      ? current.selectedUserSupplementIds.filter((itemId) => itemId !== supplement.id)
-                      : [...current.selectedUserSupplementIds, supplement.id],
-                  }));
-                }}
-              >
-                <View style={styles.optionInfo}>
-                  <View style={styles.optionTitleRow}>
-                    <Text style={styles.optionTitle}>{supplement.supplement.name}</Text>
-                    {!supplement.is_active ? (
-                      <View style={styles.inactiveBadge}>
-                        <Text style={styles.inactiveBadgeText}>Inactive</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text style={styles.optionMeta}>
-                    {supplement.dosage_amount}
-                    {supplement.dosage_unit} · {getFrequencyLabel(supplement.frequency)} ·{" "}
-                    {getTakeWindowLabel(supplement.take_window)}
-                  </Text>
-                </View>
-                <FontAwesome
-                  name={selected ? "check-square-o" : "square-o"}
-                  size={20}
-                  color={selected ? "#228be6" : "#adb5bd"}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+      <ItemSelectionList
+        title="Included Medications"
+        helperText="Keep medications separate from supplements while still allowing them in the same named stack."
+        items={medicationItems}
+        selectedIds={state.selectedUserMedicationIds}
+        onToggle={(id) => toggleId("selectedUserMedicationIds", id)}
+      />
 
-      <View style={styles.card}>
-        <View style={styles.selectionHeader}>
-          <Text style={styles.sectionTitle}>Included Medications</Text>
-          <Text style={styles.selectionCount}>{state.selectedUserMedicationIds.length} selected</Text>
-        </View>
-        <Text style={styles.helperText}>
-          Keep medications separate from supplements while still allowing them in the same named stack.
-        </Text>
-
-        <View style={styles.optionList}>
-          {medications.map((medication) => {
-            const selected = state.selectedUserMedicationIds.includes(medication.id);
-            const lockedInactive = !medication.is_active && !selected;
-            return (
-              <Pressable
-                key={medication.id}
-                style={[
-                  styles.optionRow,
-                  selected && styles.optionRowSelected,
-                  lockedInactive && styles.optionRowDisabled,
-                ]}
-                onPress={() => {
-                  if (lockedInactive) return;
-                  setState((current) => ({
-                    ...current,
-                    selectedUserMedicationIds: selected
-                      ? current.selectedUserMedicationIds.filter((itemId) => itemId !== medication.id)
-                      : [...current.selectedUserMedicationIds, medication.id],
-                  }));
-                }}
-              >
-                <View style={styles.optionInfo}>
-                  <View style={styles.optionTitleRow}>
-                    <Text style={styles.optionTitle}>{medication.medication.name}</Text>
-                    {!medication.is_active ? (
-                      <View style={styles.inactiveBadge}>
-                        <Text style={styles.inactiveBadgeText}>Inactive</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text style={styles.optionMeta}>
-                    {medication.dosage_amount}
-                    {medication.dosage_unit} · {getFrequencyLabel(medication.frequency)} ·{" "}
-                    {getTakeWindowLabel(medication.take_window)}
-                  </Text>
-                </View>
-                <FontAwesome
-                  name={selected ? "check-square-o" : "square-o"}
-                  size={20}
-                  color={selected ? "#228be6" : "#adb5bd"}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.selectionHeader}>
-          <Text style={styles.sectionTitle}>Included Modalities</Text>
-          <Text style={styles.selectionCount}>{state.selectedUserTherapyIds.length} selected</Text>
-        </View>
-        <Text style={styles.helperText}>
-          Use this for therapies, devices, meditation, training, recovery, or other scheduled protocols.
-        </Text>
-
-        <View style={styles.optionList}>
-          {therapies.map((therapy) => {
-            const selected = state.selectedUserTherapyIds.includes(therapy.id);
-            const lockedInactive = !therapy.is_active && !selected;
-            const detail = describeTherapySettings(therapy.settings);
-            return (
-              <Pressable
-                key={therapy.id}
-                style={[
-                  styles.optionRow,
-                  selected && styles.optionRowSelected,
-                  lockedInactive && styles.optionRowDisabled,
-                ]}
-                onPress={() => {
-                  if (lockedInactive) return;
-                  setState((current) => ({
-                    ...current,
-                    selectedUserTherapyIds: selected
-                      ? current.selectedUserTherapyIds.filter((itemId) => itemId !== therapy.id)
-                      : [...current.selectedUserTherapyIds, therapy.id],
-                  }));
-                }}
-              >
-                <View style={styles.optionInfo}>
-                  <View style={styles.optionTitleRow}>
-                    <Text style={styles.optionTitle}>{therapy.therapy.name}</Text>
-                    {!therapy.is_active ? (
-                      <View style={styles.inactiveBadge}>
-                        <Text style={styles.inactiveBadgeText}>Inactive</Text>
-                      </View>
-                    ) : null}
-                  </View>
-                  <Text style={styles.optionMeta}>
-                    {therapy.duration_minutes ? `${therapy.duration_minutes} min · ` : ""}
-                    {getFrequencyLabel(therapy.frequency)} · {getTakeWindowLabel(therapy.take_window)}
-                  </Text>
-                  {detail ? <Text style={styles.optionSubmeta}>{detail}</Text> : null}
-                </View>
-                <FontAwesome
-                  name={selected ? "check-square-o" : "square-o"}
-                  size={20}
-                  color={selected ? "#228be6" : "#adb5bd"}
-                />
-              </Pressable>
-            );
-          })}
-        </View>
-      </View>
+      <ItemSelectionList
+        title="Included Modalities"
+        helperText="Use this for therapies, devices, meditation, training, recovery, or other scheduled protocols."
+        items={therapyItems}
+        selectedIds={state.selectedUserTherapyIds}
+        onToggle={(id) => toggleId("selectedUserTherapyIds", id)}
+      />
 
       <Pressable
         style={[styles.primaryButton, saving && styles.buttonDisabled]}
@@ -234,10 +134,10 @@ export function ProtocolForm({
         disabled={saving}
       >
         {saving ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.white} />
         ) : (
           <>
-            <FontAwesome name="check" size={16} color="#fff" />
+            <FontAwesome name="check" size={16} color={colors.white} />
             <Text style={styles.primaryButtonText}>{primaryLabel}</Text>
           </>
         )}
@@ -258,12 +158,12 @@ export function ProtocolForm({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -272,18 +172,18 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
     marginBottom: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     fontSize: 16,
-    color: "#212529",
+    color: colors.textPrimary,
     marginBottom: 12,
   },
   notesInput: {
@@ -291,89 +191,18 @@ const styles = StyleSheet.create({
     textAlignVertical: "top",
     marginBottom: 0,
   },
-  selectionHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-  },
-  selectionCount: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: "#868e96",
-  },
-  helperText: {
-    fontSize: 12,
-    lineHeight: 18,
-    color: "#6c757d",
-    marginBottom: 12,
-  },
-  optionList: {
-    gap: 10,
-  },
-  optionRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    borderWidth: 1,
-    borderColor: "#e9ecef",
-    borderRadius: 12,
-    padding: 14,
-    backgroundColor: "#f8f9fa",
-  },
-  optionRowSelected: {
-    borderColor: "#74c0fc",
-    backgroundColor: "#e7f5ff",
-  },
-  optionRowDisabled: {
-    opacity: 0.55,
-  },
-  optionInfo: {
-    flex: 1,
-  },
-  optionTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  optionTitle: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#212529",
-  },
-  optionMeta: {
-    fontSize: 12,
-    color: "#6c757d",
-    marginTop: 4,
-  },
-  optionSubmeta: {
-    fontSize: 12,
-    color: "#495057",
-    marginTop: 4,
-  },
-  inactiveBadge: {
-    backgroundColor: "#fff3bf",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  inactiveBadgeText: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: "#8f5b00",
-  },
   primaryButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
     marginHorizontal: 16,
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
   },
   primaryButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "700",
   },
@@ -383,12 +212,12 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 12,
     alignItems: "center",
-    backgroundColor: "#fff5f5",
+    backgroundColor: colors.dangerLight,
   },
   secondaryButtonText: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#c92a2a",
+    color: colors.dangerDark,
   },
   buttonDisabled: {
     opacity: 0.6,

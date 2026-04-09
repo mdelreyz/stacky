@@ -8,9 +8,7 @@
     "declaration": true,
     "outDir": "dist",
     "paths": {
-      "@protocols/domain": [
-        "../domain/src/index.ts"
-      ]
+      "@protocols/domain": ["../domain/src/index.ts"]
     },
     "skipLibCheck": true
   },
