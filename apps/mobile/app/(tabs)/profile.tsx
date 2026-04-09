@@ -41,6 +41,19 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/preferences")}>
+          <FontAwesome name="sliders" size={18} color="#495057" />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Goals & Preferences</Text>
+            <Text style={styles.menuHint}>
+              Health goals, slot budgets, interaction mode, and AI constraints
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+        </Pressable>
+
+        <View style={styles.separator} />
+
         <Pressable style={styles.menuItem}>
           <FontAwesome name="bell" size={18} color="#495057" />
           <Text style={styles.menuText}>Notification Preferences</Text>

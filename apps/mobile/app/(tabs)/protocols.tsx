@@ -8,6 +8,7 @@ import { ActiveProtocolItemsSection } from "@/components/protocols/ActiveProtoco
 import { CatalogSearchInput } from "@/components/protocols/CatalogSearchInput";
 import { CatalogSection } from "@/components/protocols/CatalogSection";
 import { ProtocolStacksSection } from "@/components/protocols/ProtocolStacksSection";
+import { StackScoreCard } from "@/components/protocols/StackScoreCard";
 import {
   medications as medicationsApi,
   peptides as peptidesApi,
@@ -123,6 +124,16 @@ export default function ProtocolsScreen() {
           Supplements, medications, modalities, activities, devices, and named stacks
         </Text>
       </View>
+
+      <StackScoreCard />
+
+      <Link href="/recommendations" asChild>
+        <Pressable style={styles.recommendButton}>
+          <FontAwesome name="magic" size={16} color={colors.primary} />
+          <Text style={styles.recommendButtonText}>AI Recommendations</Text>
+          <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
+        </Pressable>
+      </Link>
 
       <ProtocolStacksSection stacks={stacks} />
 
@@ -293,5 +304,23 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     lineHeight: 18,
+  },
+  recommendButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    backgroundColor: colors.primaryLight,
+    marginHorizontal: 16,
+    marginBottom: 16,
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: "#d0ebff",
+  },
+  recommendButtonText: {
+    flex: 1,
+    fontSize: 15,
+    fontWeight: "700",
+    color: colors.primaryDark,
   },
 });

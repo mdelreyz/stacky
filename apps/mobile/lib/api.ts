@@ -6,6 +6,7 @@ export { nutrition } from "./api/nutrition";
 export { protocols } from "./api/protocols";
 export { supplements } from "./api/supplements";
 export { peptides } from "./api/peptides";
+export { preferences } from "./api/preferences";
 export { therapies } from "./api/therapies";
 export { tracking } from "./api/tracking";
 export { userMedications } from "./api/user-medications";
@@ -27,6 +28,15 @@ export type {
   NutritionCycle,
   Peptide,
   PeptideCategory,
+  HealthGoal,
+  InteractionMode,
+  StackScoreResponse,
+  RecommendationResponse,
+  RecommendedItem,
+  UserPreferences,
+  UserPreferencesUpdate,
+  WizardResponse,
+  WizardTurn,
   NutritionCycleType,
   NutritionMacroProfile,
   NutritionPhase,
