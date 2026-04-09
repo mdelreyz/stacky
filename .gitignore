@@ -38,4 +38,5 @@ docker-compose.override.yml
 
 # Noomix
 .noomix/
+.serena/
 *.db

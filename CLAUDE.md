@@ -194,7 +194,7 @@ Call `sitrep` with `repo_path` set to the working directory at the start of ever
 
 Before proposing a significant technical direction, call `align` with a description of the approach. Noomix will check it against past decisions and tell you what was tried, what failed, and what the user's preferences suggest. Think of it as consulting the user's judgment when they aren't actively steering.
 
-**Code anchors:** When calling `observe` for decisions involving code, include the `anchors` parameter: `[{file: "src/foo.ts", symbol: "myFunc", role: "defines config"}]`. Use role verbs like defines, reads, writes, persists, loads, produces, consumes. This enables impact chain detection — noomix can warn about downstream code that needs updating when a change is proposed.
+**Code anchors:** When observing decisions involving code, mention file paths naturally in the description or rationale — noomix extracts them automatically. For richer context, pass the `anchors` parameter: `[{file: "src/foo.ts", symbol: "myFunc", role: "defines config"}]`. Use role verbs like defines, reads, writes, persists, loads, produces, consumes. Noomix auto-generates domain tags from anchor directories and detects dependency chains for impact analysis.
 
 ### End of session
 Before exiting, call `observe` with a summary of the overall session direction:
