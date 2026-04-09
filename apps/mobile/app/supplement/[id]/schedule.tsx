@@ -14,6 +14,7 @@ import {
   SupplementScheduleState,
 } from "@/components/SupplementScheduleForm";
 import { supplements as supplementsApi, userSupplements as userSupplementsApi } from "@/lib/api";
+import { colors } from "@/constants/Colors";
 import { showError } from "@/lib/errors";
 import { isScheduleFrequency, isScheduleTakeWindow } from "@/lib/schedule";
 import type { Supplement } from "@/lib/api";
@@ -98,7 +99,7 @@ export default function ScheduleSupplementScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -132,6 +133,6 @@ export default function ScheduleSupplementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

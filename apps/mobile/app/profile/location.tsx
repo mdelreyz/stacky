@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { useAuth } from "@/contexts/AuthContext";
 import { showError } from "@/lib/errors";
@@ -77,7 +78,7 @@ export default function ProfileLocationScreen() {
   if (!user) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -139,15 +140,15 @@ export default function ProfileLocationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -156,48 +157,48 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#495057",
+    color: colors.textSecondary,
     marginBottom: 8,
     marginTop: 12,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     fontSize: 16,
-    color: "#212529",
+    color: colors.textPrimary,
   },
   helper: {
     fontSize: 12,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 14,
     lineHeight: 18,
   },
   primaryButton: {
     marginHorizontal: 16,
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
   },
   primaryText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 15,
     fontWeight: "700",
   },
   secondaryButton: {
     marginHorizontal: 16,
     marginTop: 12,
-    backgroundColor: "#fff5f5",
+    backgroundColor: colors.dangerLight,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
   },
   secondaryText: {
-    color: "#c92a2a",
+    color: colors.dangerDark,
     fontSize: 15,
     fontWeight: "700",
   },

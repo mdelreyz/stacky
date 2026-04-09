@@ -5,13 +5,13 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
 
 import { useColorScheme } from "@/components/useColorScheme";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { NetworkProvider } from "@/contexts/NetworkContext";
 
 export { ErrorBoundary } from "expo-router";
@@ -32,12 +32,6 @@ export default function RootLayout() {
     if (error) throw error;
   }, [error]);
 
-  useEffect(() => {
-    if (loaded) {
-      SplashScreen.hideAsync();
-    }
-  }, [loaded]);
-
   if (!loaded) {
     return null;
   }
@@ -53,119 +47,138 @@ export default function RootLayout() {
 
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
+  const { isLoading, isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
+
+  if (isLoading) {
+    // Keep splash screen visible while checking stored token
+    return null;
+  }
 
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen
-          name="auth/login"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="auth/signup"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="supplement/add"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="supplement/[id]"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="supplement/[id]/schedule"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="supplement/refill-request"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="medication/add"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="medication/[id]"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="medication/[id]/schedule"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="nutrition/add"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="nutrition/[id]"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="profile/location"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="therapy/[id]"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="therapy/[id]/schedule"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="user-supplement/[id]"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="user-medication/[id]"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="user-therapy/[id]"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="protocol/add"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="protocol/[id]"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="peptide/[id]"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="peptide/[id]/schedule"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="user-peptide/[id]"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="profile/preferences"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="profile/safety"
-          options={{ headerShown: false, presentation: "modal" }}
-        />
-        <Stack.Screen
-          name="recommendations"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="wizard"
-          options={{ headerShown: false }}
-        />
-        <Stack.Screen
-          name="tracking"
-          options={{ headerShown: false }}
-        />
+        {!isAuthenticated ? (
+          <>
+            <Stack.Screen
+              name="auth/login"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="auth/signup"
+              options={{ headerShown: false }}
+            />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen
+              name="supplement/add"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="supplement/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="supplement/[id]/schedule"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="supplement/refill-request"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="medication/add"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="medication/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="medication/[id]/schedule"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="nutrition/add"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="nutrition/[id]"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="profile/location"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="therapy/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="therapy/[id]/schedule"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="user-supplement/[id]"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="user-medication/[id]"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="user-therapy/[id]"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="protocol/add"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="protocol/[id]"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="peptide/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="peptide/[id]/schedule"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="user-peptide/[id]"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="profile/preferences"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="profile/safety"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="recommendations"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="wizard"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="tracking"
+              options={{ headerShown: false }}
+            />
+          </>
+        )}
       </Stack>
     </ThemeProvider>
   );

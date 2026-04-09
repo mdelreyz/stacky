@@ -14,6 +14,7 @@ import {
   SupplementScheduleForm,
   SupplementScheduleState,
 } from "@/components/SupplementScheduleForm";
+import { colors } from "@/constants/Colors";
 import { userSupplements as userSupplementsApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
 import { type ScheduleFrequency, type ScheduleTakeWindow } from "@/lib/schedule";
@@ -105,7 +106,7 @@ export default function ManageUserSupplementScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -156,15 +157,15 @@ export default function ManageUserSupplementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   stockCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -173,16 +174,16 @@ const styles = StyleSheet.create({
   stockTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
     marginBottom: 12,
   },
   stockToggle: {
     paddingVertical: 12,
     paddingHorizontal: 14,
     borderRadius: 10,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
   },
   stockToggleActive: {
     backgroundColor: "#fff4e6",
@@ -191,14 +192,14 @@ const styles = StyleSheet.create({
   stockToggleText: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#495057",
+    color: colors.textSecondary,
   },
   stockToggleTextActive: {
     color: "#e67700",
   },
   stockHint: {
     fontSize: 12,
-    color: "#868e96",
+    color: colors.textMuted,
     marginTop: 10,
     lineHeight: 18,
   },

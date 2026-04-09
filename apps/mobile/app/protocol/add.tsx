@@ -9,6 +9,7 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
 import {
@@ -104,7 +105,7 @@ export default function AddProtocolScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -118,7 +119,7 @@ export default function AddProtocolScreen() {
 
       {supplements.length === 0 && medications.length === 0 && therapies.length === 0 && peptides.length === 0 ? (
         <View style={styles.emptyCard}>
-          <FontAwesome name="calendar-check-o" size={36} color="#dee2e6" />
+          <FontAwesome name="calendar-check-o" size={36} color={colors.border} />
           <Text style={styles.emptyTitle}>No active items yet</Text>
           <Text style={styles.emptyText}>
             Add supplements, medications, or modalities to your protocol first, then bundle them into a stack here.
@@ -144,16 +145,16 @@ export default function AddProtocolScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   emptyCard: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginTop: 8,
     borderRadius: 12,
     padding: 32,
     alignItems: "center",
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -162,13 +163,13 @@ const styles = StyleSheet.create({
   emptyTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#495057",
+    color: colors.textSecondary,
     marginTop: 14,
   },
   emptyText: {
     fontSize: 13,
     lineHeight: 19,
-    color: "#868e96",
+    color: colors.textMuted,
     textAlign: "center",
     marginTop: 8,
   },

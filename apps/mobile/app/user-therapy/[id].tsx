@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { TherapyScheduleForm, type TherapyScheduleState } from "@/components/TherapyScheduleForm";
 import { userTherapies as userTherapiesApi } from "@/lib/api";
@@ -119,7 +120,7 @@ export default function ManageUserTherapyScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -152,6 +153,6 @@ export default function ManageUserTherapyScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

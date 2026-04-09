@@ -7,12 +7,13 @@ import {
   Pressable,
   ScrollView,
   ActivityIndicator,
-  Alert,
-  Platform,
 } from "react-native";
 import { router } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+
+import { colors } from "@/constants/Colors";
 import { supplements as supplementsApi } from "@/lib/api";
+import { showError } from "@/lib/errors";
 
 export default function AddSupplementScreen() {
   const [name, setName] = useState("");
@@ -23,19 +24,9 @@ export default function AddSupplementScreen() {
     setLoading(true);
     try {
       const result = await supplementsApi.onboard({ name: name.trim() });
-      if (result.status === "ready" || result.ai_profile) {
-        router.replace(`/supplement/${result.id}`);
-      } else {
-        // Profile is being generated — go to detail page which will show loading state
-        router.replace(`/supplement/${result.id}`);
-      }
+      router.replace(`/supplement/${result.id}`);
     } catch (e: any) {
-      const message = e.message || "Failed to onboard supplement";
-      if (Platform.OS === "web") {
-        window.alert(message);
-      } else {
-        Alert.alert("Error", message);
-      }
+      showError(e.message || "Failed to onboard supplement");
     } finally {
       setLoading(false);
     }
@@ -45,7 +36,7 @@ export default function AddSupplementScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <FontAwesome name="arrow-left" size={18} color="#495057" />
+          <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
         </Pressable>
         <Text style={styles.title}>Add Supplement</Text>
       </View>
@@ -55,7 +46,7 @@ export default function AddSupplementScreen() {
         <TextInput
           style={styles.input}
           placeholder="e.g., Ashwagandha KSM-66"
-          placeholderTextColor="#adb5bd"
+          placeholderTextColor={colors.textPlaceholder}
           value={name}
           onChangeText={setName}
           autoFocus
@@ -78,10 +69,10 @@ export default function AddSupplementScreen() {
         disabled={!name.trim() || loading}
       >
         {loading ? (
-          <ActivityIndicator color="#fff" />
+          <ActivityIndicator color={colors.white} />
         ) : (
           <>
-            <FontAwesome name="magic" size={16} color="#fff" />
+            <FontAwesome name="magic" size={16} color={colors.white} />
             <Text style={styles.onboardButtonText}>Find or Generate Profile</Text>
           </>
         )}
@@ -99,7 +90,7 @@ export default function AddSupplementScreen() {
           "Safety notes & contraindications",
         ].map((item) => (
           <View key={item} style={styles.infoItem}>
-            <FontAwesome name="check" size={14} color="#51cf66" />
+            <FontAwesome name="check" size={14} color={colors.success} />
             <Text style={styles.infoText}>{item}</Text>
           </View>
         ))}
@@ -109,7 +100,7 @@ export default function AddSupplementScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   header: {
     flexDirection: "row",
     alignItems: "center",
@@ -118,35 +109,35 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   backButton: { padding: 8 },
-  title: { fontSize: 24, fontWeight: "700", color: "#212529" },
+  title: { fontSize: 24, fontWeight: "700", color: colors.textPrimary },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
-  label: { fontSize: 14, fontWeight: "600", color: "#495057", marginBottom: 8 },
+  label: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginBottom: 8 },
   input: {
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
     borderRadius: 8,
     padding: 12,
     fontSize: 16,
-    color: "#212529",
-    backgroundColor: "#f8f9fa",
+    color: colors.textPrimary,
+    backgroundColor: colors.backgroundSecondary,
   },
-  hint: { fontSize: 13, color: "#868e96", marginTop: 10, lineHeight: 18 },
+  hint: { fontSize: 13, color: colors.textMuted, marginTop: 10, lineHeight: 18 },
   onboardButton: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     marginHorizontal: 16,
     marginBottom: 24,
     paddingVertical: 14,
@@ -154,9 +145,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   onboardButtonDisabled: { opacity: 0.5 },
-  onboardButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  onboardButtonText: { color: colors.white, fontSize: 16, fontWeight: "600" },
   infoSection: { paddingHorizontal: 20, paddingBottom: 32 },
-  infoTitle: { fontSize: 16, fontWeight: "600", color: "#495057", marginBottom: 12 },
+  infoTitle: { fontSize: 16, fontWeight: "600", color: colors.textSecondary, marginBottom: 12 },
   infoItem: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 8 },
-  infoText: { fontSize: 14, color: "#495057" },
+  infoText: { fontSize: 14, color: colors.textSecondary },
 });

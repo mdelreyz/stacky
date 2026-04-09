@@ -10,6 +10,8 @@ import {
   Platform,
 } from "react-native";
 import { Link, router } from "expo-router";
+
+import { colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginScreen() {
@@ -48,7 +50,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="Email"
-            placeholderTextColor="#adb5bd"
+            placeholderTextColor={colors.textPlaceholder}
             value={email}
             onChangeText={setEmail}
             autoCapitalize="none"
@@ -58,7 +60,7 @@ export default function LoginScreen() {
           <TextInput
             style={styles.input}
             placeholder="Password"
-            placeholderTextColor="#adb5bd"
+            placeholderTextColor={colors.textPlaceholder}
             value={password}
             onChangeText={setPassword}
             secureTextEntry
@@ -76,7 +78,7 @@ export default function LoginScreen() {
             disabled={!email.trim() || !password || loading}
           >
             {loading ? (
-              <ActivityIndicator color="#fff" />
+              <ActivityIndicator color={colors.white} />
             ) : (
               <Text style={styles.buttonText}>Log In</Text>
             )}
@@ -99,7 +101,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f9fa",
+    backgroundColor: colors.backgroundSecondary,
   },
   inner: {
     flex: 1,
@@ -112,13 +114,13 @@ const styles = StyleSheet.create({
   logo: {
     fontSize: 36,
     fontWeight: "800",
-    color: "#228be6",
+    color: colors.primary,
     textAlign: "center",
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: "#868e96",
+    color: colors.textMuted,
     textAlign: "center",
     marginBottom: 40,
   },
@@ -127,20 +129,20 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#dee2e6",
+    borderColor: colors.border,
     borderRadius: 10,
     padding: 14,
     fontSize: 16,
-    color: "#212529",
-    backgroundColor: "#fff",
+    color: colors.textPrimary,
+    backgroundColor: colors.white,
   },
   error: {
-    color: "#e03131",
+    color: colors.danger,
     fontSize: 14,
     textAlign: "center",
   },
   button: {
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 10,
     alignItems: "center",
@@ -150,7 +152,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "600",
   },
@@ -160,11 +162,11 @@ const styles = StyleSheet.create({
     marginTop: 20,
   },
   footerText: {
-    color: "#868e96",
+    color: colors.textMuted,
     fontSize: 14,
   },
   link: {
-    color: "#228be6",
+    color: colors.primary,
     fontSize: 14,
     fontWeight: "600",
   },

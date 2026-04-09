@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
 import {
@@ -142,7 +143,7 @@ export default function ManageProtocolScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -182,6 +183,6 @@ export default function ManageProtocolScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

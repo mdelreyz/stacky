@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Link, useLocalSearchParams } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { medications as medicationsApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
@@ -57,7 +58,7 @@ export default function MedicationDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -138,7 +139,7 @@ export default function MedicationDetailScreen() {
 
       <Link href={`/medication/${medication.id}/schedule`} asChild>
         <Pressable style={styles.primaryButton}>
-          <FontAwesome name="plus" size={16} color="#fff" />
+          <FontAwesome name="plus" size={16} color={colors.white} />
           <Text style={styles.primaryButtonText}>Add Medication</Text>
         </Pressable>
       </Link>
@@ -149,15 +150,15 @@ export default function MedicationDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -166,13 +167,13 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
     marginBottom: 12,
   },
   bodyText: {
     fontSize: 14,
     lineHeight: 20,
-    color: "#495057",
+    color: colors.textSecondary,
   },
   tagRow: {
     flexDirection: "row",
@@ -180,7 +181,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   tag: {
-    backgroundColor: "#e7f5ff",
+    backgroundColor: colors.primaryLight,
     paddingHorizontal: 10,
     paddingVertical: 8,
     borderRadius: 999,
@@ -188,7 +189,7 @@ const styles = StyleSheet.create({
   tagText: {
     fontSize: 12,
     fontWeight: "700",
-    color: "#1864ab",
+    color: colors.primaryDarker,
   },
   interactionRow: {
     marginTop: 8,
@@ -196,7 +197,7 @@ const styles = StyleSheet.create({
   interactionSubstance: {
     fontSize: 13,
     fontWeight: "700",
-    color: "#862e2e",
+    color: colors.dangerDark,
     marginBottom: 2,
   },
   primaryButton: {
@@ -205,12 +206,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     marginHorizontal: 16,
-    backgroundColor: "#228be6",
+    backgroundColor: colors.primary,
     paddingVertical: 14,
     borderRadius: 12,
   },
   primaryButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "700",
   },

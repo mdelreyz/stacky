@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
+import { colors } from "@/constants/Colors";
 import { userSupplements as userSupplementsApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
 import type { SupplementRefillRequest } from "@/lib/api";
@@ -34,7 +35,7 @@ export default function SupplementRefillRequestScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -71,15 +72,15 @@ export default function SupplementRefillRequestScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -88,7 +89,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#343a40",
+    color: colors.grayDark,
     marginBottom: 12,
   },
   itemRow: {
@@ -99,7 +100,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#212529",
+    color: colors.textPrimary,
   },
   itemMeta: {
     fontSize: 12,
@@ -108,11 +109,11 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     fontSize: 13,
-    color: "#868e96",
+    color: colors.textMuted,
   },
   generatedText: {
     fontSize: 13,
-    color: "#495057",
+    color: colors.textSecondary,
     lineHeight: 20,
   },
 });

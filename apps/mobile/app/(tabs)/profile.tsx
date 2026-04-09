@@ -1,6 +1,8 @@
 import { StyleSheet, Text, View, ScrollView, Pressable } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
+
+import { colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function ProfileScreen() {
@@ -15,7 +17,7 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.header}>
         <View style={styles.avatar}>
-          <FontAwesome name="user" size={32} color="#868e96" />
+          <FontAwesome name="user" size={32} color={colors.textMuted} />
         </View>
         <Text style={styles.title}>
           {user ? `${user.first_name} ${user.last_name}` : "Profile"}
@@ -27,7 +29,7 @@ export default function ProfileScreen() {
 
       <View style={styles.card}>
         <Pressable style={styles.menuItem} onPress={() => router.push("/profile/location")}>
-          <FontAwesome name="map-marker" size={18} color="#495057" />
+          <FontAwesome name="map-marker" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Location & UV Guidance</Text>
             <Text style={styles.menuHint}>
@@ -36,53 +38,53 @@ export default function ProfileScreen() {
                 : "Save a location to enable weather-based sunscreen guidance"}
             </Text>
           </View>
-          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
         </Pressable>
 
         <View style={styles.separator} />
 
         <Pressable style={styles.menuItem} onPress={() => router.push("/profile/preferences")}>
-          <FontAwesome name="sliders" size={18} color="#495057" />
+          <FontAwesome name="sliders" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Goals & Preferences</Text>
             <Text style={styles.menuHint}>
               Health goals, slot budgets, interaction mode, and AI constraints
             </Text>
           </View>
-          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
         </Pressable>
 
         <View style={styles.separator} />
 
         <Pressable style={styles.menuItem} onPress={() => router.push("/profile/safety")}>
-          <FontAwesome name="shield" size={18} color="#495057" />
+          <FontAwesome name="shield" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Safety Check</Text>
             <Text style={styles.menuHint}>
               Scan your active stack for known interactions
             </Text>
           </View>
-          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
         </Pressable>
 
         <View style={styles.separator} />
 
         <Pressable style={styles.menuItem} onPress={() => router.push("/tracking")}>
-          <FontAwesome name="line-chart" size={18} color="#495057" />
+          <FontAwesome name="line-chart" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Adherence Stats</Text>
             <Text style={styles.menuHint}>
               Completion rates, streaks, and per-item tracking
             </Text>
           </View>
-          <FontAwesome name="chevron-right" size={14} color="#adb5bd" />
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
         </Pressable>
       </View>
 
       <View style={styles.card}>
         <Pressable style={styles.menuItem} onPress={handleLogout}>
-          <FontAwesome name="sign-out" size={18} color="#e03131" />
-          <Text style={[styles.menuText, { color: "#e03131" }]}>Log Out</Text>
+          <FontAwesome name="sign-out" size={18} color={colors.danger} />
+          <Text style={[styles.menuText, { color: colors.danger }]}>Log Out</Text>
         </Pressable>
       </View>
     </ScrollView>
@@ -90,26 +92,26 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   header: { padding: 20, paddingTop: 10, alignItems: "center" },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: "#e9ecef",
+    backgroundColor: colors.borderLight,
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
   },
-  title: { fontSize: 24, fontWeight: "700", color: "#212529" },
-  subtitle: { fontSize: 14, color: "#6c757d", marginTop: 4 },
+  title: { fontSize: 24, fontWeight: "700", color: colors.textPrimary },
+  subtitle: { fontSize: 14, color: colors.gray, marginTop: 4 },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -122,7 +124,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   menuCopy: { flex: 1 },
-  menuText: { flex: 1, fontSize: 16, color: "#212529" },
-  menuHint: { fontSize: 12, color: "#868e96", marginTop: 4 },
-  separator: { height: 1, backgroundColor: "#f1f3f5", marginLeft: 46 },
+  menuText: { flex: 1, fontSize: 16, color: colors.textPrimary },
+  menuHint: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  separator: { height: 1, backgroundColor: colors.surface, marginLeft: 46 },
 });

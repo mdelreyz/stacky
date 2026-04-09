@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { colors } from "@/constants/Colors";
 import { DoseScheduleForm, type DoseScheduleState } from "@/components/SupplementScheduleForm";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { userMedications as userMedicationsApi } from "@/lib/api";
@@ -94,7 +95,7 @@ export default function ManageUserMedicationScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -127,6 +128,6 @@ export default function ManageUserMedicationScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

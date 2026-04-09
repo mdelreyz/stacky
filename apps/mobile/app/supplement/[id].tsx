@@ -14,6 +14,7 @@ import type { Supplement } from "@/lib/api";
 import { SupplementAIProfileContent } from "@/components/supplement-detail/SupplementAIProfileContent";
 import { SupplementDetailHero } from "@/components/supplement-detail/SupplementDetailHero";
 import { SupplementProfileFallback } from "@/components/supplement-detail/SupplementProfileFallback";
+import { colors } from "@/constants/Colors";
 import type { SupplementAIProfile } from "@protocols/domain";
 
 const POLL_INTERVAL_MS = 2500;
@@ -64,7 +65,7 @@ export default function SupplementDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#228be6" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -101,6 +102,6 @@ export default function SupplementDetailScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f8f9fa" },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });
