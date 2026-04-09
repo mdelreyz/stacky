@@ -35,6 +35,7 @@ export type {
   RecommendedItem,
   UserPreferences,
   UserPreferencesUpdate,
+  WizardRecommendedItem,
   WizardResponse,
   WizardTurn,
   NutritionCycleType,

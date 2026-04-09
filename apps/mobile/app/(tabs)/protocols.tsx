@@ -127,13 +127,20 @@ export default function ProtocolsScreen() {
 
       <StackScoreCard />
 
-      <Link href="/recommendations" asChild>
-        <Pressable style={styles.recommendButton}>
-          <FontAwesome name="magic" size={16} color={colors.primary} />
-          <Text style={styles.recommendButtonText}>AI Recommendations</Text>
-          <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
-        </Pressable>
-      </Link>
+      <View style={styles.aiButtonRow}>
+        <Link href="/recommendations" asChild>
+          <Pressable style={styles.aiButton}>
+            <FontAwesome name="magic" size={16} color={colors.primary} />
+            <Text style={styles.aiButtonText}>Recommendations</Text>
+          </Pressable>
+        </Link>
+        <Link href="/wizard" asChild>
+          <Pressable style={styles.aiButton}>
+            <FontAwesome name="comments" size={16} color={colors.primary} />
+            <Text style={styles.aiButtonText}>Guided Wizard</Text>
+          </Pressable>
+        </Link>
+      </View>
 
       <ProtocolStacksSection stacks={stacks} />
 
@@ -305,21 +312,26 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     lineHeight: 18,
   },
-  recommendButton: {
+  aiButtonRow: {
     flexDirection: "row",
-    alignItems: "center",
     gap: 10,
-    backgroundColor: colors.primaryLight,
     marginHorizontal: 16,
     marginBottom: 16,
+  },
+  aiButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    backgroundColor: colors.primaryLight,
     borderRadius: 12,
-    padding: 16,
+    padding: 14,
     borderWidth: 1,
     borderColor: "#d0ebff",
   },
-  recommendButtonText: {
-    flex: 1,
-    fontSize: 15,
+  aiButtonText: {
+    fontSize: 14,
     fontWeight: "700",
     color: colors.primaryDark,
   },
