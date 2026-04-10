@@ -9,10 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Link, router } from "expo-router";
+import { Link, router, Stack } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { ProtocolsLogo } from "@/components/ProtocolsLogo";
 
 export default function LoginScreen() {
   const { login } = useAuth();
@@ -40,8 +41,12 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <Stack.Screen options={{ headerShown: false, title: "" }} />
+      <View style={styles.logoCorner}>
+        <ProtocolsLogo size={38} />
+      </View>
       <View style={styles.inner}>
-        <Text style={styles.logo}>Protocols</Text>
+        <Text style={styles.title}>Protocols</Text>
         <Text style={styles.subtitle}>
           Manage your health protocols intelligently
         </Text>
@@ -105,15 +110,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
   },
+  logoCorner: {
+    position: "absolute",
+    top: 52,
+    right: 20,
+    zIndex: 10,
+  },
   inner: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
-    maxWidth: 400,
+    maxWidth: 440,
     width: "100%",
     alignSelf: "center",
   },
-  logo: {
+  title: {
     fontSize: 36,
     fontWeight: "800",
     color: colors.primary,
@@ -127,13 +138,14 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   form: {
-    gap: 12,
+    gap: 14,
   },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 10,
-    padding: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
     color: colors.textPrimary,
     backgroundColor: colors.white,

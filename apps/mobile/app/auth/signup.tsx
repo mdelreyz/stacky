@@ -9,10 +9,11 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Link, router } from "expo-router";
+import { Link, router, Stack } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { ProtocolsLogo } from "@/components/ProtocolsLogo";
 
 export default function SignupScreen() {
   const { signup } = useAuth();
@@ -50,29 +51,33 @@ export default function SignupScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
+      <Stack.Screen options={{ headerShown: false, title: "" }} />
+      <View style={styles.logoCorner}>
+        <ProtocolsLogo size={38} />
+      </View>
       <View style={styles.inner}>
-        <Text style={styles.logo}>Protocols</Text>
+        <Text style={styles.title}>Protocols</Text>
         <Text style={styles.subtitle}>Create your account</Text>
 
         <View style={styles.form}>
-          <View style={styles.row}>
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="First name"
-              placeholderTextColor={colors.textPlaceholder}
-              value={firstName}
-              onChangeText={setFirstName}
-              autoCapitalize="words"
-            />
-            <TextInput
-              style={[styles.input, styles.halfInput]}
-              placeholder="Last name"
-              placeholderTextColor={colors.textPlaceholder}
-              value={lastName}
-              onChangeText={setLastName}
-              autoCapitalize="words"
-            />
-          </View>
+          <TextInput
+            style={styles.input}
+            placeholder="First name"
+            placeholderTextColor={colors.textPlaceholder}
+            value={firstName}
+            onChangeText={setFirstName}
+            autoCapitalize="words"
+            autoComplete="given-name"
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Last name"
+            placeholderTextColor={colors.textPlaceholder}
+            value={lastName}
+            onChangeText={setLastName}
+            autoCapitalize="words"
+            autoComplete="family-name"
+          />
           <TextInput
             style={styles.input}
             placeholder="Email"
@@ -85,7 +90,7 @@ export default function SignupScreen() {
           />
           <TextInput
             style={styles.input}
-            placeholder="Password (8+ characters, 1 uppercase, 1 digit)"
+            placeholder="Password (min 8, 1 uppercase, 1 digit)"
             placeholderTextColor={colors.textPlaceholder}
             value={password}
             onChangeText={setPassword}
@@ -131,15 +136,21 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
   },
+  logoCorner: {
+    position: "absolute",
+    top: 52,
+    right: 20,
+    zIndex: 10,
+  },
   inner: {
     flex: 1,
     justifyContent: "center",
     paddingHorizontal: 24,
-    maxWidth: 400,
+    maxWidth: 440,
     width: "100%",
     alignSelf: "center",
   },
-  logo: {
+  title: {
     fontSize: 36,
     fontWeight: "800",
     color: colors.primary,
@@ -153,23 +164,17 @@ const styles = StyleSheet.create({
     marginBottom: 40,
   },
   form: {
-    gap: 12,
-  },
-  row: {
-    flexDirection: "row",
-    gap: 12,
+    gap: 14,
   },
   input: {
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 10,
-    padding: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     fontSize: 16,
     color: colors.textPrimary,
     backgroundColor: colors.white,
-  },
-  halfInput: {
-    flex: 1,
   },
   error: {
     color: colors.danger,

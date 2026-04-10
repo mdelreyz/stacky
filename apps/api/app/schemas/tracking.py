@@ -9,7 +9,7 @@ from app.models.enums import TakeWindow
 class TrackingEventResponse(BaseModel):
     item_id: str
     item_name: str
-    item_type: Literal["supplement", "medication", "therapy"]
+    item_type: Literal["supplement", "medication", "therapy", "peptide"]
     take_window: TakeWindow | None
     status: Literal["taken", "skipped"]
     scheduled_at: datetime
@@ -29,7 +29,7 @@ class TrackingSuggestionResponse(BaseModel):
 class TrackingItemStatResponse(BaseModel):
     item_id: str
     item_name: str
-    item_type: Literal["supplement", "medication", "therapy"]
+    item_type: Literal["supplement", "medication", "therapy", "peptide"]
     take_window: TakeWindow
     regimes: list[str]
     scheduled_count: int
@@ -44,7 +44,7 @@ class TrackingOverviewResponse(BaseModel):
     window_days: int
     start_date: date
     end_date: date
-    item_type_filter: Literal["supplement", "medication", "therapy"] | None
+    item_type_filter: Literal["supplement", "medication", "therapy", "peptide"] | None
     scheduled_count: int
     taken_count: int
     skipped_count: int

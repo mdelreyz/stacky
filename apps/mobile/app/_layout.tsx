@@ -158,6 +158,10 @@ function RootLayoutNav() {
               options={{ headerShown: false, presentation: "modal" }}
             />
             <Stack.Screen
+              name="profile/edit"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
               name="profile/preferences"
               options={{ headerShown: false, presentation: "modal" }}
             />
@@ -176,6 +180,46 @@ function RootLayoutNav() {
             <Stack.Screen
               name="tracking"
               options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="exercise/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="exercise/create"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="exercise/stats"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="workout-routine/create"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="workout-routine/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="exercise-regime/create"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="exercise-regime/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="workout-session/start"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="workout-session/[id]"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="gym-location/manage"
+              options={{ headerShown: false, presentation: "modal" }}
             />
           </>
         )}

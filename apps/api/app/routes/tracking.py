@@ -15,7 +15,7 @@ router = APIRouter(prefix="/users/me/tracking", tags=["tracking"])
 async def get_tracking_overview(
     days: int = Query(14, ge=1, le=90),
     end_date: date | None = Query(default=None),
-    item_type: Literal["supplement", "medication", "therapy"] | None = Query(default=None),
+    item_type: Literal["supplement", "medication", "therapy", "peptide"] | None = Query(default=None),
     current_user: User = Depends(get_current_user),
 ):
     return TrackingOverviewResponse.model_validate(
