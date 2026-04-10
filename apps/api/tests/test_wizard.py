@@ -1,4 +1,5 @@
 import asyncio
+import uuid
 
 from app.database import async_session_factory
 from app.models.supplement import Supplement, SupplementCategory
@@ -164,7 +165,58 @@ def test_wizard_completed_response_has_valid_items(client):
 
     body = r.json()
     assert body["is_complete"] is True
+    assert not body["assistant_message"].startswith("{")
+    assert body["conversation"][-1]["content"] == body["assistant_message"]
     for item in body["recommended_items"]:
+        assert "catalog_id" in item
+        uuid.UUID(item["catalog_id"])
         assert "name" in item
         assert "item_type" in item
         assert "reason" in item
+
+
+def test_wizard_uses_initial_goal_answer_without_reasking(client):
+    headers, _ = signup(client)
+    seed_catalog()
+
+    response = client.post(
+        "/api/v1/users/me/preferences/wizard",
+        json={"message": "I want to optimize for longevity and cognitive performance"},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["is_complete"] is False
+    assert "How many pills or capsules" in body["assistant_message"]
+    assert "primary health goals" not in body["assistant_message"]
+
+
+def test_wizard_extracts_constraints_and_concern_from_user_answers(client):
+    headers, _ = signup(client)
+    seed_catalog()
+
+    conversation = []
+    answers = [
+        "I want to optimize for longevity and cognitive performance",
+        "40 no allergies",
+        "immnue strength",
+    ]
+
+    for answer in answers:
+        response = client.post(
+            "/api/v1/users/me/preferences/wizard",
+            json={"message": answer, "conversation": conversation},
+            headers=headers,
+        )
+        assert response.status_code == 200
+        body = response.json()
+        conversation = body["conversation"]
+
+    assert body["is_complete"] is True
+    prefs = body["extracted_preferences"]
+    assert prefs["primary_goals"] == ["longevity", "cognitive"]
+    assert prefs["max_supplements_per_day"] == 40
+    assert prefs["max_tablets_per_day"] == 40
+    assert prefs["excluded_ingredients"] == []
+    assert "immune strength" in prefs["focus_concerns"]

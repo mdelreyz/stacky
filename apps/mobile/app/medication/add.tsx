@@ -25,6 +25,9 @@ export default function AddMedicationScreen() {
     setLoading(true);
     try {
       const result = await medicationsApi.onboard({ name: name.trim() });
+      if (result.status === "failed" && result.ai_error) {
+        showError(result.ai_error);
+      }
       router.replace(`/medication/${result.id}`);
     } catch (e: any) {
       showError(e.message || "Failed to onboard medication");

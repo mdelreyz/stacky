@@ -24,6 +24,9 @@ export default function AddSupplementScreen() {
     setLoading(true);
     try {
       const result = await supplementsApi.onboard({ name: name.trim() });
+      if (result.status === "failed" && result.ai_error) {
+        showError(result.ai_error);
+      }
       router.replace(`/supplement/${result.id}`);
     } catch (e: any) {
       showError(e.message || "Failed to onboard supplement");

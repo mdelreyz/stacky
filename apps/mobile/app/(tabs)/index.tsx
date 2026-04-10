@@ -55,8 +55,10 @@ export default function TodayScreen() {
       if (trackingResult.status === "fulfilled") {
         setTrackingOverview(trackingResult.value);
       } else {
-        showError("Failed to load tracking overview");
         setTrackingOverview(null);
+        if (refresh) {
+          showError("Failed to refresh tracking overview");
+        }
       }
     } catch (error) {
       showError("Failed to load daily plan");

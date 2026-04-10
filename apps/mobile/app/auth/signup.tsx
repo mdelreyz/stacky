@@ -38,7 +38,7 @@ export default function SignupScreen() {
         email: email.trim(),
         password,
       });
-      router.replace("/(tabs)");
+      router.replace("/");
     } catch (e: any) {
       setError(e.message || "Signup failed");
     } finally {

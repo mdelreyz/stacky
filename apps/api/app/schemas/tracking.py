@@ -21,7 +21,7 @@ class TrackingEventResponse(BaseModel):
 class TrackingSuggestionResponse(BaseModel):
     item_id: str | None
     item_name: str | None
-    item_type: Literal["supplement", "medication", "therapy", "overall"]
+    item_type: Literal["supplement", "medication", "therapy", "peptide", "overall"]
     headline: str
     recommendation: str
 

@@ -15,9 +15,9 @@ HealthGoalType = Literal[
 
 class UserPreferencesCreate(BaseModel):
     interaction_mode: InteractionModeType = "guided"
-    max_supplements_per_day: int | None = Field(None, ge=1, le=30)
+    max_supplements_per_day: int | None = Field(None, ge=1, le=100)
     max_tablets_per_day: int | None = Field(None, ge=1, le=50)
-    max_medications: int | None = Field(None, ge=0, le=20)
+    max_medications: int | None = Field(None, ge=0, le=100)
     exercise_blocks_per_week: int | None = Field(None, ge=0, le=14)
     exercise_minutes_per_day: int | None = Field(None, ge=0, le=300)
     primary_goals: list[HealthGoalType] | None = Field(None, max_length=5)
@@ -30,9 +30,9 @@ class UserPreferencesCreate(BaseModel):
 
 class UserPreferencesUpdate(BaseModel):
     interaction_mode: InteractionModeType | None = None
-    max_supplements_per_day: int | None = Field(None, ge=1, le=30)
+    max_supplements_per_day: int | None = Field(None, ge=1, le=100)
     max_tablets_per_day: int | None = Field(None, ge=1, le=50)
-    max_medications: int | None = Field(None, ge=0, le=20)
+    max_medications: int | None = Field(None, ge=0, le=100)
     exercise_blocks_per_week: int | None = Field(None, ge=0, le=14)
     exercise_minutes_per_day: int | None = Field(None, ge=0, le=300)
     primary_goals: list[HealthGoalType] | None = Field(None, max_length=5)
@@ -174,6 +174,7 @@ class WizardRequest(BaseModel):
 
 
 class WizardRecommendedItem(BaseModel):
+    catalog_id: str
     name: str
     item_type: str
     reason: str

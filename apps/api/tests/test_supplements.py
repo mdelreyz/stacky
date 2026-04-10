@@ -39,6 +39,7 @@ def create_supplement(name: str, ai_profile=None):
 def test_onboard_new_supplement_dispatches_generation(client, monkeypatch):
     headers = auth_headers(client)
     dispatched_ids = []
+    monkeypatch.setattr(supplements_route, "get_ai_unavailable_reason", lambda: None)
     monkeypatch.setattr(
         supplements_route.generate_ai_profile,
         "delay",
@@ -68,6 +69,7 @@ def test_onboard_existing_ready_supplement_reuses_profile(client, monkeypatch):
     supplement_id = create_supplement("Creatine Monohydrate", ai_profile={"summary": "ready"})
     headers = auth_headers(client)
     dispatched_ids = []
+    monkeypatch.setattr(supplements_route, "get_ai_unavailable_reason", lambda: None)
     monkeypatch.setattr(
         supplements_route.generate_ai_profile,
         "delay",
@@ -95,6 +97,7 @@ def test_onboard_failed_supplement_retries_generation(client, monkeypatch):
 
     headers = auth_headers(client)
     dispatched_ids = []
+    monkeypatch.setattr(supplements_route, "get_ai_unavailable_reason", lambda: None)
     monkeypatch.setattr(
         supplements_route.generate_ai_profile,
         "delay",
@@ -113,3 +116,24 @@ def test_onboard_failed_supplement_retries_generation(client, monkeypatch):
     assert body["status"] == "generating"
     assert body["ai_error"] is None
     assert dispatched_ids == [str(supplement_id)]
+
+
+def test_onboard_returns_failed_status_when_ai_is_unavailable(client, monkeypatch):
+    headers = auth_headers(client)
+    monkeypatch.setattr(
+        supplements_route,
+        "get_ai_unavailable_reason",
+        lambda: "AI profile generation is unavailable until the Anthropic API key is configured.",
+    )
+
+    response = client.post(
+        "/api/v1/supplements/onboard",
+        json={"name": "Berberine"},
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["status"] == "failed"
+    assert body["ai_profile"] is None
+    assert body["ai_error"] == "AI profile generation is unavailable until the Anthropic API key is configured."

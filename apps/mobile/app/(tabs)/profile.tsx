@@ -39,21 +39,6 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/location")} accessibilityRole="button" accessibilityLabel="Location and UV Guidance">
-          <FontAwesome name="map-marker" size={18} color={colors.textSecondary} />
-          <View style={styles.menuCopy}>
-            <Text style={styles.menuText}>Location & UV Guidance</Text>
-            <Text style={styles.menuHint}>
-              {user?.location_name
-                ? `${user.location_name} · ${user.timezone}`
-                : "Save a location to enable weather-based sunscreen guidance"}
-            </Text>
-          </View>
-          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
-        </Pressable>
-
-        <View style={styles.separator} />
-
         <Pressable style={styles.menuItem} onPress={() => router.push("/profile/preferences")} accessibilityRole="button" accessibilityLabel="Goals and Preferences">
           <FontAwesome name="sliders" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>

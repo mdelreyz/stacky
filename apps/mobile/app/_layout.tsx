@@ -5,7 +5,7 @@ import {
   ThemeProvider,
 } from "@react-navigation/native";
 import { useFonts } from "expo-font";
-import { Redirect, Stack } from "expo-router";
+import { Redirect, Stack, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
@@ -48,6 +48,7 @@ export default function RootLayout() {
 function RootLayoutNav() {
   const colorScheme = useColorScheme();
   const { isLoading, isAuthenticated } = useAuth();
+  const segments = useSegments();
 
   useEffect(() => {
     if (!isLoading) {
@@ -60,9 +61,19 @@ function RootLayoutNav() {
     return null;
   }
 
+  const inAuthFlow = segments[0] === "auth";
+
+  if (!isAuthenticated && !inAuthFlow) {
+    return <Redirect href="/auth/login" />;
+  }
+
+  if (isAuthenticated && inAuthFlow) {
+    return <Redirect href="/" />;
+  }
+
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
-      <Stack>
+      <Stack screenOptions={{ headerShown: false, title: "Protocols" }}>
         {!isAuthenticated ? (
           <>
             <Stack.Screen
@@ -76,7 +87,7 @@ function RootLayoutNav() {
           </>
         ) : (
           <>
-            <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+            <Stack.Screen name="(tabs)" options={{ headerShown: false, title: "Protocols" }} />
             <Stack.Screen
               name="supplement/add"
               options={{ headerShown: false, presentation: "modal" }}
@@ -163,7 +174,7 @@ function RootLayoutNav() {
             />
             <Stack.Screen
               name="profile/preferences"
-              options={{ headerShown: false, presentation: "modal" }}
+              options={{ headerShown: false, presentation: "modal", title: "Preferences" }}
             />
             <Stack.Screen
               name="profile/safety"

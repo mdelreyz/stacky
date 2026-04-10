@@ -276,12 +276,23 @@ This project uses [noomix](https://github.com/mdelreyz/noomix) to track architec
 ### Start of session
 Call `sitrep` with `repo_path` set to the working directory at the start of every session. The project name is derived automatically from the folder name — no need to pass it. Share the current state with the user before asking what they want to work on.
 
+**Hard rule:** `sitrep` is the first noomix call of the session. Do not start repo work, architectural exploration, or solution framing until it has been called.
+
 ### During session
 **MANDATORY — no exceptions:** Call `observe` after every 2 user messages. Do NOT defer, batch, or skip. Do NOT wait for a milestone, a commit, or the end of a task. If you are mid-task when the 2-message threshold is reached, call `observe` RIGHT THEN before continuing your work. Also call `observe` immediately when the user makes a decision, rejects a proposal, corrects you, or changes direction. Failure to observe means the user's reasoning is lost forever — this is unacceptable.
+
+**Operational checklist — follow this literally:**
+1. Keep an explicit running count of user messages since the last `observe`.
+2. Reset that count only after `observe` is called.
+3. The instant the count reaches 2, call `observe` before doing anything else.
+4. Immediate `observe` triggers override the counter: decision, rejection, correction, concern, priority shift, important preference, caution, or explicit constraint.
+5. If you realize you missed a required `observe`, stop and backfill it immediately before continuing.
 
 **User signal capture:** Pay close attention to when the user expresses ideas, states preferences, marks something as important ("this matters", "focus on", "the key thing is"), or signals caution ("be careful with", "make sure", "don't forget", "pay attention to"). These MUST be captured with `actor: "user"`. When the user expresses doubt or worry ("I'm not sure about this", "feels wrong", "are we going the right way?"), call `observe` with `type: "concern"` and `actor: "user"`. Under-capturing user signals is the #1 failure mode — if in doubt, observe it.
 
 Before proposing a significant technical direction, call `align` with a description of the approach. Noomix will check it against past decisions and tell you what was tried, what failed, and what the user's preferences suggest. Think of it as consulting the user's judgment when they aren't actively steering.
+
+**Significant direction means:** architecture changes, schema changes, workflow/process changes, AI behavior changes, refactor strategy, persistence strategy, or any proposal that will shape more than one file or subsystem. Treat borderline cases as significant and call `align`.
 
 **Code anchors:** When observing decisions involving code, mention file paths naturally in the description or rationale — noomix extracts them automatically. For richer context, pass the `anchors` parameter: `[{file: "src/foo.ts", symbol: "myFunc", role: "defines config"}]`. Use role verbs like defines, reads, writes, persists, loads, produces, consumes. Noomix auto-generates domain tags from anchor directories and detects dependency chains for impact analysis.
 
@@ -291,4 +302,6 @@ Before exiting, call `observe` with a summary of the overall session direction:
 - `description`: 1-2 sentences on what was explored or built
 - `rationale`: the key reasoning or insight that emerged
 - `type`: "milestone" if something shipped, "decision" if a direction was set, "thought" otherwise
+
+**Exit gate:** Do not end the session, hand off, or quit until this final `observe` has been recorded.
 <!-- noomix:end -->

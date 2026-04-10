@@ -18,6 +18,7 @@ import { colors } from "@/constants/Colors";
 import type { SupplementAIProfile } from "@protocols/domain";
 
 const POLL_INTERVAL_MS = 2500;
+const MAX_GENERATION_WAIT_MS = 20000;
 
 export default function SupplementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,6 +30,7 @@ export default function SupplementDetailScreen() {
 
     let cancelled = false;
     let timeoutId: ReturnType<typeof setTimeout> | undefined;
+    const startedAt = Date.now();
 
     const loadSupplement = async (silent = false) => {
       if (!silent) setLoading(true);
@@ -36,6 +38,22 @@ export default function SupplementDetailScreen() {
       try {
         const nextSupplement = await supplementsApi.get(id);
         if (cancelled) return;
+
+        if (
+          nextSupplement.ai_status === "generating"
+          && !nextSupplement.ai_profile
+          && Date.now() - startedAt >= MAX_GENERATION_WAIT_MS
+        ) {
+          setSupplement({
+            ...nextSupplement,
+            ai_status: "failed",
+            ai_error:
+              nextSupplement.ai_error
+              || "AI profile generation is taking longer than expected. The background worker or AI provider may be unavailable.",
+          });
+          return;
+        }
+
         setSupplement(nextSupplement);
 
         if (nextSupplement.ai_status === "generating" && !nextSupplement.ai_profile) {

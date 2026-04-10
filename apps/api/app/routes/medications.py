@@ -12,7 +12,12 @@ from app.models.medication import Medication
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.medication import MedicationOnboardRequest, MedicationOnboardResponse, MedicationResponse
-from app.services.ai_onboarding import resolve_medication_ai_status, run_medication_ai_onboarding_job_sync, set_ai_status
+from app.services.ai_onboarding import (
+    get_ai_unavailable_reason,
+    resolve_medication_ai_status,
+    run_medication_ai_onboarding_job_sync,
+    set_ai_status,
+)
 from app.services.pagination import paginate, paginated_response
 from app.tasks.ai_onboarding import generate_medication_ai_profile
 
@@ -86,14 +91,20 @@ async def onboard_medication(
     session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
+    unavailable_reason = get_ai_unavailable_reason()
+
     result = await session.execute(select(Medication).where(func.lower(Medication.name) == data.name.lower()))
     existing = result.scalar_one_or_none()
     if existing:
         status, error = await resolve_medication_ai_status(existing)
         if not existing.ai_profile and status != "generating":
-            await set_ai_status(str(existing.id), "generating", kind="medication")
-            _dispatch_medication_ai_onboarding(existing.id, background_tasks)
-            status, error = "generating", None
+            if unavailable_reason:
+                await set_ai_status(str(existing.id), "failed", unavailable_reason, kind="medication")
+                status, error = "failed", unavailable_reason
+            else:
+                await set_ai_status(str(existing.id), "generating", kind="medication")
+                _dispatch_medication_ai_onboarding(existing.id, background_tasks)
+                status, error = "generating", None
         return MedicationOnboardResponse(
             id=existing.id,
             name=existing.name,
@@ -110,6 +121,16 @@ async def onboard_medication(
     session.add(medication)
     await session.commit()
     await session.refresh(medication)
+
+    if unavailable_reason:
+        await set_ai_status(str(medication.id), "failed", unavailable_reason, kind="medication")
+        return MedicationOnboardResponse(
+            id=medication.id,
+            name=medication.name,
+            status="failed",
+            ai_profile=None,
+            ai_error=unavailable_reason,
+        )
 
     await set_ai_status(str(medication.id), "generating", kind="medication")
     _dispatch_medication_ai_onboarding(medication.id, background_tasks)

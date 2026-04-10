@@ -18,7 +18,40 @@ import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { preferences as prefsApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
 import { snakeCaseToLabel } from "@/lib/format";
-import type { WizardRecommendedItem, WizardResponse, WizardTurn } from "@/lib/api";
+import type { WizardRecommendedItem, WizardTurn } from "@/lib/api";
+
+function isCompletionPayloadMessage(content: string): boolean {
+  try {
+    const parsed = JSON.parse(content);
+    return Boolean(parsed?.wizard_complete);
+  } catch {
+    return false;
+  }
+}
+
+function parseSuggestedDosage(suggestedDosage: string | null | undefined): {
+  dosage_amount?: number;
+  dosage_unit?: string;
+} {
+  if (!suggestedDosage) {
+    return {};
+  }
+
+  const match = suggestedDosage.match(/^\s*(\d+(?:\.\d+)?)(?:\s*-\s*\d+(?:\.\d+)?)?\s*([a-zA-ZmcguIU]+)/);
+  if (!match) {
+    return {};
+  }
+
+  const dosageAmount = Number.parseFloat(match[1]);
+  if (!Number.isFinite(dosageAmount)) {
+    return {};
+  }
+
+  return {
+    dosage_amount: dosageAmount,
+    dosage_unit: match[2] || undefined,
+  };
+}
 
 export default function WizardScreen() {
   const [conversation, setConversation] = useState<WizardTurn[]>([]);
@@ -32,24 +65,23 @@ export default function WizardScreen() {
   } | null>(null);
   const [applying, setApplying] = useState(false);
   const listRef = useRef<FlatList>(null);
+  const visibleConversation = conversation.filter(
+    (turn) => !(turn.role === "assistant" && isCompletionPayloadMessage(turn.content)),
+  );
 
   const handleSend = async () => {
     const message = input.trim();
     if (!message || sending) return;
 
+    const previousConversation = conversation;
     setInput("");
     setSending(true);
-
-    const updatedConversation: WizardTurn[] = [
-      ...conversation,
-      { role: "user", content: message },
-    ];
-    setConversation(updatedConversation);
+    setConversation([...previousConversation, { role: "user", content: message }]);
 
     try {
       const response = await prefsApi.wizardTurn({
         message,
-        conversation: updatedConversation,
+        conversation: previousConversation,
       });
 
       setConversation(response.conversation);
@@ -65,7 +97,7 @@ export default function WizardScreen() {
     } catch (error: any) {
       showError(error.message || "Failed to get wizard response");
       // Remove the user message if the request failed
-      setConversation(conversation);
+      setConversation(previousConversation);
     } finally {
       setSending(false);
       setTimeout(() => listRef.current?.scrollToEnd({ animated: true }), 100);
@@ -79,9 +111,9 @@ export default function WizardScreen() {
     try {
       await prefsApi.applyRecommendations({
         items: result.items.map((item) => ({
-          catalog_id: "", // wizard items are matched by name on the backend
+          catalog_id: item.catalog_id,
           item_type: item.item_type,
-          ...(item.suggested_dosage ? { dosage_amount: parseFloat(item.suggested_dosage) || undefined } : {}),
+          ...parseSuggestedDosage(item.suggested_dosage),
           ...(item.suggested_window ? { take_window: item.suggested_window } : {}),
         })),
         protocol_name: result.protocolName ?? undefined,
@@ -145,7 +177,7 @@ export default function WizardScreen() {
 
       <FlatList
         ref={listRef}
-        data={conversation}
+        data={visibleConversation}
         keyExtractor={(_, index) => String(index)}
         contentContainerStyle={styles.messageList}
         onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
@@ -188,7 +220,7 @@ export default function WizardScreen() {
                   <Text style={styles.resultSummary}>{result.summary}</Text>
                 )}
                 {result.items.map((item, i) => (
-                  <View key={i} style={styles.resultItem}>
+                  <View key={item.catalog_id || `${item.name}-${i}`} style={styles.resultItem}>
                     <Text style={styles.resultItemName}>{item.name}</Text>
                     <View style={styles.resultItemMeta}>
                       <Text style={styles.resultItemType}>{snakeCaseToLabel(item.item_type)}</Text>

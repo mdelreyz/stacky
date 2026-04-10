@@ -12,7 +12,12 @@ from app.models.supplement import Supplement
 from app.models.user import User
 from app.schemas.common import PaginatedResponse
 from app.schemas.supplement import SupplementOnboardRequest, SupplementOnboardResponse, SupplementResponse
-from app.services.ai_onboarding import resolve_ai_status, run_ai_onboarding_job_sync, set_ai_status
+from app.services.ai_onboarding import (
+    get_ai_unavailable_reason,
+    resolve_ai_status,
+    run_ai_onboarding_job_sync,
+    set_ai_status,
+)
 from app.services.pagination import paginate, paginated_response
 from app.tasks.ai_onboarding import generate_ai_profile
 
@@ -88,15 +93,21 @@ async def onboard_supplement(
     session: AsyncSession = Depends(get_session),
     _current_user: User = Depends(get_current_user),
 ):
+    unavailable_reason = get_ai_unavailable_reason()
+
     # Check for existing match (case-insensitive)
     result = await session.execute(select(Supplement).where(func.lower(Supplement.name) == data.name.lower()))
     existing = result.scalar_one_or_none()
     if existing:
         status, error = await resolve_ai_status(existing)
         if not existing.ai_profile and status != "generating":
-            await set_ai_status(str(existing.id), "generating")
-            _dispatch_ai_onboarding(existing.id, background_tasks)
-            status, error = "generating", None
+            if unavailable_reason:
+                await set_ai_status(str(existing.id), "failed", unavailable_reason)
+                status, error = "failed", unavailable_reason
+            else:
+                await set_ai_status(str(existing.id), "generating")
+                _dispatch_ai_onboarding(existing.id, background_tasks)
+                status, error = "generating", None
         return SupplementOnboardResponse(
             id=existing.id,
             name=existing.name,
@@ -114,6 +125,16 @@ async def onboard_supplement(
     session.add(supplement)
     await session.commit()
     await session.refresh(supplement)
+
+    if unavailable_reason:
+        await set_ai_status(str(supplement.id), "failed", unavailable_reason)
+        return SupplementOnboardResponse(
+            id=supplement.id,
+            name=supplement.name,
+            status="failed",
+            ai_profile=None,
+            ai_error=unavailable_reason,
+        )
 
     await set_ai_status(str(supplement.id), "generating")
     _dispatch_ai_onboarding(supplement.id, background_tasks)

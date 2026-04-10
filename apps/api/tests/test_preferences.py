@@ -123,6 +123,21 @@ def test_preferences_patch_updates_single_field(client):
     assert patch_response.json()["primary_goals"] == ["longevity"]
 
 
+def test_preferences_accepts_higher_supplement_and_medication_caps(client):
+    headers, _ = signup(client)
+
+    response = client.put(
+        "/api/v1/users/me/preferences",
+        json={"max_supplements_per_day": 100, "max_medications": 100},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["max_supplements_per_day"] == 100
+    assert body["max_medications"] == 100
+
+
 def test_preferences_upsert_overwrites_on_second_put(client):
     headers, _ = signup(client)
 

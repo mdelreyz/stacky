@@ -17,6 +17,7 @@ from app.models.peptide import Peptide
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
 from scripts.seed_exercise_catalog import EXERCISE_CATALOG
+from scripts.import_supplement_stack_xls import load_workbook_supplement_catalog
 from scripts.seed_supplement_catalog import SUPPLEMENT_CATALOG
 
 
@@ -1147,7 +1148,16 @@ async def seed():
         }
 
         seeded_supplements = 0
-        all_supplements = SUPPLEMENTS + SUPPLEMENT_CATALOG
+        workbook_supplements = load_workbook_supplement_catalog(
+            excluded_names={
+                *(item["name"] for item in SUPPLEMENTS),
+                *(item["name"] for item in SUPPLEMENT_CATALOG),
+                *(item["name"] for item in MEDICATIONS),
+                *(item["name"] for item in MEDICATION_CATALOG),
+                *(item["name"] for item in PEPTIDES),
+            },
+        )
+        all_supplements = SUPPLEMENTS + SUPPLEMENT_CATALOG + workbook_supplements
         for data in all_supplements:
             if data["name"] in existing_supplement_names:
                 continue
@@ -1165,6 +1175,7 @@ async def seed():
                 is_verified=has_profile,
             )
             session.add(supplement)
+            existing_supplement_names.add(data["name"])
             seeded_supplements += 1
 
         seeded_therapies = 0
@@ -1180,6 +1191,7 @@ async def seed():
                 ai_generated_at=now,
             )
             session.add(therapy)
+            existing_therapy_names.add(data["name"])
             seeded_therapies += 1
 
         seeded_medications = 0
@@ -1199,6 +1211,7 @@ async def seed():
                 is_verified=has_profile,
             )
             session.add(medication)
+            existing_medication_names.add(data["name"])
             seeded_medications += 1
 
         seeded_peptides = 0
@@ -1214,6 +1227,7 @@ async def seed():
                 mechanism_tags=data.get("mechanism_tags"),
             )
             session.add(peptide)
+            existing_peptide_names.add(data["name"])
             seeded_peptides += 1
 
         # Exercises (shared catalog — user_id=NULL)

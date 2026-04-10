@@ -1,6 +1,7 @@
 import os
 import warnings
 
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings
 
 
@@ -26,7 +27,10 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
 
     # AI (Claude API)
-    anthropic_api_key: str = ""
+    anthropic_api_key: str = Field(
+        default="",
+        validation_alias=AliasChoices("PROTOCOLS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"),
+    )
     ai_model: str = "claude-sonnet-4-20250514"
 
     # Weather

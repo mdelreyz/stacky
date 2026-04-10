@@ -9,7 +9,10 @@ import json
 import logging
 from dataclasses import dataclass
 
-from anthropic import Anthropic
+try:
+    from anthropic import Anthropic
+except ImportError:  # pragma: no cover - optional dependency in local dev/test
+    Anthropic = None
 from pydantic import BaseModel, ConfigDict
 
 from app.config import settings
@@ -385,6 +388,8 @@ def generate_recommendations(
     )
 
     try:
+        if Anthropic is None:
+            raise RuntimeError("Anthropic SDK not installed")
         client = Anthropic(api_key=settings.anthropic_api_key)
         response = client.messages.create(
             model=settings.ai_model,

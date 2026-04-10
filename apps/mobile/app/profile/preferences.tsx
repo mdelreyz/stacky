@@ -196,10 +196,10 @@ export default function PreferencesScreen() {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>About You</Text>
         <View style={styles.row}>
-          <View style={styles.halfField}>
+          <View style={styles.ageField}>
             <Text style={styles.fieldLabel}>Age</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.ageInput]}
               keyboardType="number-pad"
               value={age}
               onChangeText={setAge}
@@ -207,7 +207,7 @@ export default function PreferencesScreen() {
               placeholderTextColor={colors.textPlaceholder}
             />
           </View>
-          <View style={styles.halfField}>
+          <View style={styles.sexField}>
             <Text style={styles.fieldLabel}>Biological Sex</Text>
             <View style={styles.sexRow}>
               {SEX_OPTIONS.map((opt) => (
@@ -378,13 +378,23 @@ const styles = StyleSheet.create({
   },
   row: {
     flexDirection: "row",
+    alignItems: "flex-start",
+    flexWrap: "wrap",
     gap: 12,
   },
-  halfField: {
+  ageField: {
+    width: 112,
+  },
+  ageInput: {
+    textAlign: "center",
+  },
+  sexField: {
     flex: 1,
+    minWidth: 220,
   },
   sexRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 6,
   },
   sexChip: {

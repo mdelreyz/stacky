@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Link, useFocusEffect, useRouter } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import {
@@ -171,18 +171,24 @@ export default function ExerciseScreen() {
       {/* Quick Actions */}
       <View style={styles.section}>
         <View style={styles.actionsRow}>
-          <Link href="/workout-session/start" asChild>
-            <Pressable style={styles.actionBtn} accessibilityRole="button" accessibilityLabel="Start Workout">
-              <FontAwesome name="plus" size={18} color={colors.textWhite} />
-              <Text style={styles.actionBtnText}>Start Workout</Text>
-            </Pressable>
-          </Link>
-          <Link href="/workout-routine/create" asChild>
-            <Pressable style={[styles.actionBtn, styles.actionBtnSecondary]} accessibilityRole="button" accessibilityLabel="New Routine">
-              <FontAwesome name="list-ol" size={16} color={colors.primary} />
-              <Text style={styles.actionBtnTextSecondary}>New Routine</Text>
-            </Pressable>
-          </Link>
+          <Pressable
+            style={styles.actionBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Start Workout"
+            onPress={() => router.push("/workout-session/start")}
+          >
+            <FontAwesome name="plus" size={18} color={colors.textWhite} />
+            <Text style={styles.actionBtnText}>Start Workout</Text>
+          </Pressable>
+          <Pressable
+            style={styles.actionBtnSecondaryButton}
+            accessibilityRole="button"
+            accessibilityLabel="New Routine"
+            onPress={() => router.push("/workout-routine/create")}
+          >
+            <FontAwesome name="list-ol" size={16} color={colors.primary} />
+            <Text style={styles.actionBtnTextSecondary}>New Routine</Text>
+          </Pressable>
         </View>
       </View>
 
@@ -190,11 +196,13 @@ export default function ExerciseScreen() {
       <View style={styles.section}>
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>My Routines</Text>
-          <Link href="/workout-routine/create" asChild>
-            <Pressable accessibilityRole="button" accessibilityLabel="Create new routine">
-              <FontAwesome name="plus-circle" size={20} color={colors.primary} />
-            </Pressable>
-          </Link>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Create new routine"
+            onPress={() => router.push("/workout-routine/create")}
+          >
+            <FontAwesome name="plus-circle" size={20} color={colors.primary} />
+          </Pressable>
         </View>
         {routines.length === 0 ? (
           <View style={styles.emptyCard}>
@@ -264,34 +272,46 @@ export default function ExerciseScreen() {
 
       {/* Navigation links */}
       <View style={styles.section}>
-        <Link href="/exercise/stats" asChild>
-          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Detailed Stats and Progress">
-            <FontAwesome name="bar-chart" size={16} color={colors.primary} />
-            <Text style={styles.navLinkText}>Detailed Stats & Progress</Text>
-            <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
-          </Pressable>
-        </Link>
-        <Link href="/exercise-regime/create" asChild>
-          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Manage Regimes">
-            <FontAwesome name="calendar" size={16} color={colors.primary} />
-            <Text style={styles.navLinkText}>Manage Regimes</Text>
-            <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
-          </Pressable>
-        </Link>
-        <Link href="/gym-location/manage" asChild>
-          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Gym Locations">
-            <FontAwesome name="map-marker" size={16} color={colors.primary} />
-            <Text style={styles.navLinkText}>Gym Locations</Text>
-            <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
-          </Pressable>
-        </Link>
-        <Link href="/exercise/create" asChild>
-          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Create Custom Exercise">
-            <FontAwesome name="plus-square-o" size={16} color={colors.primary} />
-            <Text style={styles.navLinkText}>Create Custom Exercise</Text>
-            <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
-          </Pressable>
-        </Link>
+        <Pressable
+          style={styles.navLink}
+          accessibilityRole="button"
+          accessibilityLabel="Detailed Stats and Progress"
+          onPress={() => router.push("/exercise/stats")}
+        >
+          <FontAwesome name="bar-chart" size={16} color={colors.primary} />
+          <Text style={styles.navLinkText}>Detailed Stats & Progress</Text>
+          <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
+        </Pressable>
+        <Pressable
+          style={styles.navLink}
+          accessibilityRole="button"
+          accessibilityLabel="Manage Regimes"
+          onPress={() => router.push("/exercise-regime/create")}
+        >
+          <FontAwesome name="calendar" size={16} color={colors.primary} />
+          <Text style={styles.navLinkText}>Manage Regimes</Text>
+          <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
+        </Pressable>
+        <Pressable
+          style={styles.navLink}
+          accessibilityRole="button"
+          accessibilityLabel="Gym Locations"
+          onPress={() => router.push("/gym-location/manage")}
+        >
+          <FontAwesome name="map-marker" size={16} color={colors.primary} />
+          <Text style={styles.navLinkText}>Gym Locations</Text>
+          <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
+        </Pressable>
+        <Pressable
+          style={styles.navLink}
+          accessibilityRole="button"
+          accessibilityLabel="Create Custom Exercise"
+          onPress={() => router.push("/exercise/create")}
+        >
+          <FontAwesome name="plus-square-o" size={16} color={colors.primary} />
+          <Text style={styles.navLinkText}>Create Custom Exercise</Text>
+          <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
+        </Pressable>
       </View>
 
       <View style={{ height: 40 }} />
@@ -358,8 +378,15 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   actionBtnText: { fontSize: 15, fontWeight: "600", color: colors.textWhite },
-  actionBtnSecondary: {
+  actionBtnSecondaryButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
     backgroundColor: colors.primaryLight,
+    borderRadius: 10,
+    paddingVertical: 14,
   },
   actionBtnTextSecondary: { fontSize: 15, fontWeight: "600", color: colors.primary },
 

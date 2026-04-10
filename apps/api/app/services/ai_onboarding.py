@@ -6,7 +6,10 @@ import uuid
 from datetime import datetime, timezone
 from typing import Literal
 
-from anthropic import Anthropic
+try:
+    from anthropic import Anthropic
+except ImportError:  # pragma: no cover - optional dependency in local dev/test
+    Anthropic = None
 from pydantic import BaseModel, ConfigDict, ValidationError
 from sqlalchemy import select
 
@@ -26,6 +29,14 @@ _status_redis_client = None
 
 class AIProfileGenerationError(RuntimeError):
     pass
+
+
+def get_ai_unavailable_reason() -> str | None:
+    if not settings.anthropic_api_key:
+        return "AI profile generation is unavailable until the Anthropic API key is configured."
+    if Anthropic is None:
+        return "AI profile generation is unavailable because the Anthropic SDK is not installed."
+    return None
 
 
 class DosageRecommendation(BaseModel):
@@ -191,7 +202,7 @@ async def resolve_ai_status(supplement: Supplement) -> tuple[AIProfileStatus, st
     if status is not None:
         return status
 
-    return "generating", None
+    return "failed", "AI profile generation is not running for this item. Retry onboarding to generate it."
 
 
 async def resolve_medication_ai_status(medication: Medication) -> tuple[AIProfileStatus, str | None]:
@@ -202,7 +213,7 @@ async def resolve_medication_ai_status(medication: Medication) -> tuple[AIProfil
     if status is not None:
         return status
 
-    return "generating", None
+    return "failed", "AI profile generation is not running for this item. Retry onboarding to generate it."
 
 
 def _build_prompt(name: str, category: str | None, form: str | None) -> str:
@@ -226,8 +237,9 @@ Requirements:
 
 
 def generate_supplement_profile(name: str, category: str | None, form: str | None) -> dict:
-    if not settings.anthropic_api_key:
-        raise AIProfileGenerationError("Anthropic API key is not configured.")
+    unavailable_reason = get_ai_unavailable_reason()
+    if unavailable_reason:
+        raise AIProfileGenerationError(unavailable_reason)
 
     client = Anthropic(api_key=settings.anthropic_api_key)
     response = client.messages.create(
@@ -308,8 +320,9 @@ Requirements:
 
 
 def generate_medication_profile(name: str, category: str | None, form: str | None) -> dict:
-    if not settings.anthropic_api_key:
-        raise AIProfileGenerationError("Anthropic API key is not configured.")
+    unavailable_reason = get_ai_unavailable_reason()
+    if unavailable_reason:
+        raise AIProfileGenerationError(unavailable_reason)
 
     client = Anthropic(api_key=settings.anthropic_api_key)
     response = client.messages.create(
@@ -350,6 +363,14 @@ def generate_medication_profile(name: str, category: str | None, form: str | Non
 def _public_error_message(exc: Exception) -> str:
     if isinstance(exc, AIProfileGenerationError):
         return str(exc)
+
+    message = str(exc).lower()
+    if any(token in message for token in ("credit", "credits", "quota", "billing", "insufficient")):
+        return "AI profile generation is unavailable because the Anthropic account is out of credits. Purchase more credits and retry."
+    if any(token in message for token in ("api key", "authentication", "auth", "unauthorized", "forbidden")):
+        return "AI profile generation failed because the Anthropic credentials were rejected. Update the API key and retry."
+    if any(token in message for token in ("connection", "connect", "network", "dns", "timed out", "timeout", "temporarily unavailable")):
+        return "AI profile generation could not reach Anthropic. Check the network connection and retry."
     return "AI profile generation failed. Please retry."
 
 

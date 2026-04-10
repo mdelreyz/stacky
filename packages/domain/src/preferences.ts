@@ -132,6 +132,7 @@ export interface WizardTurn {
 }
 
 export interface WizardRecommendedItem {
+  catalog_id: string;
   name: string;
   item_type: string;
   reason: string;
