@@ -1,32 +1,27 @@
 # Session Resume
 
 ## What was worked on
-Polished the current Expo/FastAPI product loop rather than expanding new pillars. The main work was on web/mobile shell behavior, the protocol wizard contract, AI onboarding failure states, local Anthropic env handling, workbook-backed supplement seeding, and stricter repo-local noomix rules.
+Finished the broad frontend polish and follow-up refactor pass across the Expo app. The session focused on completing the premium ambient/glass UI rollout on the remaining secondary screens, utility schedule/manage routes, and exercise/care detail flows, then tightening the refactor plan so it reflects actual remaining debt.
 
 ## Current state
 
 ### Done
-- Web auth guard now blocks unauthenticated access into app routes and auth screens redirect correctly after login/signup
-- Tabs/header chrome was simplified, preferences were tightened, and several rough UI issues were removed from exercise/profile flows
-- Wizard flow now avoids duplicate user turns, hides raw completion JSON, returns real `catalog_id` values, and can apply recommendations successfully
-- Preference caps were raised to 100 for supplements and medications
-- AI onboarding now surfaces explicit failure reasons for missing API config, missing SDK, connectivity/auth issues, or exhausted credits instead of appearing stuck
-- Backend now reads `ANTHROPIC_API_KEY` directly from the gitignored repo-root `.env`
-- Supplement seed flow can import additional entries from `data/Supplement_Stack.xls` via a conservative parser
-- `CLAUDE.md` noomix section is now an explicit operational checklist rather than soft guidance
+- Premium ambient/glass UI treatment now covers the user-facing mobile/web product surface, including recommendations, wizard, tracking, profile settings, supplement detail/schedule/refill flows, medication/therapy/peptide detail and schedule flows, nutrition add/manage, protocol manage, and the full workout/exercise stack
+- `REFACTORING_PLAN.md` now marks UI & Design healthy; M-23 and M-24 are closed
+- Shared AI-profile parsing helpers were extracted to `apps/mobile/lib/ai-profile.ts`
+- The stale refactor-plan warning about unused `puppeteer` was corrected because `docs/generate-pdf.mjs` still uses it
+- Mobile typecheck is green: `npx tsc -p apps/mobile/tsconfig.json --noEmit`
+- Local `main` is clean and the existing work commit was pushed to `origin/main`
 
 ### Still in progress
-- Live seeding into the real local Postgres database was not applied because nothing was listening on `localhost:5432` from this shell
-- The workbook importer is intentionally conservative and still includes some borderline catalog names that may deserve later curation
-- Mobile type-check still has pre-existing Expo Router `href` typing failures outside this session’s changes
+- Structural cleanup is still open: duplicated backend user-item routes, a few oversized files, and general maintainability work now matter more than surface polish
+- Visual QA was not re-run in a live browser/device session after every route-level polish change, so there may still be tuning opportunities in spacing or motion
 
 ## Immediate next steps
-1. Start the local Postgres-backed API database and run `python3 apps/api/scripts/seed.py` to apply the workbook-derived supplement additions for real
-2. Curate the imported supplement list if you want stricter filtering or category/goal mapping from the workbook
-3. Re-test supplement AI onboarding end-to-end with the live backend to confirm provider failures and success states read well in the UI
-4. Clean up the pre-existing `Link href` typing issues in `components/protocols/*` so `npx tsc --noEmit` can go green again
+1. Start on structural refactors in `REFACTORING_PLAN.md`, especially M-1 for duplicated backend user-item routes
+2. Split or extract the largest watch-zone frontend files like `app/wizard.tsx`, `app/recommendations.tsx`, and `app/profile/preferences.tsx`
+3. Do a visual pass in Expo web/device to tune any remaining spacing, glow intensity, or motion timing issues now that the full design system is rolled out
 
 ## Open questions or blockers
-- `apps/mobile/app.json` and `apps/mobile/components/ProtocolsLogo.tsx` had unrelated pre-existing edits and were intentionally left out of the session commit
-- `data/Supplement_Stack.xls` is local source material and was intentionally not committed
-- The real DB seed is blocked until the local Postgres instance is available
+- No functional blocker is open from this session
+- The next work should be chosen by code-health leverage, not by missing premium UI coverage
