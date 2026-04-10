@@ -106,7 +106,11 @@ export default function ActiveSessionScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.pickerHeader}>
-          <Pressable onPress={() => setShowPicker(false)}>
+          <Pressable
+            onPress={() => setShowPicker(false)}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
           </Pressable>
           <Text style={styles.pickerTitle}>Add Exercise</Text>
@@ -170,7 +174,12 @@ export default function ActiveSessionScreen() {
 
         {/* Add exercise */}
         {!isComplete && (
-          <Pressable style={styles.addExBtn} onPress={() => setShowPicker(true)}>
+          <Pressable
+            style={styles.addExBtn}
+            onPress={() => setShowPicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add Exercise"
+          >
             <FontAwesome name="plus" size={14} color={colors.primary} />
             <Text style={styles.addExText}>Add Exercise</Text>
           </Pressable>
@@ -180,7 +189,12 @@ export default function ActiveSessionScreen() {
       {/* Complete button */}
       {!isComplete && (
         <View style={styles.footer}>
-          <Pressable style={styles.completeBtn} onPress={handleComplete}>
+          <Pressable
+            style={styles.completeBtn}
+            onPress={handleComplete}
+            accessibilityRole="button"
+            accessibilityLabel="Finish Workout"
+          >
             <FontAwesome name="check-circle" size={18} color={colors.textWhite} />
             <Text style={styles.completeBtnText}>Finish Workout</Text>
           </Pressable>

@@ -49,7 +49,7 @@ export default function NutritionScreen() {
           </Text>
         </View>
         <Link href="/nutrition/add" asChild>
-          <Pressable style={styles.addButton}>
+          <Pressable style={styles.addButton} accessibilityRole="button" accessibilityLabel="Add nutrition plan">
             <FontAwesome name="plus" size={14} color={colors.white} />
             <Text style={styles.addButtonText}>New</Text>
           </Pressable>
@@ -71,7 +71,7 @@ export default function NutritionScreen() {
 
           return (
             <Link key={plan.id} href={`/nutrition/${plan.id}`} asChild>
-              <Pressable style={styles.planCard}>
+              <Pressable style={styles.planCard} accessibilityRole="button" accessibilityLabel={plan.name}>
                 <View style={styles.planHeader}>
                   <View style={styles.planInfo}>
                     <Text style={styles.planName}>{plan.name}</Text>

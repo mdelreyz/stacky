@@ -128,11 +128,11 @@ export default function ProfileLocationScreen() {
         </Text>
       </View>
 
-      <Pressable style={[styles.primaryButton, saving && styles.buttonDisabled]} onPress={handleSave} disabled={saving}>
+      <Pressable style={[styles.primaryButton, saving && styles.buttonDisabled]} onPress={handleSave} disabled={saving} accessibilityRole="button" accessibilityLabel="Save location">
         <Text style={styles.primaryText}>{saving ? "Saving..." : "Save Location"}</Text>
       </Pressable>
 
-      <Pressable style={[styles.secondaryButton, saving && styles.buttonDisabled]} onPress={handleClear} disabled={saving}>
+      <Pressable style={[styles.secondaryButton, saving && styles.buttonDisabled]} onPress={handleClear} disabled={saving} accessibilityRole="button" accessibilityLabel="Clear location">
         <Text style={styles.secondaryText}>Clear Saved Location</Text>
       </Pressable>
     </ScrollView>

@@ -53,6 +53,8 @@ export function ExerciseSearchPicker({
       <Pressable
         style={[styles.item, isSelected && styles.itemSelected]}
         onPress={() => onSelect(item)}
+        accessibilityRole="button"
+        accessibilityLabel={`${item.name}${isSelected ? ", selected" : ""}`}
       >
         <View style={styles.itemLeft}>
           <Text style={styles.itemName}>{item.name}</Text>
@@ -80,12 +82,12 @@ export function ExerciseSearchPicker({
           autoCapitalize="none"
         />
         {search.length > 0 && (
-          <Pressable onPress={() => setSearch("")}>
+          <Pressable onPress={() => setSearch("")} accessibilityRole="button" accessibilityLabel="Clear search">
             <FontAwesome name="times" size={14} color={colors.textMuted} />
           </Pressable>
         )}
       </View>
-      <Pressable style={styles.createBtn} onPress={() => router.push("/exercise/create")}>
+      <Pressable style={styles.createBtn} onPress={() => router.push("/exercise/create")} accessibilityRole="button" accessibilityLabel="Create custom exercise">
         <FontAwesome name="plus" size={12} color={colors.primary} />
         <Text style={styles.createBtnText}>Create Custom Exercise</Text>
       </Pressable>

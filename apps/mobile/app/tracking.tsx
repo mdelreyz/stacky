@@ -182,7 +182,7 @@ function FilterChip({
   onPress: () => void;
 }) {
   return (
-    <Pressable style={[styles.filterChip, selected && styles.filterChipSelected]} onPress={onPress}>
+    <Pressable style={[styles.filterChip, selected && styles.filterChipSelected]} onPress={onPress} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }}>
       <Text style={[styles.filterChipText, selected && styles.filterChipTextSelected]}>{label}</Text>
     </Pressable>
   );

@@ -18,6 +18,9 @@ export function OptionGrid({
           key={option.value}
           style={[styles.chip, selected === option.value && styles.chipSelected]}
           onPress={() => onSelect(option.value)}
+          accessibilityRole="button"
+          accessibilityLabel={option.label}
+          accessibilityState={{ selected: selected === option.value }}
         >
           <Text style={[styles.chipText, selected === option.value && styles.chipTextSelected]}>
             {option.label}

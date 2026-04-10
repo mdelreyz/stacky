@@ -39,6 +39,8 @@ export function DailyPlanWindowCard({
             style={[styles.markAllButton, markingAll && styles.markAllDisabled]}
             onPress={handleMarkAll}
             disabled={markingAll}
+            accessibilityRole="button"
+            accessibilityLabel={`Mark all ${windowPlan.display_time} items as taken`}
           >
             {markingAll ? (
               <ActivityIndicator size="small" color={colors.success} />
@@ -107,6 +109,8 @@ function AdherenceActions({
         ]}
         onPress={onTake}
         disabled={loading}
+        accessibilityRole="button"
+        accessibilityLabel={`Mark ${item.name} as taken`}
       >
         <Text style={styles.takeButtonText}>
           {loading && item.adherence_status !== "taken"
@@ -127,6 +131,8 @@ function AdherenceActions({
         ]}
         onPress={onSkip}
         disabled={loading}
+        accessibilityRole="button"
+        accessibilityLabel={`Skip ${item.name}`}
       >
         <Text style={styles.skipButtonText}>Skip</Text>
       </Pressable>

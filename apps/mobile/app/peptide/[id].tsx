@@ -200,7 +200,7 @@ export default function PeptideDetailScreen() {
 
       {/* Start button */}
       <Link href={`/peptide/${peptide.id}/schedule`} asChild>
-        <Pressable style={styles.primaryButton}>
+        <Pressable style={styles.primaryButton} accessibilityRole="button" accessibilityLabel="Add to My Protocol">
           <FontAwesome name="plus" size={16} color={colors.white} />
           <Text style={styles.primaryButtonText}>Add to My Protocol</Text>
         </Pressable>

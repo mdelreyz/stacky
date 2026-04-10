@@ -115,6 +115,9 @@ export default function CreateRegimeScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.dayOptions}>
               <Pressable
                 style={[styles.routineOption, !schedule[day] && styles.routineOptionSelected]}
+                accessibilityRole="button"
+                accessibilityLabel={`${DAY_LABELS[day]}: Rest day`}
+                accessibilityState={{ selected: !schedule[day] }}
                 onPress={() => setSchedule({ ...schedule, [day]: null })}
               >
                 <Text style={[styles.routineOptionText, !schedule[day] && styles.routineOptionTextSelected]}>
@@ -125,6 +128,9 @@ export default function CreateRegimeScreen() {
                 <Pressable
                   key={r.id}
                   style={[styles.routineOption, schedule[day] === r.id && styles.routineOptionSelected]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${DAY_LABELS[day]}: ${r.name}`}
+                  accessibilityState={{ selected: schedule[day] === r.id }}
                   onPress={() => setSchedule({ ...schedule, [day]: r.id })}
                 >
                   <Text
@@ -145,6 +151,8 @@ export default function CreateRegimeScreen() {
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={handleSave}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel="Create Regime"
         >
           <Text style={styles.saveBtnText}>{saving ? "Saving..." : "Create Regime"}</Text>
         </Pressable>

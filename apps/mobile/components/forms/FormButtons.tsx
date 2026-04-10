@@ -24,6 +24,8 @@ export function FormButtons({
         style={[styles.primaryButton, saving && styles.buttonDisabled]}
         onPress={onSubmit}
         disabled={saving}
+        accessibilityRole="button"
+        accessibilityLabel={primaryLabel}
       >
         {saving ? (
           <ActivityIndicator color={colors.white} />
@@ -44,6 +46,8 @@ export function FormButtons({
           ]}
           onPress={onSecondaryAction}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel={secondaryLabel}
         >
           <Text
             style={[

@@ -151,7 +151,7 @@ export default function TherapyDetailScreen() {
 
       {/* Start button */}
       <Link href={`/therapy/${therapy.id}/schedule`} asChild>
-        <Pressable style={styles.primaryButton}>
+        <Pressable style={styles.primaryButton} accessibilityRole="button" accessibilityLabel="Start Protocol">
           <FontAwesome name="play" size={16} color={colors.white} />
           <Text style={styles.primaryButtonText}>Start Protocol</Text>
         </Pressable>

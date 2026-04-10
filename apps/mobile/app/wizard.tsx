@@ -133,6 +133,8 @@ export default function WizardScreen() {
                 onPress={() => {
                   setInput(prompt);
                 }}
+                accessibilityRole="button"
+                accessibilityLabel={prompt}
               >
                 <Text style={styles.promptChipText}>{prompt}</Text>
               </Pressable>
@@ -205,6 +207,8 @@ export default function WizardScreen() {
                   style={[styles.applyButton, applying && styles.buttonDisabled]}
                   onPress={handleApply}
                   disabled={applying}
+                  accessibilityRole="button"
+                  accessibilityLabel="Add all to my protocol"
                 >
                   {applying ? (
                     <ActivityIndicator color={colors.white} />
@@ -216,7 +220,12 @@ export default function WizardScreen() {
                   )}
                 </Pressable>
 
-                <Pressable style={styles.startOverButton} onPress={startOver}>
+                <Pressable
+                  style={styles.startOverButton}
+                  onPress={startOver}
+                  accessibilityRole="button"
+                  accessibilityLabel="Start over"
+                >
                   <Text style={styles.startOverText}>Start Over</Text>
                 </Pressable>
               </View>
@@ -243,6 +252,8 @@ export default function WizardScreen() {
             style={[styles.sendButton, (!input.trim() || sending) && styles.sendButtonDisabled]}
             onPress={handleSend}
             disabled={!input.trim() || sending}
+            accessibilityRole="button"
+            accessibilityLabel="Send message"
           >
             <FontAwesome name="send" size={16} color={colors.white} />
           </Pressable>

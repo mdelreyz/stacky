@@ -51,10 +51,13 @@ export function SetInputRow({ setNumber, onLog, previousSet }: SetInputRowProps)
       <Pressable
         style={[styles.warmupBtn, isWarmup && styles.warmupBtnActive]}
         onPress={() => setIsWarmup(!isWarmup)}
+        accessibilityRole="checkbox"
+        accessibilityLabel="Warmup set"
+        accessibilityState={{ checked: isWarmup }}
       >
         <Text style={[styles.warmupText, isWarmup && styles.warmupTextActive]}>W</Text>
       </Pressable>
-      <Pressable style={styles.logBtn} onPress={handleLog}>
+      <Pressable style={styles.logBtn} onPress={handleLog} accessibilityRole="button" accessibilityLabel={`Log set ${setNumber}`}>
         <FontAwesome name="check" size={14} color={colors.textWhite} />
       </Pressable>
     </View>

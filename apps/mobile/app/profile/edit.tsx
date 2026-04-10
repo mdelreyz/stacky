@@ -86,6 +86,8 @@ export default function EditProfileScreen() {
         style={[styles.primaryButton, saving && styles.buttonDisabled]}
         onPress={handleSave}
         disabled={saving}
+        accessibilityRole="button"
+        accessibilityLabel="Save Changes"
       >
         <Text style={styles.primaryText}>{saving ? "Saving..." : "Save Changes"}</Text>
       </Pressable>

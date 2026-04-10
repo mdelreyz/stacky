@@ -118,6 +118,9 @@ export default function RecommendationsScreen() {
                 key={opt.value}
                 style={[styles.typeChip, selected && styles.typeChipSelected]}
                 onPress={() => toggleType(opt.value)}
+                accessibilityRole="checkbox"
+                accessibilityLabel={opt.label}
+                accessibilityState={{ checked: selected }}
               >
                 <FontAwesome
                   name={opt.icon}
@@ -146,6 +149,8 @@ export default function RecommendationsScreen() {
           style={[styles.generateButton, loading && styles.buttonDisabled]}
           onPress={handleGetRecommendations}
           disabled={loading}
+          accessibilityRole="button"
+          accessibilityLabel="Get recommendations"
         >
           {loading ? (
             <ActivityIndicator color={colors.white} />
@@ -200,6 +205,8 @@ export default function RecommendationsScreen() {
                 style={[styles.applyButton, (applying || selectedItems.size === 0) && styles.buttonDisabled]}
                 onPress={handleApply}
                 disabled={applying || selectedItems.size === 0}
+                accessibilityRole="button"
+                accessibilityLabel={`Add ${selectedItems.size} item${selectedItems.size !== 1 ? "s" : ""} to my protocol`}
               >
                 {applying ? (
                   <ActivityIndicator color={colors.white} />
@@ -242,6 +249,9 @@ function RecommendationCard({
     <Pressable
       style={[styles.recCard, selected && styles.recCardSelected]}
       onPress={onToggle}
+      accessibilityRole="checkbox"
+      accessibilityLabel={`${item.name}, ${snakeCaseToLabel(item.item_type)}`}
+      accessibilityState={{ checked: selected }}
     >
       <View style={styles.recHeader}>
         <FontAwesome

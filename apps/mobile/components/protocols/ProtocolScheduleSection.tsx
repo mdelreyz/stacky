@@ -32,6 +32,9 @@ export function ProtocolScheduleSection({
             <Pressable
               key={option.value}
               style={[styles.optionChip, selected && styles.optionChipSelected]}
+              accessibilityRole="button"
+              accessibilityLabel={option.label}
+              accessibilityState={{ selected }}
               onPress={() =>
                 setState((current) => ({
                   ...current,
@@ -54,6 +57,9 @@ export function ProtocolScheduleSection({
       {schedule.type === "manual" ? (
         <Pressable
           style={[styles.toggleRow, schedule.manualIsActive && styles.toggleRowActive]}
+          accessibilityRole="switch"
+          accessibilityLabel="Manual regime active"
+          accessibilityState={{ checked: schedule.manualIsActive }}
           onPress={() =>
             setState((current) => ({
               ...current,
@@ -123,6 +129,9 @@ export function ProtocolScheduleSection({
                 <Pressable
                   key={week}
                   style={[styles.optionChip, selected && styles.optionChipSelected]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Week ${week}`}
+                  accessibilityState={{ selected }}
                   onPress={() =>
                     setState((current) => ({
                       ...current,

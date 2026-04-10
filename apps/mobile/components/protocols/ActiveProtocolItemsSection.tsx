@@ -46,7 +46,7 @@ export function ActiveProtocolItemsSection({
       ) : (
         items.map((item) => (
           <Link key={item.id} href={item.href} asChild>
-            <Pressable style={styles.card}>
+            <Pressable style={styles.card} accessibilityRole="button" accessibilityLabel={item.name}>
               <View style={styles.info}>
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={styles.meta}>{item.meta}</Text>

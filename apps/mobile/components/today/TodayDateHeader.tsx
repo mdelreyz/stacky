@@ -21,7 +21,7 @@ export function TodayDateHeader({
       <Text style={styles.title}>{formatIsoDate(selectedDate)}</Text>
 
       <View style={styles.controls}>
-        <Pressable style={styles.arrowButton} onPress={() => onChangeDay(-1)}>
+        <Pressable style={styles.arrowButton} onPress={() => onChangeDay(-1)} accessibilityRole="button" accessibilityLabel="Previous day">
           <FontAwesome name="chevron-left" size={14} color={colors.textSecondary} />
         </Pressable>
         {isToday ? (
@@ -29,11 +29,11 @@ export function TodayDateHeader({
             <Text style={styles.todayBadgeText}>Today</Text>
           </View>
         ) : (
-          <Pressable style={styles.todayButton} onPress={onJumpToToday}>
+          <Pressable style={styles.todayButton} onPress={onJumpToToday} accessibilityRole="button" accessibilityLabel="Jump to today">
             <Text style={styles.todayButtonText}>Jump to Today</Text>
           </Pressable>
         )}
-        <Pressable style={styles.arrowButton} onPress={() => onChangeDay(1)}>
+        <Pressable style={styles.arrowButton} onPress={() => onChangeDay(1)} accessibilityRole="button" accessibilityLabel="Next day">
           <FontAwesome name="chevron-right" size={14} color={colors.textSecondary} />
         </Pressable>
       </View>

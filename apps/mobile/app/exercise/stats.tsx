@@ -226,7 +226,12 @@ export default function ExerciseStatsScreen() {
           <FontAwesome name="bar-chart" size={32} color={colors.textMuted} />
           <Text style={styles.emptyText}>No workout data yet</Text>
           <Text style={styles.emptyHint}>Complete workouts to see your stats here</Text>
-          <Pressable style={styles.startBtn} onPress={() => router.push("/workout-session/start")}>
+          <Pressable
+            style={styles.startBtn}
+            onPress={() => router.push("/workout-session/start")}
+            accessibilityRole="button"
+            accessibilityLabel="Start a Workout"
+          >
             <Text style={styles.startBtnText}>Start a Workout</Text>
           </Pressable>
         </View>

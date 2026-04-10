@@ -152,6 +152,8 @@ export function ProtocolForm({
         style={[styles.primaryButton, saving && styles.buttonDisabled]}
         onPress={onSubmit}
         disabled={saving}
+        accessibilityRole="button"
+        accessibilityLabel={primaryLabel}
       >
         {saving ? (
           <ActivityIndicator color={colors.white} />
@@ -168,6 +170,8 @@ export function ProtocolForm({
           style={[styles.secondaryButton, saving && styles.buttonDisabled]}
           onPress={onSecondaryAction}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel={secondaryLabel}
         >
           <Text style={styles.secondaryButtonText}>{secondaryLabel}</Text>
         </Pressable>

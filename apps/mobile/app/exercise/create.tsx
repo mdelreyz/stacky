@@ -115,6 +115,9 @@ export default function CreateExerciseScreen() {
             <Pressable
               key={c.value}
               style={[styles.chip, category === c.value && styles.chipSelected]}
+              accessibilityRole="button"
+              accessibilityLabel={`Category: ${c.label}`}
+              accessibilityState={{ selected: category === c.value }}
               onPress={() => {
                 setCategory(c.value);
                 setIsCompound(c.value === "compound" || c.value === "olympic");
@@ -133,6 +136,9 @@ export default function CreateExerciseScreen() {
             <Pressable
               key={m.value}
               style={[styles.chip, primaryMuscle === m.value && styles.chipSelected]}
+              accessibilityRole="button"
+              accessibilityLabel={`Primary muscle: ${m.label}`}
+              accessibilityState={{ selected: primaryMuscle === m.value }}
               onPress={() => {
                 setPrimaryMuscle(m.value);
                 setSecondaryMuscles((prev) => prev.filter((s) => s !== m.value));
@@ -153,6 +159,9 @@ export default function CreateExerciseScreen() {
             <Pressable
               key={e.value}
               style={[styles.chip, equipment === e.value && styles.chipSelected]}
+              accessibilityRole="button"
+              accessibilityLabel={`Equipment: ${e.label}`}
+              accessibilityState={{ selected: equipment === e.value }}
               onPress={() => setEquipment(e.value)}
             >
               <Text style={[styles.chipText, equipment === e.value && styles.chipTextSelected]}>
@@ -168,6 +177,9 @@ export default function CreateExerciseScreen() {
             <Pressable
               key={m.value}
               style={[styles.chip, secondaryMuscles.includes(m.value) && styles.chipSelectedSoft]}
+              accessibilityRole="checkbox"
+              accessibilityLabel={`Secondary muscle: ${m.label}`}
+              accessibilityState={{ checked: secondaryMuscles.includes(m.value) }}
               onPress={() => toggleSecondary(m.value)}
             >
               <Text
@@ -208,6 +220,8 @@ export default function CreateExerciseScreen() {
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={handleSave}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel="Create Exercise"
         >
           <FontAwesome name="plus-circle" size={16} color={colors.textWhite} />
           <Text style={styles.saveBtnText}>{saving ? "Creating..." : "Create Exercise"}</Text>

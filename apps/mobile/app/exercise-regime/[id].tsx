@@ -84,6 +84,8 @@ export default function RegimeDetailScreen() {
               {entry ? (
                 <Pressable
                   style={styles.routineCard}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View routine: ${entry.routine.name}`}
                   onPress={() => router.push(`/workout-routine/${entry.routine_id}`)}
                 >
                   <Text style={styles.routineName}>{entry.routine.name}</Text>
@@ -102,7 +104,12 @@ export default function RegimeDetailScreen() {
       </View>
 
       <View style={styles.section}>
-        <Pressable style={styles.deleteBtn} onPress={handleDelete}>
+        <Pressable
+          style={styles.deleteBtn}
+          onPress={handleDelete}
+          accessibilityRole="button"
+          accessibilityLabel="Deactivate Regime"
+        >
           <FontAwesome name="trash-o" size={14} color={colors.danger} />
           <Text style={styles.deleteBtnText}>Deactivate Regime</Text>
         </Pressable>

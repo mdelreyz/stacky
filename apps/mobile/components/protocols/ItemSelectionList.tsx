@@ -48,6 +48,9 @@ export function ItemSelectionList<T extends SelectableItem>({
               onPress={() => {
                 if (!lockedInactive) onToggle(item.id);
               }}
+              accessibilityRole="checkbox"
+              accessibilityLabel={item.title}
+              accessibilityState={{ checked: selected, disabled: lockedInactive }}
             >
               <View style={styles.optionInfo}>
                 <View style={styles.optionTitleRow}>

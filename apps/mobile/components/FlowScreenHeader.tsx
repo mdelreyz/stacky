@@ -13,7 +13,7 @@ export function FlowScreenHeader({
 }) {
   return (
     <View style={styles.header}>
-      <Pressable onPress={() => router.back()} style={styles.backButton}>
+      <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
         <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
       </Pressable>
       <View style={styles.content}>

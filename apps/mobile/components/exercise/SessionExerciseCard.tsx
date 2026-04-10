@@ -32,7 +32,7 @@ export function SessionExerciseCard({ exercise, onLogSet }: SessionExerciseCardP
 
   return (
     <View style={styles.card}>
-      <Pressable style={styles.header} onPress={() => setExpanded(!expanded)}>
+      <Pressable style={styles.header} onPress={() => setExpanded(!expanded)} accessibilityRole="button" accessibilityLabel={`${exercise.exercise.name}, ${expanded ? "collapse" : "expand"}`}>
         <View style={styles.headerLeft}>
           <Text style={styles.exerciseName}>{exercise.exercise.name}</Text>
           <Text style={styles.exerciseMeta}>

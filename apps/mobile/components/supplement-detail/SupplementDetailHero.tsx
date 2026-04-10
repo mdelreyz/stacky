@@ -16,7 +16,7 @@ export function SupplementDetailHero({
   return (
     <>
       <View style={styles.topBar}>
-        <Pressable onPress={onBack} style={styles.backButton}>
+        <Pressable onPress={onBack} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
           <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
         </Pressable>
         <Text style={styles.topTitle} numberOfLines={1}>
@@ -41,7 +41,7 @@ export function SupplementDetailHero({
         <Text style={styles.description}>{supplement.description}</Text>
       ) : null}
 
-      <Pressable style={styles.primaryAction} onPress={onAddToProtocol}>
+      <Pressable style={styles.primaryAction} onPress={onAddToProtocol} accessibilityRole="button" accessibilityLabel="Add to my protocol">
         <FontAwesome name="plus-circle" size={16} color={colors.white} />
         <Text style={styles.primaryActionText}>Add to My Protocol</Text>
       </Pressable>

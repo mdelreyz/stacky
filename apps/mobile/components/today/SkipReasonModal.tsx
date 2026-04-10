@@ -35,8 +35,8 @@ export function SkipReasonModal({ visible, itemName, onConfirm, onCancel }: Skip
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
-      <Pressable style={styles.overlay} onPress={handleCancel}>
-        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()}>
+      <Pressable style={styles.overlay} onPress={handleCancel} accessibilityLabel="Close modal">
+        <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()} accessibilityRole="none">
           <Text style={styles.title}>Skip {itemName}?</Text>
           <Text style={styles.subtitle}>Add an optional reason for your records.</Text>
 
@@ -46,6 +46,8 @@ export function SkipReasonModal({ visible, itemName, onConfirm, onCancel }: Skip
                 key={qr}
                 style={styles.quickChip}
                 onPress={() => handleConfirm(qr)}
+                accessibilityRole="button"
+                accessibilityLabel={`Skip reason: ${qr}`}
               >
                 <Text style={styles.quickChipText}>{qr}</Text>
               </Pressable>
@@ -63,12 +65,12 @@ export function SkipReasonModal({ visible, itemName, onConfirm, onCancel }: Skip
           />
 
           <View style={styles.buttonRow}>
-            <Pressable style={styles.skipButton} onPress={() => handleConfirm()}>
+            <Pressable style={styles.skipButton} onPress={() => handleConfirm()} accessibilityRole="button" accessibilityLabel={reason.trim() ? "Skip with reason" : "Skip without reason"}>
               <Text style={styles.skipButtonText}>
                 {reason.trim() ? "Skip with Reason" : "Skip Without Reason"}
               </Text>
             </Pressable>
-            <Pressable style={styles.cancelButton} onPress={handleCancel}>
+            <Pressable style={styles.cancelButton} onPress={handleCancel} accessibilityRole="button" accessibilityLabel="Cancel">
               <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
           </View>

@@ -157,7 +157,7 @@ def run_wizard_turn(
             protocol_name = parsed.get("protocol_name")
             summary = parsed.get("summary")
     except (json.JSONDecodeError, TypeError):
-        pass
+        logger.debug("Assistant response is not wizard-complete JSON, treating as conversational turn")
 
     return WizardResult(
         assistant_message=assistant_text,

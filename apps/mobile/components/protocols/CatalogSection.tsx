@@ -51,6 +51,9 @@ export function CatalogSection({
           <Pressable
             style={[styles.chip, !activeCategory && styles.chipActive]}
             onPress={() => setActiveCategory(null)}
+            accessibilityRole="button"
+            accessibilityLabel="All categories"
+            accessibilityState={{ selected: !activeCategory }}
           >
             <Text style={[styles.chipText, !activeCategory && styles.chipTextActive]}>All</Text>
           </Pressable>
@@ -59,6 +62,9 @@ export function CatalogSection({
               key={cat}
               style={[styles.chip, activeCategory === cat && styles.chipActive]}
               onPress={() => setActiveCategory(activeCategory === cat ? null : cat)}
+              accessibilityRole="button"
+              accessibilityLabel={cat}
+              accessibilityState={{ selected: activeCategory === cat }}
             >
               <Text style={[styles.chipText, activeCategory === cat && styles.chipTextActive]}>{cat}</Text>
             </Pressable>
@@ -72,7 +78,7 @@ export function CatalogSection({
       ) : (
         filtered.map((item) => (
           <Link key={item.id} href={item.href} asChild>
-            <Pressable style={styles.card}>
+            <Pressable style={styles.card} accessibilityRole="button" accessibilityLabel={item.name}>
               <View style={styles.infoRow}>
                 <View style={styles.iconWrap}>
                   <FontAwesome name={item.iconName} size={14} color={colors.primaryDark} />

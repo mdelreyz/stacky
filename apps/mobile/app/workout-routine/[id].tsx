@@ -88,7 +88,12 @@ export default function RoutineDetailScreen() {
 
       {/* Start button */}
       <View style={styles.section}>
-        <Pressable style={styles.startBtn} onPress={handleStartWorkout}>
+        <Pressable
+          style={styles.startBtn}
+          onPress={handleStartWorkout}
+          accessibilityRole="button"
+          accessibilityLabel={`Start workout: ${routine.name}`}
+        >
           <FontAwesome name="play" size={16} color={colors.textWhite} />
           <Text style={styles.startBtnText}>Start Workout</Text>
         </Pressable>
@@ -120,7 +125,12 @@ export default function RoutineDetailScreen() {
 
       {/* Actions */}
       <View style={styles.section}>
-        <Pressable style={styles.deleteBtn} onPress={handleDelete}>
+        <Pressable
+          style={styles.deleteBtn}
+          onPress={handleDelete}
+          accessibilityRole="button"
+          accessibilityLabel="Deactivate Routine"
+        >
           <FontAwesome name="trash-o" size={14} color={colors.danger} />
           <Text style={styles.deleteBtnText}>Deactivate Routine</Text>
         </Pressable>

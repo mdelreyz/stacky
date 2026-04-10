@@ -88,13 +88,23 @@ export default function CreateRoutineScreen() {
     return (
       <View style={styles.container}>
         <View style={styles.pickerHeader}>
-          <Pressable onPress={() => setShowPicker(false)} style={styles.pickerDone}>
+          <Pressable
+            onPress={() => setShowPicker(false)}
+            style={styles.pickerDone}
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+          >
             <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
           </Pressable>
           <Text style={styles.pickerTitle}>
             Add Exercises ({exercises.length} selected)
           </Text>
-          <Pressable onPress={() => setShowPicker(false)} style={styles.pickerDone}>
+          <Pressable
+            onPress={() => setShowPicker(false)}
+            style={styles.pickerDone}
+            accessibilityRole="button"
+            accessibilityLabel="Done adding exercises"
+          >
             <Text style={styles.pickerDoneText}>Done</Text>
           </Pressable>
         </View>
@@ -145,7 +155,12 @@ export default function CreateRoutineScreen() {
         {/* Exercises */}
         <View style={styles.exercisesHeader}>
           <Text style={styles.label}>Exercises ({exercises.length})</Text>
-          <Pressable style={styles.addExBtn} onPress={() => setShowPicker(true)}>
+          <Pressable
+            style={styles.addExBtn}
+            onPress={() => setShowPicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add exercises"
+          >
             <FontAwesome name="plus" size={12} color={colors.primary} />
             <Text style={styles.addExText}>Add</Text>
           </Pressable>
@@ -159,13 +174,25 @@ export default function CreateRoutineScreen() {
                 <Text style={styles.exerciseName}>{entry.exercise.name}</Text>
               </View>
               <View style={styles.exerciseActions}>
-                <Pressable onPress={() => moveExercise(index, -1)}>
+                <Pressable
+                  onPress={() => moveExercise(index, -1)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Move ${entry.exercise.name} up`}
+                >
                   <FontAwesome name="arrow-up" size={14} color={colors.textMuted} />
                 </Pressable>
-                <Pressable onPress={() => moveExercise(index, 1)}>
+                <Pressable
+                  onPress={() => moveExercise(index, 1)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Move ${entry.exercise.name} down`}
+                >
                   <FontAwesome name="arrow-down" size={14} color={colors.textMuted} />
                 </Pressable>
-                <Pressable onPress={() => removeExercise(index)}>
+                <Pressable
+                  onPress={() => removeExercise(index)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remove ${entry.exercise.name}`}
+                >
                   <FontAwesome name="trash-o" size={14} color={colors.danger} />
                 </Pressable>
               </View>
@@ -220,7 +247,12 @@ export default function CreateRoutineScreen() {
         ))}
 
         {exercises.length === 0 && (
-          <Pressable style={styles.emptyExercises} onPress={() => setShowPicker(true)}>
+          <Pressable
+            style={styles.emptyExercises}
+            onPress={() => setShowPicker(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Tap to add exercises"
+          >
             <FontAwesome name="plus-circle" size={24} color={colors.textMuted} />
             <Text style={styles.emptyText}>Tap to add exercises</Text>
           </Pressable>
@@ -232,6 +264,8 @@ export default function CreateRoutineScreen() {
           style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
           onPress={handleSave}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel="Create Routine"
         >
           <Text style={styles.saveBtnText}>{saving ? "Saving..." : "Create Routine"}</Text>
         </Pressable>

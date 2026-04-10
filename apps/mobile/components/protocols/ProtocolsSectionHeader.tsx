@@ -18,7 +18,7 @@ export function ProtocolsSectionHeader({
       <Text style={styles.sectionTitle}>{title}</Text>
       {actionHref && actionLabel ? (
         <Link href={actionHref} asChild>
-          <Pressable style={styles.addButton}>
+          <Pressable style={styles.addButton} accessibilityRole="button" accessibilityLabel={actionLabel}>
             <FontAwesome name="plus" size={14} color={colors.white} />
             <Text style={styles.addButtonText}>{actionLabel}</Text>
           </Pressable>

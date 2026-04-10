@@ -75,6 +75,8 @@ export default function LoginScreen() {
               (!email.trim() || !password || loading) && styles.buttonDisabled,
             ]}
             onPress={handleLogin}
+            accessibilityRole="button"
+            accessibilityLabel="Log In"
             disabled={!email.trim() || !password || loading}
           >
             {loading ? (
@@ -87,7 +89,7 @@ export default function LoginScreen() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>Don't have an account? </Text>
             <Link href="/auth/signup" asChild>
-              <Pressable>
+              <Pressable accessibilityRole="link" accessibilityLabel="Sign up">
                 <Text style={styles.link}>Sign Up</Text>
               </Pressable>
             </Link>

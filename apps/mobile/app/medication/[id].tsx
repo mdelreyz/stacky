@@ -138,7 +138,7 @@ export default function MedicationDetailScreen() {
       ) : null}
 
       <Link href={`/medication/${medication.id}/schedule`} asChild>
-        <Pressable style={styles.primaryButton}>
+        <Pressable style={styles.primaryButton} accessibilityRole="button" accessibilityLabel="Add to My Protocol">
           <FontAwesome name="plus" size={16} color={colors.white} />
           <Text style={styles.primaryButtonText}>Add Medication</Text>
         </Pressable>

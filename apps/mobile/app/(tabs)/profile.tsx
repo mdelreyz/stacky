@@ -28,7 +28,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.card}>
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/edit")}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/edit")} accessibilityRole="button" accessibilityLabel="Edit Profile">
           <FontAwesome name="pencil" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Edit Profile</Text>
@@ -39,7 +39,7 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/location")}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/location")} accessibilityRole="button" accessibilityLabel="Location and UV Guidance">
           <FontAwesome name="map-marker" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Location & UV Guidance</Text>
@@ -54,7 +54,7 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/preferences")}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/preferences")} accessibilityRole="button" accessibilityLabel="Goals and Preferences">
           <FontAwesome name="sliders" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Goals & Preferences</Text>
@@ -67,7 +67,7 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/safety")}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/safety")} accessibilityRole="button" accessibilityLabel="Safety Check">
           <FontAwesome name="shield" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Safety Check</Text>
@@ -80,7 +80,7 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/tracking")}>
+        <Pressable style={styles.menuItem} onPress={() => router.push("/tracking")} accessibilityRole="button" accessibilityLabel="Adherence Stats">
           <FontAwesome name="line-chart" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Adherence Stats</Text>
@@ -93,7 +93,7 @@ export default function ProfileScreen() {
       </View>
 
       <View style={styles.card}>
-        <Pressable style={styles.menuItem} onPress={handleLogout}>
+        <Pressable style={styles.menuItem} onPress={handleLogout} accessibilityRole="button" accessibilityLabel="Log Out">
           <FontAwesome name="sign-out" size={18} color={colors.danger} />
           <Text style={[styles.menuText, { color: colors.danger }]}>Log Out</Text>
         </Pressable>

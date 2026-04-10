@@ -20,7 +20,7 @@ export function TrackingSummaryCard({
 
   return (
     <Link href={{ pathname: "/tracking", params: { endDate } }} asChild>
-      <Pressable style={styles.card}>
+      <Pressable style={styles.card} accessibilityRole="button" accessibilityLabel="View tracking details">
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Tracking</Text>

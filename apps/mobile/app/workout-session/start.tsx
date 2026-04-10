@@ -83,6 +83,9 @@ export default function StartSessionScreen() {
 
         <Pressable
           style={[styles.routineCard, !selectedRoutineId && styles.routineCardSelected]}
+          accessibilityRole="button"
+          accessibilityLabel="Ad-hoc Workout: Start empty, add exercises as you go"
+          accessibilityState={{ selected: !selectedRoutineId }}
           onPress={() => {
             setSelectedRoutineId(null);
             if (!sessionName.trim()) setSessionName("");
@@ -100,6 +103,9 @@ export default function StartSessionScreen() {
           <Pressable
             key={routine.id}
             style={[styles.routineCard, selectedRoutineId === routine.id && styles.routineCardSelected]}
+            accessibilityRole="button"
+            accessibilityLabel={`Select routine: ${routine.name}`}
+            accessibilityState={{ selected: selectedRoutineId === routine.id }}
             onPress={() => {
               setSelectedRoutineId(routine.id);
               if (!sessionName.trim() || sessionName === "Workout") setSessionName(routine.name);
@@ -129,6 +135,8 @@ export default function StartSessionScreen() {
           style={[styles.startBtn, starting && styles.startBtnDisabled]}
           onPress={handleStart}
           disabled={starting}
+          accessibilityRole="button"
+          accessibilityLabel="Start Workout"
         >
           <FontAwesome name="play" size={16} color={colors.textWhite} />
           <Text style={styles.startBtnText}>{starting ? "Starting..." : "Start Workout"}</Text>

@@ -125,6 +125,9 @@ export function NutritionPlanForm({
           <Pressable
             style={[styles.toggleRow, state.useMacroProfile && styles.toggleRowActive]}
             onPress={() => setState((current) => ({ ...current, useMacroProfile: !current.useMacroProfile }))}
+            accessibilityRole="checkbox"
+            accessibilityLabel="Track macros"
+            accessibilityState={{ checked: state.useMacroProfile }}
           >
             <FontAwesome
               name={state.useMacroProfile ? "check-square-o" : "square-o"}
@@ -186,6 +189,8 @@ export function NutritionPlanForm({
         style={[styles.primaryButton, saving && styles.buttonDisabled]}
         onPress={onSubmit}
         disabled={saving}
+        accessibilityRole="button"
+        accessibilityLabel={primaryLabel}
       >
         {saving ? (
           <ActivityIndicator color={colors.white} />
@@ -202,6 +207,8 @@ export function NutritionPlanForm({
           style={[styles.secondaryButton, saving && styles.buttonDisabled]}
           onPress={onSecondaryAction}
           disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel={secondaryLabel}
         >
           <Text style={styles.secondaryButtonText}>{secondaryLabel}</Text>
         </Pressable>
@@ -247,6 +254,9 @@ function OptionGrid({
           key={option.value}
           style={[styles.optionChip, option.value === selected && styles.optionChipSelected]}
           onPress={() => onSelect(option.value)}
+          accessibilityRole="button"
+          accessibilityLabel={option.label}
+          accessibilityState={{ selected: option.value === selected }}
         >
           <Text style={[styles.optionChipText, option.value === selected && styles.optionChipTextSelected]}>
             {option.label}

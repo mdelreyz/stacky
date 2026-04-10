@@ -56,6 +56,8 @@ export default function SafetyCheckScreen() {
           style={[styles.checkButton, loading && styles.buttonDisabled]}
           onPress={handleCheck}
           disabled={loading}
+          accessibilityRole="button"
+          accessibilityLabel="Run Safety Check"
         >
           {loading ? (
             <ActivityIndicator color={colors.white} />

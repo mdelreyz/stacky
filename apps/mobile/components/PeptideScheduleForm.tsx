@@ -102,6 +102,9 @@ export function PeptideScheduleForm({
         <Pressable
           style={[styles.toggleRow, state.withFood && styles.toggleRowActive]}
           onPress={() => setState((current) => ({ ...current, withFood: !current.withFood }))}
+          accessibilityRole="checkbox"
+          accessibilityLabel="Take with food"
+          accessibilityState={{ checked: state.withFood }}
         >
           <FontAwesome
             name={state.withFood ? "check-square-o" : "square-o"}

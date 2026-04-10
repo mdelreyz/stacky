@@ -120,7 +120,12 @@ export default function GymLocationManageScreen() {
                 </Text>
               )}
             </View>
-            <Pressable onPress={() => handleDelete(loc.id)} style={styles.deleteIcon}>
+            <Pressable
+              onPress={() => handleDelete(loc.id)}
+              style={styles.deleteIcon}
+              accessibilityRole="button"
+              accessibilityLabel={`Delete ${loc.name}`}
+            >
               <FontAwesome name="trash-o" size={16} color={colors.danger} />
             </Pressable>
           </View>
@@ -180,6 +185,9 @@ export default function GymLocationManageScreen() {
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.routineScroll}>
             <Pressable
               style={[styles.routineChip, !formRoutineId && styles.routineChipSelected]}
+              accessibilityRole="button"
+              accessibilityLabel="No default routine"
+              accessibilityState={{ selected: !formRoutineId }}
               onPress={() => setFormRoutineId(null)}
             >
               <Text style={[styles.routineChipText, !formRoutineId && styles.routineChipTextSelected]}>
@@ -190,6 +198,9 @@ export default function GymLocationManageScreen() {
               <Pressable
                 key={r.id}
                 style={[styles.routineChip, formRoutineId === r.id && styles.routineChipSelected]}
+                accessibilityRole="button"
+                accessibilityLabel={`Default routine: ${r.name}`}
+                accessibilityState={{ selected: formRoutineId === r.id }}
                 onPress={() => setFormRoutineId(r.id)}
               >
                 <Text
@@ -203,13 +214,20 @@ export default function GymLocationManageScreen() {
           </ScrollView>
 
           <View style={styles.formActions}>
-            <Pressable style={styles.cancelBtn} onPress={() => setShowForm(false)}>
+            <Pressable
+              style={styles.cancelBtn}
+              onPress={() => setShowForm(false)}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+            >
               <Text style={styles.cancelBtnText}>Cancel</Text>
             </Pressable>
             <Pressable
               style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
               onPress={handleSave}
               disabled={saving}
+              accessibilityRole="button"
+              accessibilityLabel="Save gym location"
             >
               <Text style={styles.saveBtnText}>{saving ? "Saving..." : "Save"}</Text>
             </Pressable>
@@ -217,7 +235,12 @@ export default function GymLocationManageScreen() {
         </View>
       ) : (
         <View style={styles.section}>
-          <Pressable style={styles.addBtn} onPress={() => setShowForm(true)}>
+          <Pressable
+            style={styles.addBtn}
+            onPress={() => setShowForm(true)}
+            accessibilityRole="button"
+            accessibilityLabel="Add Gym Location"
+          >
             <FontAwesome name="plus" size={14} color={colors.primary} />
             <Text style={styles.addBtnText}>Add Gym Location</Text>
           </Pressable>

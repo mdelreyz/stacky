@@ -80,6 +80,12 @@ export default function ExerciseScreen() {
       {gymMatch?.matched && gymMatch.gym_location && (
         <Pressable
           style={styles.gymBanner}
+          accessibilityRole="button"
+          accessibilityLabel={
+            gymMatch.default_routine
+              ? `You're at ${gymMatch.gym_location.name}. Tap to start ${gymMatch.default_routine.name}`
+              : `You're at ${gymMatch.gym_location.name}. Tap to start a workout`
+          }
           onPress={() => {
             if (gymMatch.default_routine) {
               router.push(`/workout-session/start?routine_id=${gymMatch.default_routine.id}`);
@@ -111,6 +117,8 @@ export default function ExerciseScreen() {
             <Pressable
               key={routine.id}
               style={styles.todayCard}
+              accessibilityRole="button"
+              accessibilityLabel={`Start ${routine.name}`}
               onPress={() => router.push(`/workout-session/start?routine_id=${routine.id}`)}
             >
               <View style={styles.todayCardContent}>
@@ -164,13 +172,13 @@ export default function ExerciseScreen() {
       <View style={styles.section}>
         <View style={styles.actionsRow}>
           <Link href="/workout-session/start" asChild>
-            <Pressable style={styles.actionBtn}>
+            <Pressable style={styles.actionBtn} accessibilityRole="button" accessibilityLabel="Start Workout">
               <FontAwesome name="plus" size={18} color={colors.textWhite} />
               <Text style={styles.actionBtnText}>Start Workout</Text>
             </Pressable>
           </Link>
           <Link href="/workout-routine/create" asChild>
-            <Pressable style={[styles.actionBtn, styles.actionBtnSecondary]}>
+            <Pressable style={[styles.actionBtn, styles.actionBtnSecondary]} accessibilityRole="button" accessibilityLabel="New Routine">
               <FontAwesome name="list-ol" size={16} color={colors.primary} />
               <Text style={styles.actionBtnTextSecondary}>New Routine</Text>
             </Pressable>
@@ -183,7 +191,7 @@ export default function ExerciseScreen() {
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>My Routines</Text>
           <Link href="/workout-routine/create" asChild>
-            <Pressable>
+            <Pressable accessibilityRole="button" accessibilityLabel="Create new routine">
               <FontAwesome name="plus-circle" size={20} color={colors.primary} />
             </Pressable>
           </Link>
@@ -199,6 +207,8 @@ export default function ExerciseScreen() {
             <Pressable
               key={routine.id}
               style={styles.listCard}
+              accessibilityRole="button"
+              accessibilityLabel={`View routine: ${routine.name}`}
               onPress={() => router.push(`/workout-routine/${routine.id}`)}
             >
               <View>
@@ -230,6 +240,8 @@ export default function ExerciseScreen() {
             <Pressable
               key={session.id}
               style={styles.listCard}
+              accessibilityRole="button"
+              accessibilityLabel={`View session: ${session.name}`}
               onPress={() => router.push(`/workout-session/${session.id}`)}
             >
               <View style={{ flex: 1 }}>
@@ -253,28 +265,28 @@ export default function ExerciseScreen() {
       {/* Navigation links */}
       <View style={styles.section}>
         <Link href="/exercise/stats" asChild>
-          <Pressable style={styles.navLink}>
+          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Detailed Stats and Progress">
             <FontAwesome name="bar-chart" size={16} color={colors.primary} />
             <Text style={styles.navLinkText}>Detailed Stats & Progress</Text>
             <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
           </Pressable>
         </Link>
         <Link href="/exercise-regime/create" asChild>
-          <Pressable style={styles.navLink}>
+          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Manage Regimes">
             <FontAwesome name="calendar" size={16} color={colors.primary} />
             <Text style={styles.navLinkText}>Manage Regimes</Text>
             <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
           </Pressable>
         </Link>
         <Link href="/gym-location/manage" asChild>
-          <Pressable style={styles.navLink}>
+          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Gym Locations">
             <FontAwesome name="map-marker" size={16} color={colors.primary} />
             <Text style={styles.navLinkText}>Gym Locations</Text>
             <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
           </Pressable>
         </Link>
         <Link href="/exercise/create" asChild>
-          <Pressable style={styles.navLink}>
+          <Pressable style={styles.navLink} accessibilityRole="button" accessibilityLabel="Create Custom Exercise">
             <FontAwesome name="plus-square-o" size={16} color={colors.primary} />
             <Text style={styles.navLinkText}>Create Custom Exercise</Text>
             <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />

@@ -32,7 +32,7 @@ export function ProtocolStacksSection({ stacks }: { stacks: Protocol[] }) {
 
           return (
             <Link key={stack.id} href={`/protocol/${stack.id}`} asChild>
-              <Pressable style={styles.stackCard}>
+              <Pressable style={styles.stackCard} accessibilityRole="button" accessibilityLabel={`${stack.name}, ${stack.items.length} items`}>
                 <View style={styles.stackInfo}>
                   <Text style={styles.stackName}>{stack.name}</Text>
                   <Text style={styles.stackMeta}>

@@ -141,6 +141,9 @@ export default function ManageUserSupplementScreen() {
         <Pressable
           style={[styles.stockToggle, isOutOfStock && styles.stockToggleActive]}
           onPress={() => setIsOutOfStock((current) => !current)}
+          accessibilityRole="checkbox"
+          accessibilityLabel="Out of stock"
+          accessibilityState={{ checked: isOutOfStock }}
         >
           <Text style={[styles.stockToggleText, isOutOfStock && styles.stockToggleTextActive]}>
             {isOutOfStock ? "Marked as out of stock" : "Mark as out of stock"}

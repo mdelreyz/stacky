@@ -66,6 +66,8 @@ export default function AddMedicationScreen() {
         ]}
         onPress={handleOnboard}
         disabled={!name.trim() || loading}
+        accessibilityRole="button"
+        accessibilityLabel="Start Onboarding"
       >
         {loading ? (
           <ActivityIndicator color={colors.white} />

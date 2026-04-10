@@ -130,13 +130,13 @@ export default function ProtocolsScreen() {
 
       <View style={styles.aiButtonRow}>
         <Link href="/recommendations" asChild>
-          <Pressable style={styles.aiButton}>
+          <Pressable style={styles.aiButton} accessibilityRole="button" accessibilityLabel="Recommendations">
             <FontAwesome name="magic" size={16} color={colors.primary} />
             <Text style={styles.aiButtonText}>Recommendations</Text>
           </Pressable>
         </Link>
         <Link href="/wizard" asChild>
-          <Pressable style={styles.aiButton}>
+          <Pressable style={styles.aiButton} accessibilityRole="button" accessibilityLabel="Guided Wizard">
             <FontAwesome name="comments" size={16} color={colors.primary} />
             <Text style={styles.aiButtonText}>Guided Wizard</Text>
           </Pressable>
@@ -163,7 +163,7 @@ export default function ProtocolsScreen() {
 
       {outOfStockSupplements.length > 0 ? (
         <Link href="/supplement/refill-request" asChild>
-          <Pressable style={styles.alertCard}>
+          <Pressable style={styles.alertCard} accessibilityRole="button" accessibilityLabel="View supplements to reorder">
             <View style={styles.alertHeader}>
               <FontAwesome name="shopping-bag" size={16} color={colors.warning} />
               <Text style={styles.alertTitle}>Supplements To Reorder</Text>

@@ -101,6 +101,8 @@ export default function SignupScreen() {
               (!canSubmit || loading) && styles.buttonDisabled,
             ]}
             onPress={handleSignup}
+            accessibilityRole="button"
+            accessibilityLabel="Create Account"
             disabled={!canSubmit || loading}
           >
             {loading ? (
@@ -113,7 +115,7 @@ export default function SignupScreen() {
           <View style={styles.footer}>
             <Text style={styles.footerText}>Already have an account? </Text>
             <Link href="/auth/login" asChild>
-              <Pressable>
+              <Pressable accessibilityRole="link" accessibilityLabel="Log in">
                 <Text style={styles.link}>Log In</Text>
               </Pressable>
             </Link>

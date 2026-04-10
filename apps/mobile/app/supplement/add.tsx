@@ -35,7 +35,7 @@ export default function AddSupplementScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
+        <Pressable onPress={() => router.back()} style={styles.backButton} accessibilityRole="button" accessibilityLabel="Go back">
           <FontAwesome name="arrow-left" size={18} color={colors.textSecondary} />
         </Pressable>
         <Text style={styles.title}>Add Supplement</Text>
@@ -67,6 +67,8 @@ export default function AddSupplementScreen() {
         ]}
         onPress={handleOnboard}
         disabled={!name.trim() || loading}
+        accessibilityRole="button"
+        accessibilityLabel="Start Onboarding"
       >
         {loading ? (
           <ActivityIndicator color={colors.white} />

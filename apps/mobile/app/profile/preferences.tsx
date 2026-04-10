@@ -180,6 +180,9 @@ export default function PreferencesScreen() {
                 key={goal.value}
                 style={[styles.goalChip, selected && styles.goalChipSelected]}
                 onPress={() => toggleGoal(goal.value)}
+                accessibilityRole="checkbox"
+                accessibilityLabel={goal.label}
+                accessibilityState={{ checked: selected }}
               >
                 <Text style={[styles.goalChipText, selected && styles.goalChipTextSelected]}>
                   {goal.label}
@@ -212,6 +215,9 @@ export default function PreferencesScreen() {
                   key={opt.value}
                   style={[styles.sexChip, biologicalSex === opt.value && styles.sexChipSelected]}
                   onPress={() => setBiologicalSex(biologicalSex === opt.value ? "" : opt.value as typeof biologicalSex)}
+                  accessibilityRole="radio"
+                  accessibilityLabel={opt.label}
+                  accessibilityState={{ checked: biologicalSex === opt.value }}
                 >
                   <Text style={[styles.sexChipText, biologicalSex === opt.value && styles.sexChipTextSelected]}>
                     {opt.label}
@@ -279,6 +285,8 @@ export default function PreferencesScreen() {
         style={[styles.primaryButton, saving && styles.buttonDisabled]}
         onPress={handleSave}
         disabled={saving}
+        accessibilityRole="button"
+        accessibilityLabel="Save preferences"
       >
         {saving ? (
           <ActivityIndicator color={colors.white} />

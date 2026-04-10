@@ -12,7 +12,7 @@
 | Duplication | :warning: | 4 near-identical user item routes |
 | Security | :white_check_mark: | ~~IDOR~~ Fixed. ~~No rate limiting~~ Fixed (slowapi on auth). ~~bcrypt DoS~~ Fixed (max_length). JWT default has prod guard. |
 | Documentation | :white_check_mark: | ~~CLAUDE.md stale~~ Updated. |
-| UI & Design | :warning: | 91 hardcoded hex colors, zero accessibility labels on 302 pressables |
+| UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. |
 | Robustness | :white_check_mark: | ~~IDOR~~ Fixed. ~~Non-atomic batch adherence~~ Fixed. ~~Wrong entity labels~~ Fixed. |
 | Pipeline & Cache | :white_check_mark: | ~~Celery result_expires~~ Fixed (1h TTL). In-memory cache unbounded (low risk). |
 | Undefined Names | :white_check_mark: | ~~26 undefined names~~ Fixed. |
@@ -60,11 +60,11 @@
 | M-1 | `routes/user_{supplements,medications,peptides,therapies}.py` | 4 near-identical CRUD files (~420 duplicated lines) | Duplication | Open |
 | M-2 | `app/(tabs)/index.tsx:118-194` | Adherence dispatch uses lookup table (not duplication) | Duplication | Non-issue |
 | M-3 | `app/peptide/[id].tsx`, `therapy/[id].tsx`, `medication/[id].tsx` | Near-duplicate detail screens | Duplication | Open |
-| M-4 | `constants/Colors.ts` | 91 hardcoded hex values across 22 files | UI | Open |
-| M-5 | `NutritionPhaseCard.tsx` | All 8 style values hardcoded | UI | Open |
-| M-6 | `SkincareGuidanceCard.tsx` | Full amber palette hardcoded (7 values) | UI | Open |
-| M-7 | `TrackingSummaryCard.tsx` | Blue-tint card palette hardcoded (7 values) | UI | Open |
-| M-8 | All mobile `.tsx` | Zero `accessibilityLabel` on 302 Pressable elements | UI | Open |
+| M-4 | `constants/Colors.ts` | ~~91 hardcoded hex values across 22 files~~ | UI | **Fixed** |
+| M-5 | `NutritionPhaseCard.tsx` | ~~All 8 style values hardcoded~~ | UI | **Fixed** |
+| M-6 | `SkincareGuidanceCard.tsx` | ~~Full amber palette hardcoded (7 values)~~ | UI | **Fixed** |
+| M-7 | `TrackingSummaryCard.tsx` | ~~Blue-tint card palette hardcoded (7 values)~~ | UI | **Fixed** |
+| M-8 | All mobile `.tsx` | ~~Zero `accessibilityLabel` on 302 Pressable elements~~ | UI | **Fixed** |
 | M-9 | `CLAUDE.md:154-172` | ~~API Surface table missing exercise endpoint groups~~ | Docs | **Fixed** |
 | M-10 | `CLAUDE.md:14` | ~~Styling says NativeWind~~ | Docs | **Fixed** |
 | M-11 | `CLAUDE.md:44-52` | ~~Domain Pillars table missing Exercise pillar~~ | Docs | **Fixed** |
@@ -76,8 +76,8 @@
 | M-17 | Root `package.json` | `puppeteer` dependency unused | Dead Code | Open |
 | M-18 | `DailyPlanWindowCard.tsx:23-31` | `handleMarkAll` — parent already catches errors | Robustness | Non-issue |
 | M-19 | `therapy/[id].tsx:57` | ~~"Protocol not found" — wrong entity label~~ | Robustness | **Fixed** |
-| M-20 | `InteractionWarningsCard.tsx:45-68` | Border/text tones escape danger token | UI | Open |
-| M-21 | `CycleAlertsCard.tsx:30-55` | Entire purple palette hardcoded | UI | Open |
+| M-20 | `InteractionWarningsCard.tsx:45-68` | ~~Border/text tones escape danger token~~ | UI | **Fixed** |
+| M-21 | `CycleAlertsCard.tsx:30-55` | ~~Entire purple palette hardcoded~~ | UI | **Fixed** |
 
 ---
 
@@ -91,8 +91,8 @@
 | L-4 | `ai_onboarding.py:23` | In-memory status cache has no active eviction | Pipeline | Open |
 | L-5 | `peptide/[id].tsx`, `therapy/[id].tsx` | Exact copy of readString/readStringArray helpers | Duplication | Open |
 | L-6 | `adherence.py:142,246,292` | `dosage_amount` is NOT NULL — float(None) impossible | Robustness | Non-issue |
-| L-7 | `guided_wizard.py:161` | Silent except: pass lacks comment | Dead Code | Open |
-| L-8 | `StackScoreCard.tsx:12` | Score color function returns hardcoded hex | UI | Open |
+| L-7 | `guided_wizard.py:161` | ~~Silent except: pass lacks comment~~ | Dead Code | **Fixed** |
+| L-8 | `StackScoreCard.tsx:12` | ~~Score color function returns hardcoded hex~~ | UI | **Fixed** |
 
 ---
 
@@ -122,3 +122,6 @@
 |------|--------|
 | 2026-04-10 | Full scan — 9 dimensions, 6 parallel agents. Found 2 CRITICAL, 6 HIGH, 21 MEDIUM, 8 LOW issues. |
 | 2026-04-10 | Fixed all CRITICAL (2/2) and HIGH (6/6) issues. Fixed 6 MEDIUM and 2 LOW. 4 MEDIUM re-classified as non-issues. |
+| 2026-04-10 | Color consolidation: 91 → 0 hardcoded hex colors. 25 semantic tokens added to Colors.ts. 23 component files updated. |
+| 2026-04-10 | Second scan (6 agents): dead code clean, security clean, pipeline clean. Only remaining HIGH: accessibility labels. |
+| 2026-04-10 | Accessibility labels: 302/302 Pressable elements labeled across 50 .tsx files. All HIGH issues now resolved. |

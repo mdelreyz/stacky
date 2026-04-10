@@ -29,6 +29,8 @@ export function TodayExerciseCard({ items }: { items: ExercisePlanItem[] }) {
           <Pressable
             key={item.routine_id}
             style={styles.routineRow}
+            accessibilityRole="button"
+            accessibilityLabel={`${item.routine_name}, ${config.label}`}
             onPress={() => {
               if (item.status === "pending") {
                 router.push(`/workout-session/start?routine_id=${item.routine_id}`);
