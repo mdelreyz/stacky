@@ -34,19 +34,19 @@ const MUSCLE_LABELS: Record<string, string> = {
 };
 
 const MUSCLE_COLORS: Record<string, string> = {
-  chest: "#ef4444",
-  back: "#3b82f6",
-  shoulders: "#f59e0b",
-  biceps: "#10b981",
-  triceps: "#8b5cf6",
-  forearms: "#ec4899",
-  quadriceps: "#06b6d4",
-  hamstrings: "#f97316",
-  glutes: "#14b8a6",
-  calves: "#6366f1",
-  core: "#84cc16",
-  full_body: "#78716c",
-  cardio: "#e11d48",
+  chest: colors.muscleChest,
+  back: colors.muscleBack,
+  shoulders: colors.muscleShoulders,
+  biceps: colors.muscleBiceps,
+  triceps: colors.muscleTriceps,
+  forearms: colors.muscleForearms,
+  quadriceps: colors.muscleQuadriceps,
+  hamstrings: colors.muscleHamstrings,
+  glutes: colors.muscleGlutes,
+  calves: colors.muscleCalves,
+  core: colors.muscleCore,
+  full_body: colors.muscleFullBody,
+  cardio: colors.muscleCardio,
 };
 
 export default function ExerciseStatsScreen() {

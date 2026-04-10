@@ -1,9 +1,12 @@
+import logging
 from typing import TypedDict
 
 import httpx
 
 from app.config import settings
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 
 class UvConditions(TypedDict):
@@ -25,6 +28,7 @@ async def fetch_uv_conditions(latitude: float, longitude: float) -> UvConditions
             response.raise_for_status()
         payload = response.json()
     except Exception:
+        logger.debug("Weather API request failed", exc_info=True)
         return None
 
     current = payload.get("current")

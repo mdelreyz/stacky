@@ -67,6 +67,21 @@ export const colors = {
   safetyModerateBg: "#f4fce3",
   safetyModerateText: "#5c940d",
 
+  // Muscle group chart palette
+  muscleChest: "#ef4444",
+  muscleBack: "#3b82f6",
+  muscleShoulders: "#f59e0b",
+  muscleBiceps: "#10b981",
+  muscleTriceps: "#8b5cf6",
+  muscleForearms: "#ec4899",
+  muscleQuadriceps: "#06b6d4",
+  muscleHamstrings: "#f97316",
+  muscleGlutes: "#14b8a6",
+  muscleCalves: "#6366f1",
+  muscleCore: "#84cc16",
+  muscleFullBody: "#78716c",
+  muscleCardio: "#e11d48",
+
   // Neutral grays
   gray: "#6c757d",
   grayDark: "#343a40",

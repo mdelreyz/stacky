@@ -12,8 +12,8 @@
 | Duplication | :warning: | 4 near-identical user item routes |
 | Security | :white_check_mark: | ~~IDOR~~ Fixed. ~~No rate limiting~~ Fixed (slowapi on auth). ~~bcrypt DoS~~ Fixed (max_length). JWT default has prod guard. |
 | Documentation | :white_check_mark: | ~~CLAUDE.md stale~~ Updated. |
-| UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. |
-| Robustness | :white_check_mark: | ~~IDOR~~ Fixed. ~~Non-atomic batch adherence~~ Fixed. ~~Wrong entity labels~~ Fixed. |
+| UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. ~~Muscle chart hex~~ Fixed. |
+| Robustness | :white_check_mark: | ~~IDOR~~ Fixed. ~~Non-atomic batch adherence~~ Fixed. ~~Wrong entity labels~~ Fixed. ~~Weather silent exception~~ Fixed. |
 | Pipeline & Cache | :white_check_mark: | ~~Celery result_expires~~ Fixed (1h TTL). In-memory cache unbounded (low risk). |
 | Undefined Names | :white_check_mark: | ~~26 undefined names~~ Fixed. |
 
@@ -78,6 +78,7 @@
 | M-19 | `therapy/[id].tsx:57` | ~~"Protocol not found" — wrong entity label~~ | Robustness | **Fixed** |
 | M-20 | `InteractionWarningsCard.tsx:45-68` | ~~Border/text tones escape danger token~~ | UI | **Fixed** |
 | M-21 | `CycleAlertsCard.tsx:30-55` | ~~Entire purple palette hardcoded~~ | UI | **Fixed** |
+| M-22 | `exercise/stats.tsx:36-50` | ~~13 hardcoded hex colors in muscle-group chart map~~ | UI | **Fixed** |
 
 ---
 
@@ -93,6 +94,8 @@
 | L-6 | `adherence.py:142,246,292` | `dosage_amount` is NOT NULL — float(None) impossible | Robustness | Non-issue |
 | L-7 | `guided_wizard.py:161` | ~~Silent except: pass lacks comment~~ | Dead Code | **Fixed** |
 | L-8 | `StackScoreCard.tsx:12` | ~~Score color function returns hardcoded hex~~ | UI | **Fixed** |
+| L-9 | `services/weather.py:27` | ~~Silent `except Exception: return None` without logging~~ | Robustness | **Fixed** |
+| L-10 | `app/(tabs)/exercise.tsx:35-38` | Inner `.catch()` in Promise.all provides graceful degradation | Robustness | Non-issue |
 
 ---
 
@@ -125,3 +128,4 @@
 | 2026-04-10 | Color consolidation: 91 → 0 hardcoded hex colors. 25 semantic tokens added to Colors.ts. 23 component files updated. |
 | 2026-04-10 | Second scan (6 agents): dead code clean, security clean, pipeline clean. Only remaining HIGH: accessibility labels. |
 | 2026-04-10 | Accessibility labels: 302/302 Pressable elements labeled across 50 .tsx files. All HIGH issues now resolved. |
+| 2026-04-10 | Third scan (5 agents): all clean. Fixed M-22 muscle-group hex colors, L-9 weather.py silent exception. No CRITICAL/HIGH found. |
