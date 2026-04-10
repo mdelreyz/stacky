@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
   },
   optionChipSelected: {
-    backgroundColor: "#d0ebff",
+    backgroundColor: colors.infoBorder,
   },
   optionChipText: {
     fontSize: 13,

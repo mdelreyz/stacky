@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   categoryBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#d3f9d8",
+    backgroundColor: colors.successBadge,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primaryLight,
   },
   infoSubtleBadge: {
-    backgroundColor: "#eef7ff",
+    backgroundColor: colors.infoLight,
   },
   infoBadgeText: {
     color: colors.primary,

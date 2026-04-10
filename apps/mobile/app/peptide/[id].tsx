@@ -191,7 +191,7 @@ export default function PeptideDetailScreen() {
           <Text style={styles.sectionTitle}>Interactions</Text>
           {aiInteractions.map((interaction, i) => (
             <View key={i} style={styles.interactionRow}>
-              <FontAwesome name="exclamation-triangle" size={12} color="#e67700" />
+              <FontAwesome name="exclamation-triangle" size={12} color={colors.warning} />
               <Text style={styles.interactionText}>{interaction}</Text>
             </View>
           ))}
@@ -201,7 +201,7 @@ export default function PeptideDetailScreen() {
       {/* Start button */}
       <Link href={`/peptide/${peptide.id}/schedule`} asChild>
         <Pressable style={styles.primaryButton}>
-          <FontAwesome name="plus" size={16} color="#fff" />
+          <FontAwesome name="plus" size={16} color={colors.white} />
           <Text style={styles.primaryButtonText}>Add to My Protocol</Text>
         </Pressable>
       </Link>
@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   categoryBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#d3f9d8",
+    backgroundColor: colors.successBadge,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
@@ -237,8 +237,8 @@ const styles = StyleSheet.create({
   },
   infoBadge: { backgroundColor: colors.primaryLight },
   infoBadgeText: { fontSize: 12, fontWeight: "600", color: colors.primary },
-  formBadge: { backgroundColor: "#fff3bf" },
-  formBadgeText: { fontSize: 12, fontWeight: "600", color: "#e67700" },
+  formBadge: { backgroundColor: colors.badgeYellow },
+  formBadgeText: { fontSize: 12, fontWeight: "600", color: colors.warning },
   description: {
     fontSize: 15,
     color: colors.textSecondary,
@@ -247,12 +247,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   goalTag: {
-    backgroundColor: "#d3f9d8",
+    backgroundColor: colors.successBadge,
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 999,
@@ -353,7 +353,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   primaryButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "700",
   },

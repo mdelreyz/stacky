@@ -12,7 +12,7 @@ export function CycleAlertsCard({ alerts }: { alerts: CycleAlert[] }) {
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <FontAwesome name="refresh" size={16} color="#7048e8" />
+        <FontAwesome name="refresh" size={16} color={colors.accentIcon} />
         <Text style={styles.title}>Phase Alerts</Text>
       </View>
       {alerts.map((alert) => (
@@ -27,13 +27,13 @@ export function CycleAlertsCard({ alerts }: { alerts: CycleAlert[] }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#f3f0ff",
+    backgroundColor: colors.accentLight,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#e5dbff",
+    borderColor: colors.accentBorder,
   },
   header: {
     flexDirection: "row",
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#6741d9",
+    color: colors.accentDark,
   },
   row: {
     marginTop: 8,
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 14,
     fontWeight: "700",
-    color: "#5f3dc4",
+    color: colors.accent,
   },
   message: {
     fontSize: 13,

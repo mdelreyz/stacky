@@ -165,7 +165,7 @@ export default function ProtocolsScreen() {
         <Link href="/supplement/refill-request" asChild>
           <Pressable style={styles.alertCard}>
             <View style={styles.alertHeader}>
-              <FontAwesome name="shopping-bag" size={16} color="#e67700" />
+              <FontAwesome name="shopping-bag" size={16} color={colors.warning} />
               <Text style={styles.alertTitle}>Supplements To Reorder</Text>
             </View>
             <Text style={styles.alertBody}>
@@ -289,13 +289,13 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: "700", color: colors.textPrimary },
   subtitle: { fontSize: 14, color: colors.gray, marginTop: 4 },
   alertCard: {
-    backgroundColor: "#fff4e6",
+    backgroundColor: colors.warningLight,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ffd8a8",
+    borderColor: colors.warningBorder,
   },
   alertHeader: {
     flexDirection: "row",
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   alertTitle: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#e67700",
+    color: colors.warning,
   },
   alertBody: {
     fontSize: 13,
@@ -329,7 +329,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#d0ebff",
+    borderColor: colors.infoBorder,
   },
   aiButtonText: {
     fontSize: 14,

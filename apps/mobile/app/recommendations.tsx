@@ -423,7 +423,7 @@ const styles = StyleSheet.create({
   },
   recCardSelected: {
     borderColor: colors.primary,
-    backgroundColor: "#fafcff",
+    backgroundColor: colors.infoLighter,
   },
   recHeader: {
     flexDirection: "row",

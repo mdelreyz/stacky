@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
   itemRow: {
     paddingVertical: 8,
     borderTopWidth: 1,
-    borderTopColor: "#f1f3f5",
+    borderTopColor: colors.surface,
   },
   itemName: {
     fontSize: 14,
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
   },
   itemMeta: {
     fontSize: 12,
-    color: "#6c757d",
+    color: colors.gray,
     marginTop: 4,
   },
   emptyText: {

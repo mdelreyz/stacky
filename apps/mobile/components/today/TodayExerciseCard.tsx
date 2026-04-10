@@ -7,7 +7,7 @@ import type { ExercisePlanItem } from "@protocols/domain";
 
 const STATUS_CONFIG = {
   pending: { icon: "play-circle" as const, color: colors.primary, label: "Start" },
-  in_progress: { icon: "clock-o" as const, color: "#f59f00", label: "In Progress" },
+  in_progress: { icon: "clock-o" as const, color: colors.warning, label: "In Progress" },
   completed: { icon: "check-circle" as const, color: colors.success, label: "Done" },
 };
 

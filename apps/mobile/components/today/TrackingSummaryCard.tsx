@@ -67,7 +67,7 @@ function MiniStreak({ dailyCompletion }: { dailyCompletion: Record<string, boole
         const status = dailyCompletion[date];
         const dayLabel = new Date(date + "T12:00:00").toLocaleDateString(undefined, { weekday: "narrow" });
         const dotColor =
-          status === true ? colors.success : status === false ? "#ffa94d" : colors.border;
+          status === true ? colors.success : status === false ? colors.warningAmber : colors.border;
         return (
           <View key={date} style={styles.streakDay}>
             <Text style={styles.streakLabel}>{dayLabel}</Text>
@@ -81,13 +81,13 @@ function MiniStreak({ dailyCompletion }: { dailyCompletion: Record<string, boole
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#eef7ff",
+    backgroundColor: colors.infoLight,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#d0ebff",
+    borderColor: colors.infoBorder,
   },
   header: {
     flexDirection: "row",
@@ -97,11 +97,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#1c3d5a",
+    color: colors.info,
   },
   subtitle: {
     fontSize: 12,
-    color: "#5c7c94",
+    color: colors.infoSecondary,
     marginTop: 4,
   },
   metricsRow: {
@@ -140,7 +140,7 @@ const styles = StyleSheet.create({
   streakLabel: {
     fontSize: 10,
     fontWeight: "600",
-    color: "#5c7c94",
+    color: colors.infoSecondary,
   },
   streakDot: {
     width: 20,
@@ -150,7 +150,7 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 13,
     lineHeight: 18,
-    color: "#34536b",
+    color: colors.info,
     marginTop: 14,
   },
 });

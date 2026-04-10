@@ -24,12 +24,48 @@ export const colors = {
   // Success (green)
   success: "#2b8a3e",
   successLight: "#ebfbee",
+  successBadge: "#d3f9d8",
 
   // Danger (red)
   danger: "#e03131",
   dangerDark: "#c92a2a",
   dangerLight: "#fff5f5",
   dangerAccent: "#ef4444",
+
+  // Warning (amber)
+  warning: "#e67700",
+  warningDark: "#8f5b00",
+  warningLight: "#fff4e6",
+  warningBorder: "#ffd8a8",
+  warningAmber: "#ffa94d",
+  warningSkincare: "#f08c00",
+  warningBrown: "#9a3412",
+  warningBrownDark: "#7c2d12",
+
+  // Info (blue tint)
+  info: "#1c3d5a",
+  infoSecondary: "#5c7c94",
+  infoLight: "#eef7ff",
+  infoLighter: "#fafcff",
+  infoBorder: "#d0ebff",
+  infoSelect: "#74c0fc",
+
+  // Accent (purple)
+  accent: "#5f3dc4",
+  accentDark: "#6741d9",
+  accentIcon: "#7048e8",
+  accentLight: "#f3f0ff",
+  accentBorder: "#e5dbff",
+
+  // Badge (yellow)
+  badgeYellow: "#fff3bf",
+  badgeYellowLight: "#fff9db",
+  badgeYellowBorder: "#ffe8a1",
+
+  // Safety severity
+  safetyCriticalBg: "#ffe3e3",
+  safetyModerateBg: "#f4fce3",
+  safetyModerateText: "#5c940d",
 
   // Neutral grays
   gray: "#6c757d",

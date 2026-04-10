@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   phaseName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#5f3dc4",
+    color: colors.accent,
     marginTop: 10,
   },
   summaryLine: {

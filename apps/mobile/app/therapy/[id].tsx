@@ -152,7 +152,7 @@ export default function TherapyDetailScreen() {
       {/* Start button */}
       <Link href={`/therapy/${therapy.id}/schedule`} asChild>
         <Pressable style={styles.primaryButton}>
-          <FontAwesome name="play" size={16} color="#fff" />
+          <FontAwesome name="play" size={16} color={colors.white} />
           <Text style={styles.primaryButtonText}>Start Protocol</Text>
         </Pressable>
       </Link>
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   categoryBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#d3f9d8",
+    backgroundColor: colors.successBadge,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
@@ -196,12 +196,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   card: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.white,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
-    shadowColor: "#000",
+    shadowColor: colors.black,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -274,7 +274,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   primaryButtonText: {
-    color: "#fff",
+    color: colors.white,
     fontSize: 16,
     fontWeight: "700",
   },

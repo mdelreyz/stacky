@@ -12,7 +12,7 @@ export function SkincareGuidanceCard({ guidance }: { guidance: SkincareGuidance 
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <FontAwesome name="sun-o" size={16} color="#f08c00" />
+        <FontAwesome name="sun-o" size={16} color={colors.warningSkincare} />
         <Text style={styles.title}>Skin Protection</Text>
       </View>
       <Text style={styles.headline}>{guidance.headline}</Text>
@@ -32,13 +32,13 @@ export function SkincareGuidanceCard({ guidance }: { guidance: SkincareGuidance 
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff4e6",
+    backgroundColor: colors.warningLight,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ffd8a8",
+    borderColor: colors.warningBorder,
   },
   header: {
     flexDirection: "row",
@@ -49,16 +49,16 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#e67700",
+    color: colors.warning,
   },
   headline: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#7c2d12",
+    color: colors.warningBrownDark,
   },
   meta: {
     fontSize: 12,
-    color: "#9a3412",
+    color: colors.warningBrown,
     marginTop: 4,
   },
   body: {
@@ -69,7 +69,7 @@ const styles = StyleSheet.create({
   },
   detail: {
     fontSize: 12,
-    color: "#9a3412",
+    color: colors.warningBrown,
     marginTop: 10,
     fontWeight: "600",
   },

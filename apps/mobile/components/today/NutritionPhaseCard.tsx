@@ -15,7 +15,7 @@ export function NutritionPhaseCard({ phase }: { phase: ActiveNutritionPhase | nu
   return (
     <View style={styles.card}>
       <View style={styles.header}>
-        <FontAwesome name="cutlery" size={16} color="#e67700" />
+        <FontAwesome name="cutlery" size={16} color={colors.warning} />
         <Text style={styles.title}>Nutrition Focus</Text>
       </View>
       <Text style={styles.planName}>{phase.plan_name}</Text>
@@ -40,13 +40,13 @@ export function NutritionPhaseCard({ phase }: { phase: ActiveNutritionPhase | nu
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff9db",
+    backgroundColor: colors.badgeYellowLight,
     marginHorizontal: 16,
     marginBottom: 12,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ffe8a1",
+    borderColor: colors.badgeYellowBorder,
   },
   header: {
     flexDirection: "row",
@@ -57,22 +57,22 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#e67700",
+    color: colors.warning,
   },
   planName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#5f3dc4",
+    color: colors.accent,
   },
   phaseMeta: {
     fontSize: 12,
-    color: "#8f5b00",
+    color: colors.warningDark,
     marginTop: 4,
   },
   phaseName: {
     fontSize: 15,
     fontWeight: "700",
-    color: "#5f3dc4",
+    color: colors.accent,
     marginTop: 8,
   },
   summaryLine: {
@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   transitionMeta: {
     fontSize: 12,
-    color: "#8f5b00",
+    color: colors.warningDark,
     marginTop: 10,
     fontWeight: "600",
   },

@@ -186,8 +186,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
   },
   stockToggleActive: {
-    backgroundColor: "#fff4e6",
-    borderColor: "#ffd8a8",
+    backgroundColor: colors.warningLight,
+    borderColor: colors.warningBorder,
   },
   stockToggleText: {
     fontSize: 14,
@@ -195,7 +195,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   stockToggleTextActive: {
-    color: "#e67700",
+    color: colors.warning,
   },
   stockHint: {
     fontSize: 12,

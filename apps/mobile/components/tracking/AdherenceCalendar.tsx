@@ -37,13 +37,13 @@ function getMonthLabel(year: number, month: number): string {
 
 function getDayColor(status: DayStatus): string {
   if (status === true) return colors.success;
-  if (status === false) return "#ffa94d"; // amber — incomplete
+  if (status === false) return colors.warningAmber; // amber — incomplete
   return colors.surface; // nothing scheduled
 }
 
 function getDayTextColor(status: DayStatus): string {
   if (status === true) return colors.white;
-  if (status === false) return "#ffffff";
+  if (status === false) return colors.white;
   return colors.textMuted;
 }
 
@@ -113,7 +113,7 @@ export function AdherenceCalendar({ dailyCompletion, startDate, endDate }: Adher
         <Text style={styles.title}>Adherence Calendar</Text>
         <View style={styles.legend}>
           <LegendDot color={colors.success} label={`${complete} complete`} />
-          <LegendDot color="#ffa94d" label={`${incomplete} missed`} />
+          <LegendDot color={colors.warningAmber} label={`${incomplete} missed`} />
           <LegendDot color={colors.surface} label={`${noSchedule} off`} />
         </View>
       </View>

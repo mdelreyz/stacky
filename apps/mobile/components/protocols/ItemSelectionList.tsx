@@ -123,7 +123,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
   },
   optionRowSelected: {
-    borderColor: "#74c0fc",
+    borderColor: colors.infoSelect,
     backgroundColor: colors.primaryLight,
   },
   optionRowDisabled: {
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   inactiveBadge: {
-    backgroundColor: "#fff3bf",
+    backgroundColor: colors.badgeYellow,
     paddingHorizontal: 8,
     paddingVertical: 3,
     borderRadius: 999,
@@ -162,6 +162,6 @@ const styles = StyleSheet.create({
   inactiveBadgeText: {
     fontSize: 11,
     fontWeight: "700",
-    color: "#8f5b00",
+    color: colors.warningDark,
   },
 });

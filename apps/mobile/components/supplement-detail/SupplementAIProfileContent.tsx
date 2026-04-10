@@ -173,8 +173,8 @@ function severityColor(
   severity: "critical" | "major" | "moderate" | "minor"
 ): string {
   if (severity === "critical") return colors.danger;
-  if (severity === "major") return "#fd7e14";
-  if (severity === "moderate") return "#fcc419";
+  if (severity === "major") return colors.warning;
+  if (severity === "moderate") return colors.warningAmber;
   return colors.textPlaceholder;
 }
 

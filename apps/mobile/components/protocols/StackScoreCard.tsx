@@ -9,7 +9,7 @@ import type { StackScoreResponse } from "@/lib/api";
 
 function scoreColor(score: number): string {
   if (score >= 80) return colors.success;
-  if (score >= 60) return "#e67700";
+  if (score >= 60) return colors.warning;
   return colors.danger;
 }
 
@@ -82,7 +82,7 @@ export function StackScoreCard() {
         <View style={styles.suggestionsSection}>
           {score.suggestions.slice(0, 2).map((suggestion, i) => (
             <View key={i} style={styles.suggestionRow}>
-              <FontAwesome name="lightbulb-o" size={13} color="#e67700" />
+              <FontAwesome name="lightbulb-o" size={13} color={colors.warning} />
               <Text style={styles.suggestionText}>{suggestion}</Text>
             </View>
           ))}

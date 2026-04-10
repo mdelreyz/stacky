@@ -42,7 +42,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ffe3e3",
+    borderColor: colors.safetyCriticalBg,
   },
   warningHeader: {
     flexDirection: "row",
@@ -61,11 +61,11 @@ const styles = StyleSheet.create({
   warningPair: {
     fontSize: 14,
     fontWeight: "600",
-    color: "#862e2e",
+    color: colors.dangerDark,
   },
   warningText: {
     fontSize: 13,
-    color: "#a61e4d",
+    color: colors.danger,
     marginTop: 2,
     lineHeight: 18,
   },

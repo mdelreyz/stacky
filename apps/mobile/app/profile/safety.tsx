@@ -16,9 +16,9 @@ import { showError } from "@/lib/errors";
 import type { InteractionCheckResponse } from "@/lib/api";
 
 const SEVERITY_CONFIG: Record<string, { color: string; bg: string; icon: string }> = {
-  critical: { color: "#c92a2a", bg: "#ffe3e3", icon: "exclamation-triangle" },
-  major: { color: "#e67700", bg: "#fff4e6", icon: "exclamation-circle" },
-  moderate: { color: "#5c940d", bg: "#f4fce3", icon: "info-circle" },
+  critical: { color: colors.dangerDark, bg: colors.safetyCriticalBg, icon: "exclamation-triangle" },
+  major: { color: colors.warning, bg: colors.warningLight, icon: "exclamation-circle" },
+  moderate: { color: colors.safetyModerateText, bg: colors.safetyModerateBg, icon: "info-circle" },
   minor: { color: colors.textMuted, bg: colors.surface, icon: "info" },
 };
 
@@ -88,7 +88,7 @@ export default function SafetyCheckScreen() {
               <FontAwesome
                 name="exclamation-triangle"
                 size={20}
-                color={result.has_critical ? "#c92a2a" : "#e67700"}
+                color={result.has_critical ? colors.dangerDark : colors.warning}
               />
               <View style={{ flex: 1 }}>
                 <Text style={styles.summaryTitle}>
@@ -199,18 +199,18 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#fff4e6",
+    backgroundColor: colors.warningLight,
     marginHorizontal: 16,
     marginBottom: 16,
     borderRadius: 12,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ffd8a8",
+    borderColor: colors.warningBorder,
   },
   summaryTitle: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#e67700",
+    color: colors.warning,
   },
   summaryBody: {
     fontSize: 13,
