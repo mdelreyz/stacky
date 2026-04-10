@@ -16,7 +16,11 @@ export function OptionGrid({
       {options.map((option) => (
         <Pressable
           key={option.value}
-          style={[styles.chip, selected === option.value && styles.chipSelected]}
+          style={({ pressed }) => [
+            styles.chip,
+            selected === option.value && styles.chipSelected,
+            pressed && styles.pressed,
+          ]}
           onPress={() => onSelect(option.value)}
           accessibilityRole="button"
           accessibilityLabel={option.label}
@@ -41,10 +45,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255,255,255,0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.9)",
   },
   chipSelected: {
-    backgroundColor: colors.infoBorder,
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.infoBorder,
   },
   chipText: {
     fontSize: 13,
@@ -53,5 +60,9 @@ const styles = StyleSheet.create({
   },
   chipTextSelected: {
     color: colors.primaryDarker,
+  },
+  pressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.985 }],
   },
 });

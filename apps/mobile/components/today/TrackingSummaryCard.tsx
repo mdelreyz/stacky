@@ -20,7 +20,11 @@ export function TrackingSummaryCard({
 
   return (
     <Link href={{ pathname: "/tracking", params: { endDate } }} asChild>
-      <Pressable style={styles.card} accessibilityRole="button" accessibilityLabel="View tracking details">
+      <Pressable
+        style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+        accessibilityRole="button"
+        accessibilityLabel="View tracking details"
+      >
         <View style={styles.header}>
           <View>
             <Text style={styles.title}>Tracking</Text>
@@ -81,13 +85,22 @@ function MiniStreak({ dailyCompletion }: { dailyCompletion: Record<string, boole
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.infoLight,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.infoBorder,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  cardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.988 }],
   },
   header: {
     flexDirection: "row",
@@ -97,11 +110,11 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 16,
     fontWeight: "700",
-    color: colors.info,
+    color: colors.textPrimary,
   },
   subtitle: {
     fontSize: 12,
-    color: colors.infoSecondary,
+    color: colors.textMuted,
     marginTop: 4,
   },
   metricsRow: {
@@ -111,10 +124,12 @@ const styles = StyleSheet.create({
   },
   metric: {
     flex: 1,
-    backgroundColor: colors.white,
-    borderRadius: 10,
+    backgroundColor: "rgba(240,244,248,0.78)",
+    borderRadius: 14,
     paddingVertical: 12,
     paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.88)",
   },
   metricValue: {
     fontSize: 16,
@@ -140,7 +155,7 @@ const styles = StyleSheet.create({
   streakLabel: {
     fontSize: 10,
     fontWeight: "600",
-    color: colors.infoSecondary,
+    color: colors.textMuted,
   },
   streakDot: {
     width: 20,
@@ -150,7 +165,7 @@ const styles = StyleSheet.create({
   hint: {
     fontSize: 13,
     lineHeight: 18,
-    color: colors.info,
+    color: colors.textSecondary,
     marginTop: 14,
   },
 });

@@ -14,6 +14,7 @@ class SupplementResponse(BaseModel):
     id: uuid.UUID
     name: str
     category: SupplementCategory
+    source: Literal["catalog", "user_created"]
     form: str | None
     description: str | None
     goals: list[str] | None

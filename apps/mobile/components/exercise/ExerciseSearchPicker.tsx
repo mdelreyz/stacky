@@ -51,7 +51,11 @@ export function ExerciseSearchPicker({
     const isSelected = selectedIds.includes(item.id);
     return (
       <Pressable
-        style={[styles.item, isSelected && styles.itemSelected]}
+        style={({ pressed }) => [
+          styles.item,
+          isSelected && styles.itemSelected,
+          pressed && styles.softPressed,
+        ]}
         onPress={() => onSelect(item)}
         accessibilityRole="button"
         accessibilityLabel={`${item.name}${isSelected ? ", selected" : ""}`}
@@ -63,8 +67,22 @@ export function ExerciseSearchPicker({
             {item.equipment !== "none" ? ` \u00b7 ${item.equipment}` : ""}
           </Text>
         </View>
-        {isSelected && <FontAwesome name="check" size={16} color={colors.success} />}
-        {item.user_id && <FontAwesome name="user" size={12} color={colors.textMuted} style={{ marginLeft: 6 }} />}
+        <View style={styles.itemActions}>
+          {item.user_id && (
+            <View style={styles.userBadge}>
+              <FontAwesome name="user" size={11} color={colors.textSecondary} />
+            </View>
+          )}
+          {isSelected ? (
+            <View style={styles.selectedBadge}>
+              <FontAwesome name="check" size={14} color={colors.textWhite} />
+            </View>
+          ) : (
+            <View style={styles.unselectedBadge}>
+              <FontAwesome name="plus" size={12} color={colors.primaryDark} />
+            </View>
+          )}
+        </View>
       </Pressable>
     );
   };
@@ -82,12 +100,22 @@ export function ExerciseSearchPicker({
           autoCapitalize="none"
         />
         {search.length > 0 && (
-          <Pressable onPress={() => setSearch("")} accessibilityRole="button" accessibilityLabel="Clear search">
+          <Pressable
+            onPress={() => setSearch("")}
+            style={({ pressed }) => [styles.clearButton, pressed && styles.softPressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Clear search"
+          >
             <FontAwesome name="times" size={14} color={colors.textMuted} />
           </Pressable>
         )}
       </View>
-      <Pressable style={styles.createBtn} onPress={() => router.push("/exercise/create")} accessibilityRole="button" accessibilityLabel="Create custom exercise">
+      <Pressable
+        style={({ pressed }) => [styles.createBtn, pressed && styles.softPressed]}
+        onPress={() => router.push("/exercise/create")}
+        accessibilityRole="button"
+        accessibilityLabel="Create custom exercise"
+      >
         <FontAwesome name="plus" size={12} color={colors.primary} />
         <Text style={styles.createBtnText}>Create Custom Exercise</Text>
       </Pressable>
@@ -99,6 +127,7 @@ export function ExerciseSearchPicker({
           keyExtractor={(item) => item.id}
           renderItem={renderItem}
           style={styles.list}
+          contentContainerStyle={styles.listContent}
           keyboardShouldPersistTaps="handled"
         />
       )}
@@ -107,43 +136,102 @@ export function ExerciseSearchPicker({
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
+  container: { flex: 1, gap: 10 },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: "rgba(251,253,255,0.76)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     gap: 8,
-    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.94)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 18,
+    elevation: 2,
   },
   searchInput: { flex: 1, fontSize: 15, color: colors.textPrimary },
+  clearButton: {
+    width: 26,
+    height: 26,
+    borderRadius: 13,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(236,242,247,0.86)",
+  },
   createBtn: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    paddingVertical: 10,
-    marginBottom: 4,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-    borderStyle: "dashed",
-    borderRadius: 8,
+    paddingVertical: 13,
+    borderWidth: 1,
+    borderColor: "rgba(113,141,161,0.24)",
+    borderRadius: 18,
+    backgroundColor: "rgba(255,255,255,0.6)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.06,
+    shadowRadius: 16,
+    elevation: 2,
   },
   createBtnText: { fontSize: 13, fontWeight: "600", color: colors.primary },
   list: { flex: 1 },
+  listContent: { paddingBottom: 24, gap: 10 },
   item: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 12,
-    paddingHorizontal: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.borderLight,
+    paddingVertical: 15,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.68)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.06,
+    shadowRadius: 18,
+    elevation: 2,
   },
-  itemSelected: { backgroundColor: colors.successLight },
+  itemSelected: {
+    backgroundColor: "rgba(236,246,240,0.92)",
+    borderColor: "rgba(95,156,120,0.24)",
+  },
   itemLeft: { flex: 1 },
-  itemName: { fontSize: 15, fontWeight: "500", color: colors.textPrimary },
-  itemMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
+  itemName: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
+  itemMeta: { fontSize: 12, color: colors.textMuted, marginTop: 4 },
+  itemActions: { flexDirection: "row", alignItems: "center", gap: 8, marginLeft: 12 },
+  userBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(241,245,249,0.92)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.94)",
+  },
+  selectedBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.success,
+  },
+  unselectedBadge: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(237,245,252,0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(105,138,160,0.2)",
+  },
+  softPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
 });

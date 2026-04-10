@@ -1,24 +1,34 @@
-"""Best-effort supplement import from the legacy Supplement_Stack workbook.
+"""Supplement import from the Supplement_Stack workbook.
 
-The workbook is an old `.xls` file and this repo does not currently ship the
-usual `xlrd` dependency needed to parse it directly. For seeding purposes we
-recover the visible workbook text via the local `strings` binary, extract the
-main supplement list, then apply conservative cleanup and filtering rules.
+Parses the ``data/Supplement_Stack.xls`` file using ``pandas`` + ``xlrd``,
+extracts the "Supplements" sheet, and produces a clean catalog of dicts
+suitable for seeding the database.
+
+Each dict has keys: name, category, form, goals, mechanism_tags, description.
 """
 
 from __future__ import annotations
 
 import logging
 import re
-import subprocess
 from pathlib import Path
+
+try:
+    import pandas as pd
+
+    _HAS_PANDAS = True
+except ImportError:  # pragma: no cover
+    pd = None  # type: ignore[assignment]
+    _HAS_PANDAS = False
 
 
 logger = logging.getLogger(__name__)
 
 WORKBOOK_PATH = Path(__file__).resolve().parents[3] / "data" / "Supplement_Stack.xls"
-_START_MARKER = "Supplement"
-_END_MARKER = "Explanation*"
+
+# ---------------------------------------------------------------------------
+# Name normalisation
+# ---------------------------------------------------------------------------
 
 _RAW_REPLACEMENTS = {
     "5HTP": "5-HTP",
@@ -42,6 +52,11 @@ _RAW_REPLACEMENTS = {
     "ValerianJ": "Valerian",
     "Vitamin K2-MK4 and MK7": "Vitamin K2 MK-4 / MK-7",
 }
+
+# ---------------------------------------------------------------------------
+# Exclusion lists (medications / drugs that don't belong in the supplement
+# catalog)
+# ---------------------------------------------------------------------------
 
 _DROP_EXACT = {
     "Bioidentical testosterone cream/pellets",
@@ -78,6 +93,10 @@ _DROP_SUBSTRINGS = (
     "cream/pellets",
 )
 
+# ---------------------------------------------------------------------------
+# Category inference
+# ---------------------------------------------------------------------------
+
 _CATEGORY_RULES: list[tuple[str, tuple[str, ...]]] = [
     ("healthy_aging", ("spermidine", "fisetin", "ergothioneine", "pterostilbene", "oxaloacetate", "alpha ketoglutarate", "superoxide dismutase", "catalase", "trehalose", "piperlongumine")),
     ("energy_mitochondria", ("creatine", "coenzyme q10", "ubiquinol", "mitoq", "d-ribose", "mct", "molecular h2", "shilajit", "cordyceps", "beta alanine", "whey protein")),
@@ -107,43 +126,62 @@ _GOALS_BY_CATEGORY = {
     "musculoskeletal": ["joint_health"],
 }
 
+_MAIN_USE_TO_CATEGORY = {
+    "General Longevity": "healthy_aging",
+    "Cardiovascular": "cardiovascular",
+    "Cognitive": "brain_mood_stress",
+    "Mitochondria": "energy_mitochondria",
+    "Gut": "gut_digestion",
+    "Antioxidant": "inflammation_antioxidant",
+    "Performance": "energy_mitochondria",
+    "Hormonal": "hormones_fertility",
+    "Joints/Hair/Skin/Bones": "musculoskeletal",
+    "Lyme": "immune_antimicrobial",
+    "Glucose": "glucose_metabolic",
+    "Immune System": "immune_antimicrobial",
+    "Sleep": "sleep_recovery",
+    "General": "other",
+    "Anti-inflammation": "inflammation_antioxidant",
+    "Regeneration": "healthy_aging",
+    "Detox": "detox_binding",
+    "Binders": "detox_binding",
+    "Senolytic": "healthy_aging",
+    "Adaptogen": "brain_mood_stress",
+    "Grey Hair": "hormones_fertility",
+    "Pulse": "other",
+    "Fertility": "hormones_fertility",
+    "Stress": "brain_mood_stress",
+    "Gut (bioavailability)": "gut_digestion",
+    "Eye": "inflammation_antioxidant",
+}
 
-def _read_workbook_strings(workbook_path: Path) -> list[str]:
-    try:
-        result = subprocess.run(
-            ["strings", "-n", "4", str(workbook_path)],
-            check=True,
-            capture_output=True,
-            text=True,
-            errors="ignore",
-        )
-    except FileNotFoundError:
-        logger.warning("Skipping workbook supplement import because `strings` is not available")
-        return []
-    except subprocess.CalledProcessError as exc:
-        logger.warning("Skipping workbook supplement import because `strings` failed: %s", exc)
-        return []
-
-    return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+# Timing strings that hint at extra goals.
+_TIMING_GOAL_HINTS: dict[str, list[str]] = {
+    "before sport": ["performance"],
+    "post-workout": ["performance"],
+    "before performance": ["performance"],
+    "just before bed": ["sleep"],
+}
 
 
-def _extract_candidate_lines(lines: list[str]) -> list[str]:
-    try:
-        start_idx = lines.index(_START_MARKER) + 1
-    except ValueError:
-        logger.warning("Supplement workbook import could not find start marker %r", _START_MARKER)
-        return []
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
-    try:
-        end_idx = lines.index(_END_MARKER, start_idx)
-    except ValueError:
-        end_idx = len(lines)
 
-    return lines[start_idx:end_idx]
+def _safe_str(value: object) -> str | None:
+    """Return a stripped string or ``None`` for NaN / empty values."""
+    if value is None:
+        return None
+    if _HAS_PANDAS and pd.isna(value):  # type: ignore[arg-type]
+        return None
+    text = str(value).strip()
+    return text if text else None
 
 
 def _normalize_candidate_name(raw_name: str) -> str | None:
-    if raw_name in {_START_MARKER, "Supplements", "Peptides"}:
+    """Clean up a supplement name extracted from the workbook."""
+    if raw_name in {"Supplement", "Supplements", "Peptides"}:
         return None
 
     raw_name = raw_name.strip()
@@ -171,33 +209,179 @@ def _should_drop_candidate(name: str) -> bool:
         return True
 
     lowered = name.lower()
-    if any(token in lowered for token in _DROP_SUBSTRINGS):
-        return True
-
-    return False
+    return any(token in lowered for token in _DROP_SUBSTRINGS)
 
 
-def _infer_category(name: str) -> str:
+def _infer_category(name: str, main_use: str | None = None) -> str:
+    """Determine the body-system category for a supplement.
+
+    Priority: keyword rules first (most precise), then ``Main Use`` column
+    from the workbook as a fallback.
+    """
     lowered = name.lower()
     for category, keywords in _CATEGORY_RULES:
         if any(keyword in lowered for keyword in keywords):
             return category
+
+    # Fall back to Main Use column mapping.
+    if main_use:
+        mapped = _MAIN_USE_TO_CATEGORY.get(main_use)
+        if mapped:
+            return mapped
+
     return "other"
 
 
-def _infer_goals(category: str) -> list[str] | None:
-    goals = _GOALS_BY_CATEGORY.get(category)
-    return list(goals) if goals else None
+def _infer_goals(category: str, general_timing: str | None = None) -> list[str] | None:
+    """Return default goals for the category, enriched by timing hints."""
+    base = list(_GOALS_BY_CATEGORY.get(category, []))
+
+    if general_timing:
+        timing_lower = general_timing.lower()
+        for pattern, extra_goals in _TIMING_GOAL_HINTS.items():
+            if pattern in timing_lower:
+                for g in extra_goals:
+                    if g not in base:
+                        base.append(g)
+
+    return base if base else None
 
 
-def extract_workbook_supplement_names(workbook_path: Path = WORKBOOK_PATH) -> list[str]:
-    lines = _read_workbook_strings(workbook_path)
-    candidates = _extract_candidate_lines(lines)
+def _infer_mechanism_tags(
+    main_use: str | None,
+    tier: str | None,
+    general_timing: str | None,
+) -> list[str] | None:
+    """Derive lightweight mechanism tags from workbook metadata."""
+    tags: list[str] = []
+
+    if main_use:
+        main_lower = main_use.lower()
+        if "senolytic" in main_lower:
+            tags.append("senolytic")
+        if "adaptogen" in main_lower:
+            tags.append("adaptogen")
+        if "antioxidant" in main_lower:
+            tags.append("antioxidant")
+        if "detox" in main_lower or "binder" in main_lower:
+            tags.append("detox / binder")
+
+    if tier:
+        tier_lower = tier.lower()
+        if "pulse" in tier_lower:
+            tags.append("pulsed dosing")
+        if "binder" in tier_lower:
+            if "detox / binder" not in tags:
+                tags.append("detox / binder")
+
+    if general_timing:
+        timing_lower = general_timing.lower()
+        if "sport" in timing_lower or "workout" in timing_lower:
+            tags.append("performance")
+
+    return tags if tags else None
+
+
+def _build_description(
+    *,
+    main_use: str | None,
+    consensus_dosage: str | None,
+    general_timing: str | None,
+    warning: str | None,
+    bioavailability: str | None,
+    note: str | None,
+) -> str:
+    """Assemble a rich description from the available workbook columns."""
+    parts: list[str] = []
+
+    if main_use:
+        parts.append(f"{main_use}.")
+
+    if consensus_dosage:
+        parts.append(f"Dosage: {consensus_dosage}.")
+
+    if general_timing:
+        parts.append(f"Timing: {general_timing}.")
+
+    if bioavailability:
+        parts.append(f"Bioavailability: {bioavailability}.")
+
+    if warning:
+        parts.append(f"Warning: {warning}.")
+
+    if note:
+        parts.append(f"Note: {note}.")
+
+    parts.append("Imported from the Supplement_Stack workbook.")
+
+    return " ".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# Workbook reading (pandas + xlrd)
+# ---------------------------------------------------------------------------
+
+
+def _read_supplement_dataframe(
+    workbook_path: Path,
+) -> "pd.DataFrame | None":
+    """Read the Supplements sheet and return a DataFrame, or None on failure."""
+    if not _HAS_PANDAS:
+        logger.warning(
+            "Skipping workbook supplement import — pandas is not installed"
+        )
+        return None
+
+    if not workbook_path.exists():
+        logger.warning(
+            "Skipping workbook supplement import — file not found: %s",
+            workbook_path,
+        )
+        return None
+
+    try:
+        df = pd.read_excel(  # type: ignore[union-attr]
+            workbook_path,
+            sheet_name="Supplements",
+            engine="xlrd",
+        )
+    except Exception as exc:
+        logger.warning(
+            "Skipping workbook supplement import — failed to read Excel: %s",
+            exc,
+        )
+        return None
+
+    if "Supplement" not in df.columns:
+        logger.warning(
+            "Skipping workbook supplement import — 'Supplement' column not found"
+        )
+        return None
+
+    return df
+
+
+# ---------------------------------------------------------------------------
+# Public API
+# ---------------------------------------------------------------------------
+
+
+def extract_workbook_supplement_names(
+    workbook_path: Path = WORKBOOK_PATH,
+) -> list[str]:
+    """Return a deduplicated list of clean supplement names from the workbook."""
+    df = _read_supplement_dataframe(workbook_path)
+    if df is None:
+        return []
 
     names: list[str] = []
     seen: set[str] = set()
-    for raw_name in candidates:
-        normalized = _normalize_candidate_name(raw_name)
+
+    for raw_name in df["Supplement"]:
+        if _safe_str(raw_name) is None:
+            continue
+
+        normalized = _normalize_candidate_name(str(raw_name).strip())
         if normalized is None or _should_drop_candidate(normalized):
             continue
         if normalized in seen:
@@ -212,22 +396,66 @@ def load_workbook_supplement_catalog(
     workbook_path: Path = WORKBOOK_PATH,
     excluded_names: set[str] | None = None,
 ) -> list[dict]:
-    excluded_names = {name.lower() for name in (excluded_names or set())}
+    """Load enriched supplement catalog entries from the workbook.
+
+    Returns a list of dicts with keys:
+        name, category, form, goals, mechanism_tags, description
+    """
+    excluded_lower = {name.lower() for name in (excluded_names or set())}
+
+    df = _read_supplement_dataframe(workbook_path)
+    if df is None:
+        return []
 
     catalog: list[dict] = []
-    for name in extract_workbook_supplement_names(workbook_path):
-        if name.lower() in excluded_names:
+    seen: set[str] = set()
+
+    for _, row in df.iterrows():
+        raw_name = _safe_str(row.get("Supplement"))
+        if raw_name is None:
             continue
 
-        category = _infer_category(name)
+        normalized = _normalize_candidate_name(raw_name)
+        if normalized is None or _should_drop_candidate(normalized):
+            continue
+        if normalized in seen:
+            continue
+        if normalized.lower() in excluded_lower:
+            continue
+
+        seen.add(normalized)
+
+        # Extract workbook metadata.
+        main_use = _safe_str(row.get("Main Use"))
+        # Strip trailing whitespace from Main Use (e.g. "Fertility " → "Fertility").
+        if main_use:
+            main_use = main_use.strip()
+        consensus_dosage = _safe_str(row.get("Consensus Dosage"))
+        general_timing = _safe_str(row.get("General_timing"))
+        warning = _safe_str(row.get("Warning"))
+        bioavailability = _safe_str(row.get("Bioavailability"))
+        note = _safe_str(row.get("Note"))
+        tier = _safe_str(row.get("Tier"))
+
+        category = _infer_category(normalized, main_use=main_use)
+
         catalog.append(
             {
-                "name": name,
+                "name": normalized,
                 "category": category,
                 "form": None,
-                "goals": _infer_goals(category),
-                "mechanism_tags": None,
-                "description": "Imported from the Supplement_Stack workbook.",
+                "goals": _infer_goals(category, general_timing=general_timing),
+                "mechanism_tags": _infer_mechanism_tags(
+                    main_use=main_use, tier=tier, general_timing=general_timing,
+                ),
+                "description": _build_description(
+                    main_use=main_use,
+                    consensus_dosage=consensus_dosage,
+                    general_timing=general_timing,
+                    warning=warning,
+                    bioavailability=bioavailability,
+                    note=note,
+                ),
             }
         )
 

@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { useAuth } from "@/contexts/AuthContext";
@@ -84,74 +86,101 @@ export default function ProfileLocationScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader title="Location & UV" subtitle="Used for weather-based sunscreen guidance in Today" />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader title="Location & UV" subtitle="Used for weather-based sunscreen guidance in Today" />
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Location Name</Text>
-        <TextInput
-          style={styles.input}
-          value={locationName}
-          onChangeText={setLocationName}
-          placeholder="Barcelona"
-        />
+        <View style={styles.card}>
+          <Text style={styles.label}>Location Name</Text>
+          <TextInput
+            style={styles.input}
+            value={locationName}
+            onChangeText={setLocationName}
+            placeholder="Barcelona"
+          />
 
-        <Text style={styles.label}>Timezone</Text>
-        <TextInput
-          style={styles.input}
-          value={timezone}
-          onChangeText={setTimezone}
-          placeholder="Europe/Berlin"
-          autoCapitalize="none"
-        />
+          <Text style={styles.label}>Timezone</Text>
+          <TextInput
+            style={styles.input}
+            value={timezone}
+            onChangeText={setTimezone}
+            placeholder="Europe/Berlin"
+            autoCapitalize="none"
+          />
 
-        <Text style={styles.label}>Latitude</Text>
-        <TextInput
-          style={styles.input}
-          value={latitude}
-          onChangeText={setLatitude}
-          placeholder="41.3874"
-          keyboardType="decimal-pad"
-        />
+          <Text style={styles.label}>Latitude</Text>
+          <TextInput
+            style={styles.input}
+            value={latitude}
+            onChangeText={setLatitude}
+            placeholder="41.3874"
+            keyboardType="decimal-pad"
+          />
 
-        <Text style={styles.label}>Longitude</Text>
-        <TextInput
-          style={styles.input}
-          value={longitude}
-          onChangeText={setLongitude}
-          placeholder="2.1686"
-          keyboardType="decimal-pad"
-        />
+          <Text style={styles.label}>Longitude</Text>
+          <TextInput
+            style={styles.input}
+            value={longitude}
+            onChangeText={setLongitude}
+            placeholder="2.1686"
+            keyboardType="decimal-pad"
+          />
 
-        <Text style={styles.helper}>
-          Save coordinates for your current or primary location and the Today tab will fetch UV guidance from a weather API.
-        </Text>
-      </View>
+          <Text style={styles.helper}>
+            Save coordinates for your current or primary location and the Today tab will fetch UV guidance from a weather API.
+          </Text>
+        </View>
 
-      <Pressable style={[styles.primaryButton, saving && styles.buttonDisabled]} onPress={handleSave} disabled={saving} accessibilityRole="button" accessibilityLabel="Save location">
-        <Text style={styles.primaryText}>{saving ? "Saving..." : "Save Location"}</Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.primaryButton,
+            saving && styles.buttonDisabled,
+            pressed && !saving && styles.buttonPressed,
+          ]}
+          onPress={handleSave}
+          disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel="Save location"
+        >
+          <Text style={styles.primaryText}>{saving ? "Saving..." : "Save Location"}</Text>
+        </Pressable>
 
-      <Pressable style={[styles.secondaryButton, saving && styles.buttonDisabled]} onPress={handleClear} disabled={saving} accessibilityRole="button" accessibilityLabel="Clear location">
-        <Text style={styles.secondaryText}>Clear Saved Location</Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            saving && styles.buttonDisabled,
+            pressed && !saving && styles.secondaryButtonPressed,
+          ]}
+          onPress={handleClear}
+          disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel="Clear location"
+        >
+          <Text style={styles.secondaryText}>Clear Saved Location</Text>
+        </Pressable>
+      </FadeInView>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 980 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   label: {
@@ -163,11 +192,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 16,
     color: colors.textPrimary,
   },
@@ -179,10 +208,15 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginHorizontal: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
+    backgroundColor: colors.primaryDark,
+    borderRadius: 18,
     paddingVertical: 14,
     alignItems: "center",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   primaryText: {
     color: colors.white,
@@ -192,10 +226,12 @@ const styles = StyleSheet.create({
   secondaryButton: {
     marginHorizontal: 16,
     marginTop: 12,
-    backgroundColor: colors.dangerLight,
-    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.64)",
+    borderRadius: 18,
     paddingVertical: 14,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(208,101,101,0.34)",
   },
   secondaryText: {
     color: colors.dangerDark,
@@ -204,5 +240,13 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
+  },
+  secondaryButtonPressed: {
+    transform: [{ scale: 0.992 }],
+    backgroundColor: "rgba(255,255,255,0.76)",
   },
 });

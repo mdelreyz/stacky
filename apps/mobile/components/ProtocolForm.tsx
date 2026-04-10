@@ -149,7 +149,11 @@ export function ProtocolForm({
       />
 
       <Pressable
-        style={[styles.primaryButton, saving && styles.buttonDisabled]}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          saving && styles.buttonDisabled,
+          pressed && !saving && styles.primaryButtonPressed,
+        ]}
         onPress={onSubmit}
         disabled={saving}
         accessibilityRole="button"
@@ -167,7 +171,11 @@ export function ProtocolForm({
 
       {secondaryLabel && onSecondaryAction ? (
         <Pressable
-          style={[styles.secondaryButton, saving && styles.buttonDisabled]}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            saving && styles.buttonDisabled,
+            pressed && !saving && styles.secondaryButtonPressed,
+          ]}
           onPress={onSecondaryAction}
           disabled={saving}
           accessibilityRole="button"
@@ -182,15 +190,17 @@ export function ProtocolForm({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   sectionTitle: {
@@ -201,11 +211,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 16,
     color: colors.textPrimary,
     marginBottom: 12,
@@ -221,9 +231,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     marginHorizontal: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primaryDark,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   primaryButtonText: {
     color: colors.white,
@@ -234,9 +249,11 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 12,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
     alignItems: "center",
-    backgroundColor: colors.dangerLight,
+    backgroundColor: "rgba(255,255,255,0.64)",
+    borderWidth: 1,
+    borderColor: "rgba(208,101,101,0.34)",
   },
   secondaryButtonText: {
     fontSize: 15,
@@ -245,5 +262,13 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  primaryButtonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
+  },
+  secondaryButtonPressed: {
+    transform: [{ scale: 0.992 }],
+    backgroundColor: "rgba(255,255,255,0.76)",
   },
 });

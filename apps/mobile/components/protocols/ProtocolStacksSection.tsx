@@ -13,7 +13,9 @@ export function ProtocolStacksSection({ stacks }: { stacks: Protocol[] }) {
 
       {stacks.length === 0 ? (
         <View style={styles.emptyCard}>
-          <FontAwesome name="cubes" size={40} color={colors.border} style={{ marginBottom: 12 }} />
+          <View style={styles.emptyIconWrap}>
+            <FontAwesome name="cubes" size={24} color={colors.primaryDark} />
+          </View>
           <Text style={styles.emptyText}>No stacks yet</Text>
           <Text style={styles.emptyHint}>
             Bundle active supplements and modalities into named routines like Morning Stack or Recovery Block.
@@ -32,7 +34,11 @@ export function ProtocolStacksSection({ stacks }: { stacks: Protocol[] }) {
 
           return (
             <Link key={stack.id} href={`/protocol/${stack.id}`} asChild>
-              <Pressable style={styles.stackCard} accessibilityRole="button" accessibilityLabel={`${stack.name}, ${stack.items.length} items`}>
+              <Pressable
+                style={({ pressed }) => [styles.stackCard, pressed && styles.stackCardPressed]}
+                accessibilityRole="button"
+                accessibilityLabel={`${stack.name}, ${stack.items.length} items`}
+              >
                 <View style={styles.stackInfo}>
                   <Text style={styles.stackName}>{stack.name}</Text>
                   <Text style={styles.stackMeta}>
@@ -73,43 +79,62 @@ export function ProtocolStacksSection({ stacks }: { stacks: Protocol[] }) {
 
 const styles = StyleSheet.create({
   emptyCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.72)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 32,
+    borderRadius: 20,
+    padding: 24,
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
-  emptyText: { fontSize: 16, fontWeight: "500", color: colors.textMuted },
+  emptyIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.infoBorder,
+    marginBottom: 14,
+  },
+  emptyText: { fontSize: 16, fontWeight: "700", color: colors.textSecondary },
   emptyHint: {
     fontSize: 13,
-    color: colors.textPlaceholder,
+    color: colors.textMuted,
     textAlign: "center",
     marginTop: 8,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   stackCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.74)",
     marginHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 10,
-    padding: 14,
+    marginBottom: 10,
+    borderRadius: 18,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  stackCardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.988 }],
   },
   stackInfo: { flex: 1, marginRight: 12 },
   stackName: { fontSize: 15, fontWeight: "700", color: colors.textPrimary },
-  stackMeta: { fontSize: 12, color: colors.gray, marginTop: 4 },
+  stackMeta: { fontSize: 12, color: colors.gray, marginTop: 5, lineHeight: 18 },
   scheduleRow: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -119,14 +144,17 @@ const styles = StyleSheet.create({
   },
   statusBadge: {
     borderRadius: 999,
-    paddingHorizontal: 8,
+    paddingHorizontal: 9,
     paddingVertical: 4,
+    borderWidth: 1,
   },
   statusBadgeActive: {
     backgroundColor: colors.successLight,
+    borderColor: colors.successBadge,
   },
   statusBadgePaused: {
     backgroundColor: colors.dangerLight,
+    borderColor: "#efd3d3",
   },
   statusBadgeText: {
     fontSize: 11,
@@ -142,5 +170,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textSecondary,
   },
-  stackDescription: { fontSize: 13, color: colors.textSecondary, marginTop: 6, lineHeight: 18 },
+  stackDescription: { fontSize: 13, color: colors.textSecondary, marginTop: 7, lineHeight: 19 },
 });

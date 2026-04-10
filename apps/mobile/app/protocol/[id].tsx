@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
@@ -157,25 +159,28 @@ export default function ManageProtocolScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="Manage Stack"
-        subtitle={protocol.name}
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="Manage Stack"
+          subtitle={protocol.name}
+        />
 
-      <ProtocolForm
-        state={formState}
-        setState={setFormState}
-        supplements={supplements}
-        medications={medications}
-        therapies={therapies}
-        peptides={peptides}
-        saving={saving}
-        primaryLabel="Save Stack"
-        onSubmit={handleSave}
-        secondaryLabel="Delete Stack"
-        onSecondaryAction={handleDelete}
-      />
+        <ProtocolForm
+          state={formState}
+          setState={setFormState}
+          supplements={supplements}
+          medications={medications}
+          therapies={therapies}
+          peptides={peptides}
+          saving={saving}
+          primaryLabel="Save Stack"
+          onSubmit={handleSave}
+          secondaryLabel="Delete Stack"
+          onSecondaryAction={handleDelete}
+        />
+      </FadeInView>
 
       <View style={{ height: 32 }} />
     </ScrollView>
@@ -184,5 +189,7 @@ export default function ManageProtocolScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1240 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

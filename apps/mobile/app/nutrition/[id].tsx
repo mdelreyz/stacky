@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import {
@@ -125,18 +127,21 @@ export default function ManageNutritionPlanScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader title="Manage Nutrition Plan" subtitle={nutritionPlan.name} />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader title="Manage Nutrition Plan" subtitle={nutritionPlan.name} />
 
-      <NutritionPlanForm
-        state={formState}
-        setState={setFormState}
-        saving={saving}
-        primaryLabel="Save Changes"
-        onSubmit={handleSave}
-        secondaryLabel="Stop Plan"
-        onSecondaryAction={handleRemove}
-      />
+        <NutritionPlanForm
+          state={formState}
+          setState={setFormState}
+          saving={saving}
+          primaryLabel="Save Changes"
+          onSubmit={handleSave}
+          secondaryLabel="Stop Plan"
+          onSecondaryAction={handleRemove}
+        />
+      </FadeInView>
 
       <View style={{ height: 24 }} />
     </ScrollView>
@@ -147,6 +152,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
+  },
+  content: {
+    paddingBottom: 24,
+    position: "relative",
+  },
+  backdrop: {
+    top: -48,
+    height: 1100,
   },
   centered: {
     flex: 1,

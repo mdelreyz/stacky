@@ -14,6 +14,11 @@ export const supplements = {
 
   get: (id: string) => request<Supplement>(`/api/v1/supplements/${id}`),
 
+  delete: (id: string) =>
+    request<void>(`/api/v1/supplements/${id}`, {
+      method: "DELETE",
+    }),
+
   onboard: (data: { name: string; category?: string; form?: string }) =>
     request<{
       id: string;

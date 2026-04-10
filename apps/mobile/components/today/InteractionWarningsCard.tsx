@@ -36,13 +36,18 @@ export function InteractionWarningsCard({
 
 const styles = StyleSheet.create({
   warningCard: {
-    backgroundColor: colors.dangerLight,
+    backgroundColor: "rgba(248,237,237,0.9)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.safetyCriticalBg,
+    borderColor: "#efd3d3",
+    shadowColor: colors.dangerDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   warningHeader: {
     flexDirection: "row",

@@ -17,6 +17,7 @@ export interface Supplement {
   id: string;
   name: string;
   category: SupplementCategory;
+  source: "catalog" | "user_created";
   form: string | null;
   description: string | null;
   goals: string[] | null;

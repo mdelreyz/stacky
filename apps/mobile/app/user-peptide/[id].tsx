@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { PeptideScheduleForm, type PeptideScheduleState } from "@/components/PeptideScheduleForm";
@@ -111,21 +113,24 @@ export default function ManageUserPeptideScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="Manage Schedule"
-        subtitle={userPeptide.peptide.name}
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="Manage Schedule"
+          subtitle={userPeptide.peptide.name}
+        />
 
-      <PeptideScheduleForm
-        state={formState}
-        setState={setFormState}
-        saving={saving}
-        primaryLabel="Save Changes"
-        onSubmit={handleSave}
-        secondaryLabel="Stop Taking"
-        onSecondaryAction={handleRemove}
-      />
+        <PeptideScheduleForm
+          state={formState}
+          setState={setFormState}
+          saving={saving}
+          primaryLabel="Save Changes"
+          onSubmit={handleSave}
+          secondaryLabel="Stop Taking"
+          onSecondaryAction={handleRemove}
+        />
+      </FadeInView>
 
       <View style={{ height: 32 }} />
     </ScrollView>
@@ -134,5 +139,7 @@ export default function ManageUserPeptideScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1120 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

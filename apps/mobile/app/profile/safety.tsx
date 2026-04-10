@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { preferences as prefsApi } from "@/lib/api";
@@ -41,39 +43,45 @@ export default function SafetyCheckScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="Safety Check"
-        subtitle="Scan your active stack for known interactions"
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="Safety Check"
+          subtitle="Scan your active stack for known interactions"
+        />
 
-      <View style={styles.card}>
-        <Text style={styles.cardBody}>
-          This checks all your active supplements, medications, and peptides for
-          known interactions — contraindications, timing conflicts, and caution pairs.
-        </Text>
-        <Pressable
-          style={[styles.checkButton, loading && styles.buttonDisabled]}
-          onPress={handleCheck}
-          disabled={loading}
-          accessibilityRole="button"
-          accessibilityLabel="Run Safety Check"
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <>
-              <FontAwesome name="shield" size={16} color={colors.white} />
-              <Text style={styles.checkButtonText}>
-                {checked ? "Re-check Interactions" : "Run Safety Check"}
-              </Text>
-            </>
-          )}
-        </Pressable>
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.cardBody}>
+            This checks all your active supplements, medications, and peptides for
+            known interactions — contraindications, timing conflicts, and caution pairs.
+          </Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.checkButton,
+              loading && styles.buttonDisabled,
+              pressed && !loading && styles.buttonPressed,
+            ]}
+            onPress={handleCheck}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Run Safety Check"
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <>
+                <FontAwesome name="shield" size={16} color={colors.white} />
+                <Text style={styles.checkButtonText}>
+                  {checked ? "Re-check Interactions" : "Run Safety Check"}
+                </Text>
+              </>
+            )}
+          </Pressable>
+        </View>
 
-      {checked && result && (
-        <>
+        {checked && result && (
+          <>
           {/* Summary banner */}
           {result.total_warnings === 0 ? (
             <View style={styles.successBanner}>
@@ -134,26 +142,31 @@ export default function SafetyCheckScreen() {
               </View>
             );
           })}
-        </>
-      )}
+          </>
+        )}
+      </FadeInView>
 
-      <View style={{ height: 32 }} />
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 980 },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   cardBody: {
@@ -167,9 +180,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primaryDark,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   checkButtonText: {
     color: colors.white,
@@ -177,15 +195,21 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   buttonDisabled: { opacity: 0.6 },
+  buttonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
+  },
   successBanner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: colors.successLight,
+    backgroundColor: "rgba(234,245,239,0.88)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 22,
     padding: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   successTitle: {
     fontSize: 16,
@@ -201,13 +225,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: colors.warningLight,
+    backgroundColor: "rgba(248,243,232,0.92)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 22,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.warningBorder,
+    borderColor: "rgba(226,212,176,0.78)",
   },
   summaryTitle: {
     fontSize: 16,
@@ -220,16 +244,16 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   warningCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
     borderLeftWidth: 4,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
     elevation: 2,
   },
   warningHeader: {
@@ -251,8 +275,8 @@ const styles = StyleSheet.create({
   typeBadge: {
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: colors.surface,
+    borderRadius: 999,
+    backgroundColor: "rgba(243,247,251,0.94)",
   },
   typeText: {
     fontSize: 11,

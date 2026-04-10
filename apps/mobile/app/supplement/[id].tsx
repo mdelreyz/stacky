@@ -4,7 +4,6 @@ import {
   Text,
   View,
   ScrollView,
-  Pressable,
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
@@ -14,6 +13,8 @@ import type { Supplement } from "@/lib/api";
 import { SupplementAIProfileContent } from "@/components/supplement-detail/SupplementAIProfileContent";
 import { SupplementDetailHero } from "@/components/supplement-detail/SupplementDetailHero";
 import { SupplementProfileFallback } from "@/components/supplement-detail/SupplementProfileFallback";
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import type { SupplementAIProfile } from "@protocols/domain";
 
@@ -24,6 +25,9 @@ export default function SupplementDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [supplement, setSupplement] = useState<Supplement | null>(null);
   const [loading, setLoading] = useState(true);
+  const [retrying, setRetrying] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     if (!id) return;
@@ -78,7 +82,48 @@ export default function SupplementDetailScreen() {
         clearTimeout(timeoutId);
       }
     };
-  }, [id]);
+  }, [id, refreshKey]);
+
+  const handleRetry = async () => {
+    if (!supplement) return;
+
+    setRetrying(true);
+    try {
+      const result = await supplementsApi.onboard({
+        name: supplement.name,
+        category: supplement.category,
+        form: supplement.form ?? undefined,
+      });
+      setSupplement((current) =>
+        current
+          ? {
+              ...current,
+              ai_profile: result.ai_profile as Supplement["ai_profile"],
+              ai_status: result.status,
+              ai_error: result.ai_error,
+            }
+          : current,
+      );
+      setRefreshKey((current) => current + 1);
+    } catch (error: any) {
+      showError(error.message || "Failed to retry supplement generation");
+    } finally {
+      setRetrying(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!supplement || supplement.source !== "user_created") return;
+
+    setDeleting(true);
+    try {
+      await supplementsApi.delete(supplement.id);
+      router.replace("/(tabs)/protocols");
+    } catch (error: any) {
+      showError(error.message || "Failed to delete supplement");
+      setDeleting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -99,27 +144,43 @@ export default function SupplementDetailScreen() {
   const ai = supplement.ai_profile as SupplementAIProfile | null;
 
   return (
-    <ScrollView style={styles.container}>
-      <SupplementDetailHero
-        supplement={supplement}
-        onBack={() => router.back()}
-        onAddToProtocol={() => router.push(`/supplement/${supplement.id}/schedule`)}
-      />
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <SupplementDetailHero
+          supplement={supplement}
+          onBack={() => router.back()}
+          onAddToProtocol={() => router.push(`/supplement/${supplement.id}/schedule`)}
+          onDelete={handleDelete}
+          deleting={deleting}
+        />
 
-      {ai ? (
-        <SupplementAIProfileContent ai={ai} />
-      ) : supplement.ai_status === "failed" ? (
-        <SupplementProfileFallback status="failed" error={supplement.ai_error} />
-      ) : (
-        <SupplementProfileFallback status="generating" error={null} />
-      )}
+        {ai ? (
+          <SupplementAIProfileContent ai={ai} />
+        ) : supplement.ai_status === "failed" ? (
+          <SupplementProfileFallback
+            status="failed"
+            error={supplement.ai_error}
+            onRetry={handleRetry}
+            retrying={retrying}
+          />
+        ) : (
+          <SupplementProfileFallback status="generating" error={null} />
+        )}
+      </FadeInView>
 
-      <View style={{ height: 40 }} />
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 980 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
 });

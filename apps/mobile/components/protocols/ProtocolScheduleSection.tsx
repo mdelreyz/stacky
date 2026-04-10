@@ -31,7 +31,11 @@ export function ProtocolScheduleSection({
           return (
             <Pressable
               key={option.value}
-              style={[styles.optionChip, selected && styles.optionChipSelected]}
+              style={({ pressed }) => [
+                styles.optionChip,
+                selected && styles.optionChipSelected,
+                pressed && styles.pressed,
+              ]}
               accessibilityRole="button"
               accessibilityLabel={option.label}
               accessibilityState={{ selected }}
@@ -56,7 +60,11 @@ export function ProtocolScheduleSection({
 
       {schedule.type === "manual" ? (
         <Pressable
-          style={[styles.toggleRow, schedule.manualIsActive && styles.toggleRowActive]}
+          style={({ pressed }) => [
+            styles.toggleRow,
+            schedule.manualIsActive && styles.toggleRowActive,
+            pressed && styles.pressed,
+          ]}
           accessibilityRole="switch"
           accessibilityLabel="Manual regime active"
           accessibilityState={{ checked: schedule.manualIsActive }}
@@ -128,7 +136,11 @@ export function ProtocolScheduleSection({
               return (
                 <Pressable
                   key={week}
-                  style={[styles.optionChip, selected && styles.optionChipSelected]}
+                  style={({ pressed }) => [
+                    styles.optionChip,
+                    selected && styles.optionChipSelected,
+                    pressed && styles.pressed,
+                  ]}
                   accessibilityRole="button"
                   accessibilityLabel={`Week ${week}`}
                   accessibilityState={{ selected }}
@@ -160,15 +172,17 @@ export function ProtocolScheduleSection({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   sectionTitle: {
@@ -193,10 +207,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255,255,255,0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.9)",
   },
   optionChipSelected: {
     backgroundColor: colors.primaryLight,
+    borderColor: colors.infoBorder,
   },
   optionChipText: {
     color: colors.textSecondary,
@@ -210,10 +227,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 12,
     alignItems: "flex-start",
-    borderRadius: 12,
-    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 14,
+    backgroundColor: "rgba(240,244,248,0.82)",
     padding: 14,
     marginTop: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.88)",
   },
   toggleRowActive: {
     backgroundColor: colors.successLight,
@@ -248,15 +267,19 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
+    borderColor: "rgba(255,255,255,0.9)",
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: "rgba(240,244,248,0.82)",
     fontSize: 15,
     color: colors.textPrimary,
   },
   weekSection: {
     marginTop: 14,
+  },
+  pressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.988 }],
   },
 });

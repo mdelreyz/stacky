@@ -9,6 +9,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import {
   SupplementScheduleForm,
@@ -120,39 +122,47 @@ export default function ManageUserSupplementScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="Manage Schedule"
-        subtitle={userSupplement.supplement.name}
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="Manage Schedule"
+          subtitle={userSupplement.supplement.name}
+        />
 
-      <SupplementScheduleForm
-        state={formState}
-        setState={setFormState}
-        saving={saving}
-        primaryLabel="Save Changes"
-        onSubmit={handleSave}
-        secondaryLabel="Stop Taking"
-        onSecondaryAction={handleRemove}
-      />
+        <SupplementScheduleForm
+          state={formState}
+          setState={setFormState}
+          saving={saving}
+          primaryLabel="Save Changes"
+          onSubmit={handleSave}
+          secondaryLabel="Stop Taking"
+          onSecondaryAction={handleRemove}
+        />
 
-      <View style={styles.stockCard}>
-        <Text style={styles.stockTitle}>Supply Status</Text>
-        <Pressable
-          style={[styles.stockToggle, isOutOfStock && styles.stockToggleActive]}
-          onPress={() => setIsOutOfStock((current) => !current)}
-          accessibilityRole="checkbox"
-          accessibilityLabel="Out of stock"
-          accessibilityState={{ checked: isOutOfStock }}
-        >
-          <Text style={[styles.stockToggleText, isOutOfStock && styles.stockToggleTextActive]}>
-            {isOutOfStock ? "Marked as out of stock" : "Mark as out of stock"}
+        <View style={styles.stockCard}>
+          <Text style={styles.stockEyebrow}>Inventory</Text>
+          <Text style={styles.stockTitle}>Supply Status</Text>
+          <Pressable
+            style={({ pressed }) => [
+              styles.stockToggle,
+              isOutOfStock && styles.stockToggleActive,
+              pressed && styles.softPressed,
+            ]}
+            onPress={() => setIsOutOfStock((current) => !current)}
+            accessibilityRole="checkbox"
+            accessibilityLabel="Out of stock"
+            accessibilityState={{ checked: isOutOfStock }}
+          >
+            <Text style={[styles.stockToggleText, isOutOfStock && styles.stockToggleTextActive]}>
+              {isOutOfStock ? "Marked as out of stock" : "Mark as out of stock"}
+            </Text>
+          </Pressable>
+          <Text style={styles.stockHint}>
+            Out-of-stock supplements can be gathered into a generated refill note from the Protocols tab.
           </Text>
-        </Pressable>
-        <Text style={styles.stockHint}>
-          Out-of-stock supplements can be gathered into a generated refill note from the Protocols tab.
-        </Text>
-      </View>
+        </View>
+      </FadeInView>
 
       <View style={{ height: 32 }} />
     </ScrollView>
@@ -161,36 +171,49 @@ export default function ManageUserSupplementScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1180 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
   stockCard: {
-    backgroundColor: colors.white,
     marginHorizontal: 16,
+    marginTop: 4,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 24,
+    padding: 18,
+    backgroundColor: "rgba(255,255,255,0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
     elevation: 2,
   },
-  stockTitle: {
-    fontSize: 15,
+  stockEyebrow: {
+    fontSize: 11,
     fontWeight: "700",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  stockTitle: {
+    fontSize: 22,
+    fontWeight: "800",
     color: colors.grayDark,
     marginBottom: 12,
   },
   stockToggle: {
-    paddingVertical: 12,
-    paddingHorizontal: 14,
-    borderRadius: 10,
-    backgroundColor: colors.backgroundSecondary,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 18,
+    backgroundColor: "rgba(248,251,255,0.9)",
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   stockToggleActive: {
-    backgroundColor: colors.warningLight,
-    borderColor: colors.warningBorder,
+    backgroundColor: "rgba(255,248,235,0.9)",
+    borderColor: "rgba(241,181,104,0.14)",
   },
   stockToggleText: {
     fontSize: 14,
@@ -198,12 +221,13 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   stockToggleTextActive: {
-    color: colors.warning,
+    color: colors.warningDark,
   },
   stockHint: {
     fontSize: 12,
     color: colors.textMuted,
-    marginTop: 10,
+    marginTop: 12,
     lineHeight: 18,
   },
+  softPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
 });

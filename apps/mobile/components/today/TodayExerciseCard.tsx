@@ -28,7 +28,7 @@ export function TodayExerciseCard({ items }: { items: ExercisePlanItem[] }) {
         return (
           <Pressable
             key={item.routine_id}
-            style={styles.routineRow}
+            style={({ pressed }) => [styles.routineRow, pressed && styles.routineRowPressed]}
             accessibilityRole="button"
             accessibilityLabel={`${item.routine_name}, ${config.label}`}
             onPress={() => {
@@ -59,15 +59,17 @@ export function TodayExerciseCard({ items }: { items: ExercisePlanItem[] }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 20,
     overflow: "hidden",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   header: {
@@ -87,16 +89,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.borderLight,
+    borderTopColor: "rgba(216,224,232,0.65)",
+  },
+  routineRowPressed: {
+    opacity: 0.94,
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   routineInfo: { flex: 1 },
   routineName: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
   routineMeta: { fontSize: 12, color: colors.textMuted, marginTop: 2 },
 
   statusBadge: {
-    borderRadius: 8,
+    borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.7)",
   },
   statusText: { fontSize: 12, fontWeight: "600" },
 });

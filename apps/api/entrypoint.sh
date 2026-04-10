@@ -1,8 +1,15 @@
 #!/bin/bash
-set -e
+set -euo pipefail
+
+cd /app
+export PYTHONPATH="/app${PYTHONPATH:+:${PYTHONPATH}}"
 
 echo "Running database migrations..."
-alembic upgrade head
+python -m alembic upgrade head
 
 echo "Starting Protocols API..."
-exec uvicorn app.main:app --host 0.0.0.0 --port 8000
+if [[ "$#" -gt 0 ]]; then
+  exec "$@"
+fi
+
+exec python -m uvicorn app.main:app --host 0.0.0.0 --port 8000

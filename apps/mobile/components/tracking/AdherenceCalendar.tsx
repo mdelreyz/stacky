@@ -165,15 +165,17 @@ function LegendDot({ color, label }: { color: string; label: string }) {
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   header: {
@@ -204,7 +206,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   monthBlock: {
-    marginTop: 4,
+    marginTop: 8,
   },
   monthLabel: {
     fontSize: 13,
@@ -220,19 +222,21 @@ const styles = StyleSheet.create({
     flex: 1,
     textAlign: "center",
     fontSize: 11,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textMuted,
   },
   weekRow: {
     flexDirection: "row",
-    gap: 2,
-    marginBottom: 2,
+    gap: 4,
+    marginBottom: 4,
   },
   dayCell: {
     flex: 1,
     aspectRatio: 1,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "rgba(243,247,251,0.6)",
+    borderRadius: 10,
   },
   dayText: {
     fontSize: 12,

@@ -3,22 +3,15 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Link, useLocalSearchParams } from "expo-router";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { peptides as peptidesApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
 import { snakeCaseToLabel } from "@/lib/format";
+import { readProfileString, readProfileStringArray } from "@/lib/ai-profile";
 import type { Peptide } from "@/lib/api";
-
-function readString(profile: Record<string, unknown> | null, key: string): string | null {
-  const value = profile?.[key];
-  return typeof value === "string" && value.trim() ? value : null;
-}
-
-function readStringArray(obj: Record<string, unknown> | null, key: string): string[] {
-  const value = obj?.[key];
-  return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
-}
 
 export default function PeptideDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -57,154 +50,178 @@ export default function PeptideDetailScreen() {
   const ai = peptide.ai_profile as Record<string, unknown> | null;
   const goals = peptide.goals ?? [];
   const mechanismTags = peptide.mechanism_tags ?? [];
-  const aiDosage = readString(ai, "typical_dosage");
-  const aiRoute = readString(ai, "recommended_route");
-  const aiCycling = readString(ai, "cycling_protocol");
-  const aiStorage = readString(ai, "storage");
-  const aiReconstitution = readString(ai, "reconstitution");
-  const aiNotes = readString(ai, "notes");
-  const aiInteractions = readStringArray(ai, "interactions");
+  const aiDosage = readProfileString(ai, "typical_dosage");
+  const aiRoute = readProfileString(ai, "recommended_route");
+  const aiCycling = readProfileString(ai, "cycling_protocol");
+  const aiStorage = readProfileString(ai, "storage");
+  const aiReconstitution = readProfileString(ai, "reconstitution");
+  const aiNotes = readProfileString(ai, "notes");
+  const aiInteractions = readProfileStringArray(ai, "interactions");
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader title={peptide.name} subtitle={snakeCaseToLabel(peptide.category)} />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader title={peptide.name} subtitle={snakeCaseToLabel(peptide.category)} />
 
-      {/* Badges */}
-      <View style={styles.badgeRow}>
-        <View style={styles.categoryBadge}>
-          <Text style={styles.categoryBadgeText}>{snakeCaseToLabel(peptide.category)}</Text>
-        </View>
-        {ai && (
-          <View style={[styles.categoryBadge, styles.infoBadge]}>
-            <FontAwesome name="bolt" size={10} color={colors.primary} />
-            <Text style={styles.infoBadgeText}> Profile</Text>
+        <View style={styles.badgeRow}>
+          <View style={styles.categoryBadge}>
+            <Text style={styles.categoryBadgeText}>{snakeCaseToLabel(peptide.category)}</Text>
           </View>
-        )}
-        {peptide.form && (
-          <View style={[styles.categoryBadge, styles.formBadge]}>
-            <Text style={styles.formBadgeText}>{peptide.form}</Text>
-          </View>
-        )}
-      </View>
-
-      {/* Description */}
-      {peptide.description && (
-        <Text style={styles.description}>{peptide.description}</Text>
-      )}
-
-      {/* Goals */}
-      {goals.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Goals</Text>
-          <View style={styles.tagRow}>
-            {goals.map((goal) => (
-              <View key={goal} style={styles.goalTag}>
-                <Text style={styles.goalTagText}>{goal.replace(/_/g, " ")}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* Mechanism tags */}
-      {mechanismTags.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Mechanisms</Text>
-          <View style={styles.tagRow}>
-            {mechanismTags.map((tag) => (
-              <View key={tag} style={styles.tag}>
-                <Text style={styles.tagText}>{tag.replace(/_/g, " ")}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-      )}
-
-      {/* AI Profile details */}
-      {(aiDosage || aiRoute || aiCycling || aiReconstitution || aiStorage) && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Protocol Details</Text>
-          <View style={styles.detailsGrid}>
-            {aiDosage && (
-              <View style={styles.detailItem}>
-                <FontAwesome name="eyedropper" size={14} color={colors.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Typical Dosage</Text>
-                  <Text style={styles.detailValue}>{aiDosage}</Text>
-                </View>
-              </View>
-            )}
-            {aiRoute && (
-              <View style={styles.detailItem}>
-                <FontAwesome name="crosshairs" size={14} color={colors.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Route</Text>
-                  <Text style={styles.detailValue}>{aiRoute}</Text>
-                </View>
-              </View>
-            )}
-            {aiReconstitution && (
-              <View style={styles.detailItem}>
-                <FontAwesome name="flask" size={14} color={colors.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Reconstitution</Text>
-                  <Text style={styles.detailValue}>{aiReconstitution}</Text>
-                </View>
-              </View>
-            )}
-            {aiStorage && (
-              <View style={styles.detailItem}>
-                <FontAwesome name="snowflake-o" size={14} color={colors.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Storage</Text>
-                  <Text style={styles.detailValue}>{aiStorage}</Text>
-                </View>
-              </View>
-            )}
-            {aiCycling && (
-              <View style={styles.detailItem}>
-                <FontAwesome name="refresh" size={14} color={colors.primary} />
-                <View style={styles.detailContent}>
-                  <Text style={styles.detailLabel}>Cycling Protocol</Text>
-                  <Text style={styles.detailValue}>{aiCycling}</Text>
-                </View>
-              </View>
-            )}
-          </View>
-        </View>
-      )}
-
-      {/* AI Notes */}
-      {aiNotes && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Notes</Text>
-          <View style={styles.notesBox}>
-            <FontAwesome name="info-circle" size={14} color={colors.primary} style={{ marginTop: 2 }} />
-            <Text style={styles.notesText}>{aiNotes}</Text>
-          </View>
-        </View>
-      )}
-
-      {/* Interactions */}
-      {aiInteractions.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Interactions</Text>
-          {aiInteractions.map((interaction, i) => (
-            <View key={i} style={styles.interactionRow}>
-              <FontAwesome name="exclamation-triangle" size={12} color={colors.warning} />
-              <Text style={styles.interactionText}>{interaction}</Text>
+          {ai && (
+            <View style={[styles.categoryBadge, styles.infoBadge]}>
+              <FontAwesome name="bolt" size={10} color={colors.primaryDark} />
+              <Text style={styles.infoBadgeText}>Profile</Text>
             </View>
-          ))}
+          )}
+          {peptide.form && (
+            <View style={[styles.categoryBadge, styles.formBadge]}>
+              <Text style={styles.formBadgeText}>{peptide.form}</Text>
+            </View>
+          )}
         </View>
-      )}
 
-      {/* Start button */}
-      <Link href={`/peptide/${peptide.id}/schedule`} asChild>
-        <Pressable style={styles.primaryButton} accessibilityRole="button" accessibilityLabel="Add to My Protocol">
-          <FontAwesome name="plus" size={16} color={colors.white} />
-          <Text style={styles.primaryButtonText}>Add to My Protocol</Text>
-        </Pressable>
-      </Link>
+        {peptide.description && (
+          <View style={styles.section}>
+            <View style={styles.card}>
+              <Text style={styles.sectionEyebrow}>Overview</Text>
+              <Text style={styles.sectionTitle}>What It Supports</Text>
+              <Text style={styles.description}>{peptide.description}</Text>
+            </View>
+          </View>
+        )}
+
+        {goals.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.card}>
+              <Text style={styles.sectionEyebrow}>Targets</Text>
+              <Text style={styles.sectionTitle}>Goals</Text>
+              <View style={styles.tagRow}>
+                {goals.map((goal) => (
+                  <View key={goal} style={styles.goalTag}>
+                    <Text style={styles.goalTagText}>{goal.replace(/_/g, " ")}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {mechanismTags.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.card}>
+              <Text style={styles.sectionEyebrow}>Mechanism</Text>
+              <Text style={styles.sectionTitle}>Mechanisms</Text>
+              <View style={styles.tagRow}>
+                {mechanismTags.map((tag) => (
+                  <View key={tag} style={styles.tag}>
+                    <Text style={styles.tagText}>{tag.replace(/_/g, " ")}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {(aiDosage || aiRoute || aiCycling || aiReconstitution || aiStorage) && (
+          <View style={styles.section}>
+            <View style={styles.card}>
+              <Text style={styles.sectionEyebrow}>Protocol</Text>
+              <Text style={styles.sectionTitle}>Protocol Details</Text>
+              <View style={styles.detailsGrid}>
+                {aiDosage && (
+                  <View style={styles.detailItem}>
+                    <FontAwesome name="eyedropper" size={14} color={colors.primaryDark} />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Typical Dosage</Text>
+                      <Text style={styles.detailValue}>{aiDosage}</Text>
+                    </View>
+                  </View>
+                )}
+                {aiRoute && (
+                  <View style={styles.detailItem}>
+                    <FontAwesome name="crosshairs" size={14} color={colors.primaryDark} />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Route</Text>
+                      <Text style={styles.detailValue}>{aiRoute}</Text>
+                    </View>
+                  </View>
+                )}
+                {aiReconstitution && (
+                  <View style={styles.detailItem}>
+                    <FontAwesome name="flask" size={14} color={colors.primaryDark} />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Reconstitution</Text>
+                      <Text style={styles.detailValue}>{aiReconstitution}</Text>
+                    </View>
+                  </View>
+                )}
+                {aiStorage && (
+                  <View style={styles.detailItem}>
+                    <FontAwesome name="snowflake-o" size={14} color={colors.primaryDark} />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Storage</Text>
+                      <Text style={styles.detailValue}>{aiStorage}</Text>
+                    </View>
+                  </View>
+                )}
+                {aiCycling && (
+                  <View style={styles.detailItem}>
+                    <FontAwesome name="refresh" size={14} color={colors.primaryDark} />
+                    <View style={styles.detailContent}>
+                      <Text style={styles.detailLabel}>Cycling Protocol</Text>
+                      <Text style={styles.detailValue}>{aiCycling}</Text>
+                    </View>
+                  </View>
+                )}
+              </View>
+            </View>
+          </View>
+        )}
+
+        {aiNotes && (
+          <View style={styles.section}>
+            <View style={styles.card}>
+              <Text style={styles.sectionEyebrow}>Notes</Text>
+              <Text style={styles.sectionTitle}>Guidance</Text>
+              <View style={styles.notesBox}>
+                <FontAwesome name="info-circle" size={14} color={colors.primaryDark} style={{ marginTop: 2 }} />
+                <Text style={styles.notesText}>{aiNotes}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {aiInteractions.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.card}>
+              <Text style={styles.sectionEyebrow}>Safety</Text>
+              <Text style={styles.sectionTitle}>Interactions</Text>
+              <View style={styles.detailsGrid}>
+                {aiInteractions.map((interaction, i) => (
+                  <View key={i} style={styles.interactionRow}>
+                    <FontAwesome name="exclamation-triangle" size={12} color={colors.warning} />
+                    <Text style={styles.interactionText}>{interaction}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </View>
+        )}
+
+        <View style={styles.section}>
+          <Link href={`/peptide/${peptide.id}/schedule`} asChild>
+            <Pressable
+              style={({ pressed }) => [styles.primaryButton, pressed && styles.buttonPressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Add to My Protocol"
+            >
+              <FontAwesome name="plus" size={16} color={colors.white} />
+              <Text style={styles.primaryButtonText}>Add to My Protocol</Text>
+            </Pressable>
+          </Link>
+        </View>
+      </FadeInView>
 
       <View style={{ height: 32 }} />
     </ScrollView>
@@ -213,54 +230,65 @@ export default function PeptideDetailScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1340 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  section: { paddingHorizontal: 16, marginTop: 16 },
   badgeRow: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     gap: 8,
-    marginBottom: 12,
+    marginBottom: 2,
   },
   categoryBadge: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.successBadge,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    backgroundColor: "rgba(236,246,240,0.92)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(95,156,120,0.14)",
   },
   categoryBadgeText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.success,
     textTransform: "capitalize",
   },
-  infoBadge: { backgroundColor: colors.primaryLight },
-  infoBadgeText: { fontSize: 12, fontWeight: "600", color: colors.primary },
-  formBadge: { backgroundColor: colors.badgeYellow },
-  formBadgeText: { fontSize: 12, fontWeight: "600", color: colors.warning },
+  infoBadge: { gap: 6, backgroundColor: "rgba(236,245,252,0.92)", borderColor: "rgba(104,138,160,0.14)" },
+  infoBadgeText: { fontSize: 12, fontWeight: "700", color: colors.primaryDark },
+  formBadge: { backgroundColor: "rgba(255,244,230,0.92)", borderColor: "rgba(241,181,104,0.18)" },
+  formBadgeText: { fontSize: 12, fontWeight: "700", color: colors.warningDark },
   description: {
     fontSize: 15,
     color: colors.textSecondary,
-    lineHeight: 22,
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    lineHeight: 24,
   },
   card: {
-    backgroundColor: colors.white,
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 26,
+    padding: 20,
+    backgroundColor: "rgba(255,255,255,0.7)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.08,
+    shadowRadius: 20,
     elevation: 2,
   },
-  sectionTitle: {
-    fontSize: 15,
+  sectionEyebrow: {
+    fontSize: 11,
     fontWeight: "700",
+    letterSpacing: 0.7,
+    textTransform: "uppercase",
+    color: colors.textMuted,
+    marginBottom: 4,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "800",
     color: colors.grayDark,
     marginBottom: 12,
   },
@@ -270,26 +298,30 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   goalTag: {
-    backgroundColor: colors.successBadge,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    backgroundColor: "rgba(236,246,240,0.92)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(95,156,120,0.14)",
   },
   goalTagText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.success,
     textTransform: "capitalize",
   },
   tag: {
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    backgroundColor: "rgba(236,245,252,0.94)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(104,138,160,0.18)",
   },
   tagText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.primaryDarker,
   },
   detailsGrid: {
@@ -299,6 +331,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 12,
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: "rgba(248,251,255,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   detailContent: {
     flex: 1,
@@ -320,21 +357,27 @@ const styles = StyleSheet.create({
   notesBox: {
     flexDirection: "row",
     gap: 10,
-    backgroundColor: colors.primaryLight,
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: "rgba(236,245,252,0.94)",
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: "rgba(104,138,160,0.18)",
   },
   notesText: {
     flex: 1,
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
     color: colors.primaryDarker,
   },
   interactionRow: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: 8,
-    marginBottom: 8,
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: "rgba(255,248,235,0.86)",
+    borderWidth: 1,
+    borderColor: "rgba(241,181,104,0.12)",
   },
   interactionText: {
     flex: 1,
@@ -347,14 +390,19 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    marginHorizontal: 16,
-    backgroundColor: colors.primary,
-    paddingVertical: 14,
-    borderRadius: 12,
+    backgroundColor: colors.primaryDark,
+    paddingVertical: 16,
+    borderRadius: 18,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   primaryButtonText: {
     color: colors.white,
     fontSize: 16,
     fontWeight: "700",
   },
+  buttonPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
 });

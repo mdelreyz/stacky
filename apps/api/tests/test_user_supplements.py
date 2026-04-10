@@ -1,16 +1,19 @@
 import asyncio
 
+from sqlalchemy import select
+
 from app.database import async_session_factory
 from app.models.supplement import Supplement, SupplementCategory
+from app.models.user import User
 
 
-def auth_headers(client):
+def auth_headers(client, email: str = "supplements@example.com"):
     response = client.post(
         "/api/v1/auth/signup",
         json={
             "first_name": "Protocol",
             "last_name": "Builder",
-            "email": "supplements@example.com",
+            "email": email,
             "password": "Password123",
         },
     )
@@ -18,10 +21,23 @@ def auth_headers(client):
     return {"Authorization": f"Bearer {token}"}
 
 
-def create_supplement(name: str):
+def user_id_for_email(email: str):
+    async def _get():
+        async with async_session_factory() as session:
+            result = await session.execute(select(User).where(User.email == email))
+            return result.scalar_one().id
+
+    return asyncio.run(_get())
+
+
+def create_supplement(name: str, created_by_user_id=None):
     async def _create():
         async with async_session_factory() as session:
-            supplement = Supplement(name=name, category=SupplementCategory.other)
+            supplement = Supplement(
+                name=name,
+                category=SupplementCategory.other,
+                created_by_user_id=created_by_user_id,
+            )
             session.add(supplement)
             await session.commit()
             await session.refresh(supplement)
@@ -141,3 +157,27 @@ def test_generate_refill_request_from_out_of_stock_supplements(client):
     assert body["items"][0]["supplement_name"] == "Magnesium Glycinate"
     assert "Magnesium Glycinate" in body["text"]
     assert "Vitamin D3" not in body["text"]
+
+
+def test_cannot_add_another_users_custom_supplement(client):
+    auth_headers(client, "owner@example.com")
+    viewer_headers = auth_headers(client, "viewer@example.com")
+    owner_id = user_id_for_email("owner@example.com")
+    hidden_supplement_id = create_supplement("Owner Only Blend", created_by_user_id=owner_id)
+
+    response = client.post(
+        "/api/v1/users/me/supplements",
+        json={
+            "supplement_id": str(hidden_supplement_id),
+            "dosage_amount": 1,
+            "dosage_unit": "capsule",
+            "frequency": "daily",
+            "take_window": "morning_with_food",
+            "with_food": True,
+            "started_at": "2026-04-10",
+        },
+        headers=viewer_headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Supplement not found"

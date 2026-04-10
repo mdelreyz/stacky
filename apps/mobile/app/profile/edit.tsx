@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { useAuth } from "@/contexts/AuthContext";
@@ -51,63 +53,74 @@ export default function EditProfileScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader title="Edit Profile" subtitle="Update your name" />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader title="Edit Profile" subtitle="Update your name" />
 
-      <View style={styles.card}>
-        <Text style={styles.label}>First Name</Text>
-        <TextInput
-          style={styles.input}
-          value={firstName}
-          onChangeText={setFirstName}
-          placeholder="First name"
-          autoCapitalize="words"
-          autoCorrect={false}
-        />
+        <View style={styles.card}>
+          <Text style={styles.label}>First Name</Text>
+          <TextInput
+            style={styles.input}
+            value={firstName}
+            onChangeText={setFirstName}
+            placeholder="First name"
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
 
-        <Text style={styles.label}>Last Name</Text>
-        <TextInput
-          style={styles.input}
-          value={lastName}
-          onChangeText={setLastName}
-          placeholder="Last name"
-          autoCapitalize="words"
-          autoCorrect={false}
-        />
+          <Text style={styles.label}>Last Name</Text>
+          <TextInput
+            style={styles.input}
+            value={lastName}
+            onChangeText={setLastName}
+            placeholder="Last name"
+            autoCapitalize="words"
+            autoCorrect={false}
+          />
 
-        <Text style={styles.label}>Email</Text>
-        <View style={styles.readonlyField}>
-          <Text style={styles.readonlyText}>{user.email}</Text>
+          <Text style={styles.label}>Email</Text>
+          <View style={styles.readonlyField}>
+            <Text style={styles.readonlyText}>{user.email}</Text>
+          </View>
+          <Text style={styles.helper}>Email cannot be changed.</Text>
         </View>
-        <Text style={styles.helper}>Email cannot be changed.</Text>
-      </View>
 
-      <Pressable
-        style={[styles.primaryButton, saving && styles.buttonDisabled]}
-        onPress={handleSave}
-        disabled={saving}
-        accessibilityRole="button"
-        accessibilityLabel="Save Changes"
-      >
-        <Text style={styles.primaryText}>{saving ? "Saving..." : "Save Changes"}</Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.primaryButton,
+            saving && styles.buttonDisabled,
+            pressed && !saving && styles.buttonPressed,
+          ]}
+          onPress={handleSave}
+          disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel="Save Changes"
+        >
+          <Text style={styles.primaryText}>{saving ? "Saving..." : "Save Changes"}</Text>
+        </Pressable>
+      </FadeInView>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 900 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   label: {
@@ -119,21 +132,21 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 16,
     color: colors.textPrimary,
   },
   readonlyField: {
     borderWidth: 1,
-    borderColor: colors.borderLight,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.surface,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: "rgba(243,247,251,0.9)",
   },
   readonlyText: {
     fontSize: 16,
@@ -146,10 +159,15 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginHorizontal: 16,
-    backgroundColor: colors.primary,
-    borderRadius: 12,
+    backgroundColor: colors.primaryDark,
+    borderRadius: 18,
     paddingVertical: 14,
     alignItems: "center",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   primaryText: {
     color: colors.white,
@@ -158,5 +176,9 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
   },
 });

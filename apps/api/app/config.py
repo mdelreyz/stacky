@@ -1,8 +1,12 @@
 import os
 import warnings
+from pathlib import Path
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings
+
+_REPO_ROOT = Path(__file__).resolve().parents[3]
+_ENV_FILES = (str(_REPO_ROOT / ".env"), ".env")
 
 
 class Settings(BaseSettings):
@@ -41,7 +45,7 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8000
 
-    model_config = {"env_prefix": "PROTOCOLS_", "env_file": ".env", "env_file_encoding": "utf-8"}
+    model_config = {"env_prefix": "PROTOCOLS_", "env_file": _ENV_FILES, "env_file_encoding": "utf-8"}
 
 
 settings = Settings()

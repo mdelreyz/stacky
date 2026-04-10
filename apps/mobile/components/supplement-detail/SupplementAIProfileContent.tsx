@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
@@ -147,7 +148,7 @@ function Section({
 }: {
   title: string;
   icon: string;
-  children: React.ReactNode;
+  children: ReactNode;
 }) {
   return (
     <View style={styles.section}>
@@ -180,68 +181,75 @@ function severityColor(
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
-    marginBottom: 12,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    marginBottom: 14,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   sectionTitleRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 12,
   },
   sectionIcon: {
     marginRight: 8,
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textPrimary,
   },
   bodyText: {
     fontSize: 14,
     color: colors.textSecondary,
-    lineHeight: 20,
+    lineHeight: 22,
   },
   bodyTextSmall: {
     fontSize: 13,
     color: colors.textMuted,
-    lineHeight: 18,
-    marginTop: 6,
+    lineHeight: 19,
+    marginTop: 8,
   },
   subLabel: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textSecondary,
   },
   contraindicationsLabel: {
     marginTop: 12,
   },
   dosageRow: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    marginBottom: 6,
+    marginBottom: 8,
     gap: 8,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(246,249,252,0.88)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   dosageAmount: {
     fontSize: 15,
-    fontWeight: "600",
-    color: colors.primary,
+    fontWeight: "700",
+    color: colors.primaryDark,
+    marginBottom: 3,
   },
   dosageContext: {
     fontSize: 13,
     color: colors.textMuted,
+    lineHeight: 18,
   },
   infoRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    paddingVertical: 4,
+    paddingVertical: 8,
     gap: 12,
   },
   infoLabel: {
@@ -260,6 +268,9 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
     marginBottom: 10,
     gap: 8,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(248,251,255,0.72)",
   },
   severityDot: {
     width: 8,
@@ -282,10 +293,13 @@ const styles = StyleSheet.create({
   },
   synergyRow: {
     marginBottom: 10,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(248,251,255,0.72)",
   },
   synergySubstance: {
     fontSize: 14,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.success,
   },
   synergyBenefit: {
@@ -300,20 +314,24 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   tag: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 6,
+    backgroundColor: "rgba(243,247,251,0.94)",
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.9)",
   },
   tagText: {
     fontSize: 12,
     color: colors.textSecondary,
+    fontWeight: "600",
   },
   tagDanger: {
-    backgroundColor: colors.dangerLight,
+    backgroundColor: "rgba(248,237,237,0.96)",
   },
   tagDangerText: {
     fontSize: 12,
     color: colors.danger,
+    fontWeight: "700",
   },
 });

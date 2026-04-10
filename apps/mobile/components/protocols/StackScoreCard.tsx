@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Link } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { preferences as prefsApi } from "@/lib/api";
@@ -94,15 +93,17 @@ export function StackScoreCard() {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   header: {
@@ -127,6 +128,8 @@ const styles = StyleSheet.create({
     borderRadius: 26,
     alignItems: "center",
     justifyContent: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.7)",
   },
   scoreText: {
     fontSize: 22,
@@ -150,7 +153,7 @@ const styles = StyleSheet.create({
   barTrack: {
     flex: 1,
     height: 6,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(230,236,242,0.9)",
     borderRadius: 3,
     overflow: "hidden",
   },
@@ -168,7 +171,7 @@ const styles = StyleSheet.create({
     marginTop: 14,
     paddingTop: 14,
     borderTopWidth: 1,
-    borderTopColor: colors.surface,
+    borderTopColor: "rgba(216,224,232,0.65)",
   },
   synergiesTitle: {
     fontSize: 13,
@@ -185,6 +188,7 @@ const styles = StyleSheet.create({
   suggestionsSection: {
     marginTop: 12,
     gap: 6,
+    paddingTop: 2,
   },
   suggestionRow: {
     flexDirection: "row",

@@ -6,7 +6,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
 from app.database import get_session
-from app.models.supplement import Supplement
 from app.models.user import User
 from app.models.user_supplement import UserSupplement
 from app.schemas.common import PaginatedResponse
@@ -19,6 +18,7 @@ from app.schemas.supplement import (
 )
 from app.services.daily_plan import resolve_user_date
 from app.services.pagination import paginate, paginated_response
+from app.services.supplement_visibility import get_visible_supplement
 from app.services.user_supplement_serialization import serialize_user_supplement
 
 router = APIRouter(prefix="/users/me/supplements", tags=["user-supplements"])
@@ -125,9 +125,8 @@ async def add_user_supplement(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    # Verify supplement exists
-    result = await session.execute(select(Supplement).where(Supplement.id == data.supplement_id))
-    if result.scalar_one_or_none() is None:
+    supplement = await get_visible_supplement(session, data.supplement_id, current_user.id)
+    if supplement is None:
         raise HTTPException(status_code=404, detail="Supplement not found")
 
     existing_result = await session.execute(

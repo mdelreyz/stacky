@@ -1,7 +1,7 @@
 import type { ComponentProps } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Link } from "expo-router";
+import { Link, type Href } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { ProtocolsSectionHeader } from "./ProtocolsSectionHeader";
@@ -13,7 +13,7 @@ export interface ActiveProtocolListItem {
   name: string;
   meta: string;
   detail?: string;
-  href: string;
+  href: Href;
 }
 
 export function ActiveProtocolItemsSection({
@@ -26,7 +26,7 @@ export function ActiveProtocolItemsSection({
   items,
 }: {
   title: string;
-  actionHref?: string;
+  actionHref?: Href;
   actionLabel?: string;
   emptyIcon: IconName;
   emptyTitle: string;
@@ -39,14 +39,20 @@ export function ActiveProtocolItemsSection({
 
       {items.length === 0 ? (
         <View style={styles.emptyCard}>
-          <FontAwesome name={emptyIcon} size={40} color={colors.border} style={{ marginBottom: 12 }} />
+          <View style={styles.emptyIconWrap}>
+            <FontAwesome name={emptyIcon} size={24} color={colors.primaryDark} />
+          </View>
           <Text style={styles.emptyText}>{emptyTitle}</Text>
           <Text style={styles.emptyHint}>{emptyHint}</Text>
         </View>
       ) : (
         items.map((item) => (
           <Link key={item.id} href={item.href} asChild>
-            <Pressable style={styles.card} accessibilityRole="button" accessibilityLabel={item.name}>
+            <Pressable
+              style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+              accessibilityRole="button"
+              accessibilityLabel={item.name}
+            >
               <View style={styles.info}>
                 <Text style={styles.name}>{item.name}</Text>
                 <Text style={styles.meta}>{item.meta}</Text>
@@ -63,42 +69,61 @@ export function ActiveProtocolItemsSection({
 
 const styles = StyleSheet.create({
   emptyCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.72)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 32,
+    borderRadius: 20,
+    padding: 24,
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
-  emptyText: { fontSize: 16, fontWeight: "500", color: colors.textMuted },
+  emptyIconWrap: {
+    width: 56,
+    height: 56,
+    borderRadius: 999,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.primaryLight,
+    borderWidth: 1,
+    borderColor: colors.infoBorder,
+    marginBottom: 14,
+  },
+  emptyText: { fontSize: 16, fontWeight: "700", color: colors.textSecondary },
   emptyHint: {
     fontSize: 13,
-    color: colors.textPlaceholder,
+    color: colors.textMuted,
     textAlign: "center",
     marginTop: 8,
-    lineHeight: 18,
+    lineHeight: 19,
   },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.74)",
     marginHorizontal: 16,
-    marginBottom: 8,
-    borderRadius: 10,
-    padding: 14,
+    marginBottom: 10,
+    borderRadius: 18,
+    padding: 16,
     flexDirection: "row",
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  cardPressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.988 }],
   },
   info: { flex: 1, marginRight: 12 },
-  name: { fontSize: 15, fontWeight: "600", color: colors.textPrimary },
-  meta: { fontSize: 12, color: colors.gray, marginTop: 4 },
-  detail: { fontSize: 12, color: colors.textSecondary, marginTop: 4 },
+  name: { fontSize: 15, fontWeight: "700", color: colors.textPrimary },
+  meta: { fontSize: 12, color: colors.gray, marginTop: 5 },
+  detail: { fontSize: 12, color: colors.textSecondary, marginTop: 6, lineHeight: 17 },
 });

@@ -8,6 +8,8 @@ import {
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import {
   SupplementScheduleForm,
@@ -113,19 +115,22 @@ export default function ScheduleSupplementScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="Start Taking"
-        subtitle={supplement.name}
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="Start Taking"
+          subtitle={supplement.name}
+        />
 
-      <SupplementScheduleForm
-        state={formState}
-        setState={setFormState}
-        saving={saving}
-        primaryLabel="Add to My Protocol"
-        onSubmit={handleSave}
-      />
+        <SupplementScheduleForm
+          state={formState}
+          setState={setFormState}
+          saving={saving}
+          primaryLabel="Add to My Protocol"
+          onSubmit={handleSave}
+        />
+      </FadeInView>
 
       <View style={{ height: 32 }} />
     </ScrollView>
@@ -134,5 +139,7 @@ export default function ScheduleSupplementScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1140 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

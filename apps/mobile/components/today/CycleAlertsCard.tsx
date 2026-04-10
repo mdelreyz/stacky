@@ -27,13 +27,18 @@ export function CycleAlertsCard({ alerts }: { alerts: CycleAlert[] }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.accentLight,
+    backgroundColor: "rgba(240,238,248,0.84)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 18,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.accentBorder,
+    shadowColor: colors.accentDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
   },
   header: {
     flexDirection: "row",

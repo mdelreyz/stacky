@@ -4,6 +4,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useLocalSearchParams } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { AdherenceCalendar } from "@/components/tracking/AdherenceCalendar";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
@@ -58,107 +60,110 @@ export default function TrackingScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="Tracking"
-        subtitle={`${formatIsoDate(overview.end_date)} snapshot`}
-      />
-
-      {overview.daily_completion && (
-        <AdherenceCalendar
-          dailyCompletion={overview.daily_completion}
-          startDate={overview.start_date}
-          endDate={overview.end_date}
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="Tracking"
+          subtitle={`${formatIsoDate(overview.end_date)} snapshot`}
         />
-      )}
 
-      <View style={styles.summaryCard}>
-        <Text style={styles.summaryTitle}>Execution Overview</Text>
-        <View style={styles.filterRow}>
-          <FilterChip label="All" selected={itemTypeFilter === null} onPress={() => setItemTypeFilter(null)} />
-          <FilterChip
-            label="Supplements"
-            selected={itemTypeFilter === "supplement"}
-            onPress={() => setItemTypeFilter("supplement")}
+        {overview.daily_completion && (
+          <AdherenceCalendar
+            dailyCompletion={overview.daily_completion}
+            startDate={overview.start_date}
+            endDate={overview.end_date}
           />
-          <FilterChip
-            label="Medications"
-            selected={itemTypeFilter === "medication"}
-            onPress={() => setItemTypeFilter("medication")}
-          />
-          <FilterChip
-            label="Modalities"
-            selected={itemTypeFilter === "therapy"}
-            onPress={() => setItemTypeFilter("therapy")}
-          />
-          <FilterChip
-            label="Peptides"
-            selected={itemTypeFilter === "peptide"}
-            onPress={() => setItemTypeFilter("peptide")}
-          />
+        )}
+
+        <View style={styles.summaryCard}>
+          <Text style={styles.summaryTitle}>Execution Overview</Text>
+          <View style={styles.filterRow}>
+            <FilterChip label="All" selected={itemTypeFilter === null} onPress={() => setItemTypeFilter(null)} />
+            <FilterChip
+              label="Supplements"
+              selected={itemTypeFilter === "supplement"}
+              onPress={() => setItemTypeFilter("supplement")}
+            />
+            <FilterChip
+              label="Medications"
+              selected={itemTypeFilter === "medication"}
+              onPress={() => setItemTypeFilter("medication")}
+            />
+            <FilterChip
+              label="Modalities"
+              selected={itemTypeFilter === "therapy"}
+              onPress={() => setItemTypeFilter("therapy")}
+            />
+            <FilterChip
+              label="Peptides"
+              selected={itemTypeFilter === "peptide"}
+              onPress={() => setItemTypeFilter("peptide")}
+            />
+          </View>
+          <View style={styles.summaryGrid}>
+            <SummaryMetric label="Completion" value={`${Math.round(overview.completion_rate * 100)}%`} />
+            <SummaryMetric label="Streak" value={`${overview.current_streak_days} days`} />
+            <SummaryMetric label="Taken" value={String(overview.taken_count)} />
+            <SummaryMetric label="Pending" value={String(overview.pending_count)} />
+          </View>
+          <Text style={styles.summaryRange}>
+            {formatIsoDate(overview.start_date)} to {formatIsoDate(overview.end_date)}
+          </Text>
         </View>
-        <View style={styles.summaryGrid}>
-          <SummaryMetric label="Completion" value={`${Math.round(overview.completion_rate * 100)}%`} />
-          <SummaryMetric label="Streak" value={`${overview.current_streak_days} days`} />
-          <SummaryMetric label="Taken" value={String(overview.taken_count)} />
-          <SummaryMetric label="Pending" value={String(overview.pending_count)} />
-        </View>
-        <Text style={styles.summaryRange}>
-          {formatIsoDate(overview.start_date)} to {formatIsoDate(overview.end_date)}
-        </Text>
-      </View>
 
-      <SectionCard title="Suggestions" icon="compass">
-        {overview.suggestions.length === 0 ? (
-          <Text style={styles.emptyText}>No change suggestions yet. Keep logging completions to surface patterns.</Text>
-        ) : (
-          overview.suggestions.map((suggestion, index) => (
-            <View key={`${suggestion.item_type}-${suggestion.item_id ?? "overall"}-${index}`} style={styles.listRow}>
-              <Text style={styles.listTitle}>{suggestion.headline}</Text>
-              <Text style={styles.listBody}>{suggestion.recommendation}</Text>
-            </View>
-          ))
-        )}
-      </SectionCard>
+        <SectionCard title="Suggestions" icon="compass">
+          {overview.suggestions.length === 0 ? (
+            <Text style={styles.emptyText}>No change suggestions yet. Keep logging completions to surface patterns.</Text>
+          ) : (
+            overview.suggestions.map((suggestion, index) => (
+              <View key={`${suggestion.item_type}-${suggestion.item_id ?? "overall"}-${index}`} style={styles.listRow}>
+                <Text style={styles.listTitle}>{suggestion.headline}</Text>
+                <Text style={styles.listBody}>{suggestion.recommendation}</Text>
+              </View>
+            ))
+          )}
+        </SectionCard>
 
-      <SectionCard title="Lowest Adherence Items" icon="exclamation-circle">
-        {overview.item_stats.length === 0 ? (
-          <Text style={styles.emptyText}>No scheduled items in this window.</Text>
-        ) : (
-          overview.item_stats.slice(0, 8).map((item) => (
-            <View key={`${item.item_type}-${item.item_id}`} style={styles.listRow}>
-              <Text style={styles.listTitle}>{item.item_name}</Text>
-              <Text style={styles.listMeta}>
-                {Math.round(item.completion_rate * 100)}% completion · {item.taken_count}/{item.scheduled_count} taken ·{" "}
-                {item.take_window.replace(/_/g, " ")}
-              </Text>
-              {item.regimes.length > 0 ? <Text style={styles.listBody}>Regime: {item.regimes.join(", ")}</Text> : null}
-            </View>
-          ))
-        )}
-      </SectionCard>
+        <SectionCard title="Lowest Adherence Items" icon="exclamation-circle">
+          {overview.item_stats.length === 0 ? (
+            <Text style={styles.emptyText}>No scheduled items in this window.</Text>
+          ) : (
+            overview.item_stats.slice(0, 8).map((item) => (
+              <View key={`${item.item_type}-${item.item_id}`} style={styles.listRow}>
+                <Text style={styles.listTitle}>{item.item_name}</Text>
+                <Text style={styles.listMeta}>
+                  {Math.round(item.completion_rate * 100)}% completion · {item.taken_count}/{item.scheduled_count} taken ·{" "}
+                  {item.take_window.replace(/_/g, " ")}
+                </Text>
+                {item.regimes.length > 0 ? <Text style={styles.listBody}>Regime: {item.regimes.join(", ")}</Text> : null}
+              </View>
+            ))
+          )}
+        </SectionCard>
 
-      <SectionCard title="Recent Activity" icon="clock-o">
-        {overview.recent_events.length === 0 ? (
-          <Text style={styles.emptyText}>No completion events recorded yet.</Text>
-        ) : (
-          overview.recent_events.map((event) => (
-            <View key={`${event.item_type}-${event.item_id}-${event.scheduled_at}`} style={styles.listRow}>
-              <Text style={styles.listTitle}>
-                {event.item_name} · {event.status === "taken" ? "Taken" : "Skipped"}
-              </Text>
-              <Text style={styles.listMeta}>{formatEventTimestamp(event.taken_at ?? event.scheduled_at)}</Text>
-              {event.take_window ? (
-                <Text style={styles.listBody}>Window: {event.take_window.replace(/_/g, " ")}</Text>
-              ) : null}
-              {event.regimes.length > 0 ? <Text style={styles.listBody}>Regime: {event.regimes.join(", ")}</Text> : null}
-              {event.skip_reason ? <Text style={styles.listBody}>Reason: {event.skip_reason}</Text> : null}
-            </View>
-          ))
-        )}
-      </SectionCard>
+        <SectionCard title="Recent Activity" icon="clock-o">
+          {overview.recent_events.length === 0 ? (
+            <Text style={styles.emptyText}>No completion events recorded yet.</Text>
+          ) : (
+            overview.recent_events.map((event) => (
+              <View key={`${event.item_type}-${event.item_id}-${event.scheduled_at}`} style={styles.listRow}>
+                <Text style={styles.listTitle}>
+                  {event.item_name} · {event.status === "taken" ? "Taken" : "Skipped"}
+                </Text>
+                <Text style={styles.listMeta}>{formatEventTimestamp(event.taken_at ?? event.scheduled_at)}</Text>
+                {event.take_window ? (
+                  <Text style={styles.listBody}>Window: {event.take_window.replace(/_/g, " ")}</Text>
+                ) : null}
+                {event.regimes.length > 0 ? <Text style={styles.listBody}>Regime: {event.regimes.join(", ")}</Text> : null}
+                {event.skip_reason ? <Text style={styles.listBody}>Reason: {event.skip_reason}</Text> : null}
+              </View>
+            ))
+          )}
+        </SectionCard>
+      </FadeInView>
 
-      <View style={{ height: 32 }} />
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
@@ -182,7 +187,17 @@ function FilterChip({
   onPress: () => void;
 }) {
   return (
-    <Pressable style={[styles.filterChip, selected && styles.filterChipSelected]} onPress={onPress} accessibilityRole="button" accessibilityLabel={label} accessibilityState={{ selected }}>
+    <Pressable
+      style={({ pressed }) => [
+        styles.filterChip,
+        selected && styles.filterChipSelected,
+        pressed && styles.softPressed,
+      ]}
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityState={{ selected }}
+    >
       <Text style={[styles.filterChipText, selected && styles.filterChipTextSelected]}>{label}</Text>
     </Pressable>
   );
@@ -223,21 +238,32 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
   },
+  content: {
+    paddingBottom: 24,
+    position: "relative",
+  },
+  backdrop: {
+    top: -48,
+    height: 1040,
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: colors.backgroundSecondary,
   },
   summaryCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   summaryTitle: {
@@ -258,13 +284,15 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   filterChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(243,247,251,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   filterChipSelected: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "rgba(234,242,248,0.94)",
   },
   filterChipText: {
     fontSize: 12,
@@ -276,9 +304,11 @@ const styles = StyleSheet.create({
   },
   metricCard: {
     flexBasis: "47%",
-    backgroundColor: colors.backgroundSecondary,
-    borderRadius: 10,
+    backgroundColor: "rgba(248,251,255,0.84)",
+    borderRadius: 18,
     padding: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   metricValue: {
     fontSize: 18,
@@ -296,15 +326,17 @@ const styles = StyleSheet.create({
     marginTop: 14,
   },
   sectionCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   sectionHeader: {
@@ -319,10 +351,10 @@ const styles = StyleSheet.create({
     color: colors.grayDark,
   },
   listRow: {
-    paddingTop: 10,
-    paddingBottom: 10,
-    borderTopWidth: 1,
-    borderTopColor: colors.surface,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(248,251,255,0.72)",
+    marginTop: 10,
   },
   listTitle: {
     fontSize: 14,
@@ -344,5 +376,9 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textMuted,
     lineHeight: 18,
+  },
+  softPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
   },
 });

@@ -12,7 +12,7 @@
 | Duplication | :warning: | 4 near-identical user item routes |
 | Security | :white_check_mark: | ~~IDOR~~ Fixed. ~~No rate limiting~~ Fixed (slowapi on auth). ~~bcrypt DoS~~ Fixed (max_length). JWT default has prod guard. |
 | Documentation | :white_check_mark: | ~~CLAUDE.md stale~~ Updated. |
-| UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. ~~Muscle chart hex~~ Fixed. |
+| UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. ~~Muscle chart hex~~ Fixed. Premium glass UI system now spans the full product surface; remaining non-ambient files are shell/framework routes rather than user-facing UI debt. |
 | Robustness | :white_check_mark: | ~~IDOR~~ Fixed. ~~Non-atomic batch adherence~~ Fixed. ~~Wrong entity labels~~ Fixed. ~~Weather silent exception~~ Fixed. |
 | Pipeline & Cache | :white_check_mark: | ~~Celery result_expires~~ Fixed (1h TTL). In-memory cache unbounded (low risk). |
 | Undefined Names | :white_check_mark: | ~~26 undefined names~~ Fixed. |
@@ -70,15 +70,17 @@
 | M-11 | `CLAUDE.md:44-52` | ~~Domain Pillars table missing Exercise pillar~~ | Docs | **Fixed** |
 | M-12 | `celery_app.py:21-27` | ~~`result_expires` not set~~ | Pipeline | **Fixed** |
 | M-13 | `main.py:32-38` | CORS allow_credentials — origins are explicit, not wildcard | Security | Non-issue |
-| M-14 | `routes/supplements.py:84`, `medications.py:82` | Any user can create shared catalog entries | Security | Open |
+| M-14 | `routes/supplements.py:84`, `medications.py:82` | ~~Any user can create shared catalog entries~~ | Security | **Fixed** |
 | M-15 | `services/stack_score.py:169` | ~~Unused variable `relevant_goal_tags`~~ | Dead Code | **Fixed** |
 | M-16 | `packages/api-client/` | Unused package — intentionally kept for future use | Dead Code | Deferred |
-| M-17 | Root `package.json` | `puppeteer` dependency unused | Dead Code | Open |
+| M-17 | Root `package.json` | `puppeteer` is used by `docs/generate-pdf.mjs` | Dead Code | Non-issue |
 | M-18 | `DailyPlanWindowCard.tsx:23-31` | `handleMarkAll` — parent already catches errors | Robustness | Non-issue |
 | M-19 | `therapy/[id].tsx:57` | ~~"Protocol not found" — wrong entity label~~ | Robustness | **Fixed** |
 | M-20 | `InteractionWarningsCard.tsx:45-68` | ~~Border/text tones escape danger token~~ | UI | **Fixed** |
 | M-21 | `CycleAlertsCard.tsx:30-55` | ~~Entire purple palette hardcoded~~ | UI | **Fixed** |
 | M-22 | `exercise/stats.tsx:36-50` | ~~13 hardcoded hex colors in muscle-group chart map~~ | UI | **Fixed** |
+| M-23 | `app/recommendations.tsx`, `app/wizard.tsx`, `app/tracking.tsx` | ~~Secondary high-traffic screens still use flatter legacy cards instead of the new ambient/glass system~~ | UI | **Fixed** |
+| M-24 | `app/{medication,therapy,peptide}/[id]/schedule.tsx`, `app/{medication,nutrition}/add.tsx`, `app/protocol/[id].tsx`, `app/user-supplement/[id].tsx`, `app/supplement/[id]/schedule.tsx`, `app/supplement/refill-request.tsx` | ~~Remaining schedule/create utility routes still need the same ambient shell and glass treatment used across the main product surfaces~~ | UI | **Fixed** |
 
 ---
 
@@ -90,7 +92,7 @@
 | L-2 | `schemas/auth.py:31` | ~~No password max_length (bcrypt DoS)~~ | Security | **Fixed** |
 | L-3 | `jwt.py:15,74` | In-memory token revocation is process-scoped | Security | Open |
 | L-4 | `ai_onboarding.py:23` | In-memory status cache has no active eviction | Pipeline | Open |
-| L-5 | `peptide/[id].tsx`, `therapy/[id].tsx` | Exact copy of readString/readStringArray helpers | Duplication | Open |
+| L-5 | `peptide/[id].tsx`, `therapy/[id].tsx` | ~~Exact copy of readString/readStringArray helpers~~ | Duplication | **Fixed** |
 | L-6 | `adherence.py:142,246,292` | `dosage_amount` is NOT NULL — float(None) impossible | Robustness | Non-issue |
 | L-7 | `guided_wizard.py:161` | ~~Silent except: pass lacks comment~~ | Dead Code | **Fixed** |
 | L-8 | `StackScoreCard.tsx:12` | ~~Score color function returns hardcoded hex~~ | UI | **Fixed** |
@@ -129,3 +131,7 @@
 | 2026-04-10 | Second scan (6 agents): dead code clean, security clean, pipeline clean. Only remaining HIGH: accessibility labels. |
 | 2026-04-10 | Accessibility labels: 302/302 Pressable elements labeled across 50 .tsx files. All HIGH issues now resolved. |
 | 2026-04-10 | Third scan (5 agents): all clean. Fixed M-22 muscle-group hex colors, L-9 weather.py silent exception. No CRITICAL/HIGH found. |
+| 2026-04-10 | Premium UI execution pass: web shell, auth, all top-level tabs, shared form primitives, protocol creation, supplement add/detail, and today/protocol cards were upgraded to the ambient glass visual system. Logged remaining legacy secondary screens as M-23 and M-24. |
+| 2026-04-10 | Follow-up UI pass: recommendations, wizard, tracking, profile settings, the full exercise/workout flow, nutrition manage, and medication/therapy/peptide detail/manage screens were upgraded to the ambient glass system. M-23 closed and M-24 narrowed to the remaining schedule/create utility routes. |
+| 2026-04-10 | Final UI cleanup pass: remaining schedule/create/manage utility routes were moved onto the shared ambient shell, refill-note and medication onboarding were polished, and M-24 closed. |
+| 2026-04-10 | Refactor hygiene pass: verified `puppeteer` is still required by `docs/generate-pdf.mjs` and extracted shared AI-profile readers into `apps/mobile/lib/ai-profile.ts`, closing L-5 and marking M-17 as a non-issue. |

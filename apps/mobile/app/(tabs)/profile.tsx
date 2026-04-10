@@ -4,6 +4,8 @@ import { router } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { useAuth } from "@/contexts/AuthContext";
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
@@ -14,21 +16,30 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.avatar}>
-          <FontAwesome name="user" size={32} color={colors.textMuted} />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop />
+      <FadeInView>
+        <View style={styles.header}>
+          <View style={styles.heroGlowLarge} />
+          <View style={styles.heroGlowSmall} />
+          <View style={styles.avatar}>
+            <FontAwesome name="user" size={32} color={colors.textWhite} />
+          </View>
+          <Text style={styles.title}>
+            {user ? `${user.first_name} ${user.last_name}` : "Profile"}
+          </Text>
+          <Text style={styles.subtitle}>
+            {user?.email || "Manage your account and preferences"}
+          </Text>
         </View>
-        <Text style={styles.title}>
-          {user ? `${user.first_name} ${user.last_name}` : "Profile"}
-        </Text>
-        <Text style={styles.subtitle}>
-          {user?.email || "Manage your account and preferences"}
-        </Text>
-      </View>
 
-      <View style={styles.card}>
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/edit")} accessibilityRole="button" accessibilityLabel="Edit Profile">
+        <View style={styles.card}>
+          <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+            onPress={() => router.push("/profile/edit")}
+            accessibilityRole="button"
+            accessibilityLabel="Edit Profile"
+          >
           <FontAwesome name="pencil" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Edit Profile</Text>
@@ -39,7 +50,12 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/preferences")} accessibilityRole="button" accessibilityLabel="Goals and Preferences">
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/profile/preferences")}
+          accessibilityRole="button"
+          accessibilityLabel="Goals and Preferences"
+        >
           <FontAwesome name="sliders" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Goals & Preferences</Text>
@@ -52,7 +68,12 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/profile/safety")} accessibilityRole="button" accessibilityLabel="Safety Check">
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/profile/safety")}
+          accessibilityRole="button"
+          accessibilityLabel="Safety Check"
+        >
           <FontAwesome name="shield" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Safety Check</Text>
@@ -65,7 +86,12 @@ export default function ProfileScreen() {
 
         <View style={styles.separator} />
 
-        <Pressable style={styles.menuItem} onPress={() => router.push("/tracking")} accessibilityRole="button" accessibilityLabel="Adherence Stats">
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/tracking")}
+          accessibilityRole="button"
+          accessibilityLabel="Adherence Stats"
+        >
           <FontAwesome name="line-chart" size={18} color={colors.textSecondary} />
           <View style={styles.menuCopy}>
             <Text style={styles.menuText}>Adherence Stats</Text>
@@ -75,42 +101,86 @@ export default function ProfileScreen() {
           </View>
           <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
         </Pressable>
-      </View>
+        </View>
 
-      <View style={styles.card}>
-        <Pressable style={styles.menuItem} onPress={handleLogout} accessibilityRole="button" accessibilityLabel="Log Out">
+        <View style={styles.card}>
+          <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+            onPress={handleLogout}
+            accessibilityRole="button"
+            accessibilityLabel="Log Out"
+          >
           <FontAwesome name="sign-out" size={18} color={colors.danger} />
           <Text style={[styles.menuText, { color: colors.danger }]}>Log Out</Text>
         </Pressable>
-      </View>
+        </View>
+      </FadeInView>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
-  header: { padding: 20, paddingTop: 10, alignItems: "center" },
+  content: { paddingBottom: 24, position: "relative" },
+  header: {
+    margin: 16,
+    marginTop: 10,
+    padding: 22,
+    alignItems: "center",
+    borderRadius: 26,
+    backgroundColor: "rgba(54,94,130,0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 3,
+    overflow: "hidden",
+  },
+  heroGlowLarge: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.11)",
+    top: -50,
+    right: -18,
+  },
+  heroGlowSmall: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,194,116,0.12)",
+    bottom: -20,
+    left: -12,
+  },
   avatar: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: colors.borderLight,
+    backgroundColor: "rgba(255,255,255,0.16)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 12,
   },
-  title: { fontSize: 24, fontWeight: "700", color: colors.textPrimary },
-  subtitle: { fontSize: 14, color: colors.gray, marginTop: 4 },
+  title: { fontSize: 24, fontWeight: "800", color: colors.textWhite },
+  subtitle: { fontSize: 14, color: "rgba(255,255,255,0.78)", marginTop: 4 },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     overflow: "hidden",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   menuItem: {
@@ -118,6 +188,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 16,
     gap: 12,
+  },
+  pressed: {
+    opacity: 0.94,
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
   menuCopy: { flex: 1 },
   menuText: { flex: 1, fontSize: 16, color: colors.textPrimary },

@@ -14,6 +14,7 @@ async def serialize_user_supplement(user_supplement: UserSupplement | None) -> U
             id=user_supplement.supplement.id,
             name=user_supplement.supplement.name,
             category=user_supplement.supplement.category,
+            source="catalog" if user_supplement.supplement.created_by_user_id is None else "user_created",
             form=user_supplement.supplement.form,
             description=user_supplement.supplement.description,
             goals=user_supplement.supplement.goals,

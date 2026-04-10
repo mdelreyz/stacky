@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { DoseScheduleForm, type DoseScheduleState } from "@/components/SupplementScheduleForm";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
@@ -108,16 +110,19 @@ export default function ScheduleMedicationScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader title="Start Medication" subtitle={medication.name} />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader title="Start Medication" subtitle={medication.name} />
 
-      <DoseScheduleForm
-        state={formState}
-        setState={setFormState}
-        saving={saving}
-        primaryLabel="Add to My Protocols"
-        onSubmit={handleSave}
-      />
+        <DoseScheduleForm
+          state={formState}
+          setState={setFormState}
+          saving={saving}
+          primaryLabel="Add to My Protocols"
+          onSubmit={handleSave}
+        />
+      </FadeInView>
 
       <View style={{ height: 32 }} />
     </ScrollView>
@@ -126,5 +131,7 @@ export default function ScheduleMedicationScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1120 },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

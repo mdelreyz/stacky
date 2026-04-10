@@ -37,6 +37,8 @@ export function SkipReasonModal({ visible, itemName, onConfirm, onCancel }: Skip
     <Modal visible={visible} transparent animationType="fade" onRequestClose={handleCancel}>
       <Pressable style={styles.overlay} onPress={handleCancel} accessibilityLabel="Close modal">
         <Pressable style={styles.sheet} onPress={(e) => e.stopPropagation()} accessibilityRole="none">
+          <View style={styles.glowLarge} />
+          <View style={styles.glowSmall} />
           <Text style={styles.title}>Skip {itemName}?</Text>
           <Text style={styles.subtitle}>Add an optional reason for your records.</Text>
 
@@ -44,7 +46,7 @@ export function SkipReasonModal({ visible, itemName, onConfirm, onCancel }: Skip
             {QUICK_REASONS.map((qr) => (
               <Pressable
                 key={qr}
-                style={styles.quickChip}
+                style={({ pressed }) => [styles.quickChip, pressed && styles.quickChipPressed]}
                 onPress={() => handleConfirm(qr)}
                 accessibilityRole="button"
                 accessibilityLabel={`Skip reason: ${qr}`}
@@ -65,12 +67,22 @@ export function SkipReasonModal({ visible, itemName, onConfirm, onCancel }: Skip
           />
 
           <View style={styles.buttonRow}>
-            <Pressable style={styles.skipButton} onPress={() => handleConfirm()} accessibilityRole="button" accessibilityLabel={reason.trim() ? "Skip with reason" : "Skip without reason"}>
+            <Pressable
+              style={({ pressed }) => [styles.skipButton, pressed && styles.skipButtonPressed]}
+              onPress={() => handleConfirm()}
+              accessibilityRole="button"
+              accessibilityLabel={reason.trim() ? "Skip with reason" : "Skip without reason"}
+            >
               <Text style={styles.skipButtonText}>
                 {reason.trim() ? "Skip with Reason" : "Skip Without Reason"}
               </Text>
             </Pressable>
-            <Pressable style={styles.cancelButton} onPress={handleCancel} accessibilityRole="button" accessibilityLabel="Cancel">
+            <Pressable
+              style={({ pressed }) => [styles.cancelButton, pressed && styles.cancelButtonPressed]}
+              onPress={handleCancel}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel"
+            >
               <Text style={styles.cancelText}>Cancel</Text>
             </Pressable>
           </View>
@@ -83,19 +95,45 @@ export function SkipReasonModal({ visible, itemName, onConfirm, onCancel }: Skip
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
+    backgroundColor: "rgba(28,40,56,0.24)",
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    backgroundColor: "rgba(255,255,255,0.8)",
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     padding: 20,
     paddingBottom: 36,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: -8 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 4,
+    overflow: "hidden",
+  },
+  glowLarge: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: "rgba(123,220,225,0.12)",
+    top: -54,
+    right: -12,
+  },
+  glowSmall: {
+    position: "absolute",
+    width: 110,
+    height: 110,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,194,116,0.12)",
+    bottom: -16,
+    left: -10,
   },
   title: {
     fontSize: 18,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.textPrimary,
   },
   subtitle: {
@@ -111,23 +149,29 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   quickChip: {
-    backgroundColor: colors.surface,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    backgroundColor: "rgba(243,247,251,0.9)",
+    paddingHorizontal: 13,
+    paddingVertical: 9,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+  },
+  quickChipPressed: {
+    transform: [{ scale: 0.98 }],
+    backgroundColor: "rgba(255,255,255,0.95)",
   },
   quickChipText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textSecondary,
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 15,
     color: colors.textPrimary,
     minHeight: 44,
@@ -138,19 +182,32 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   skipButton: {
-    backgroundColor: colors.dangerLight,
+    backgroundColor: colors.dangerDark,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
     alignItems: "center",
+    shadowColor: colors.dangerDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.16,
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  skipButtonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
   },
   skipButtonText: {
-    color: colors.dangerDark,
+    color: colors.white,
     fontSize: 15,
     fontWeight: "700",
   },
   cancelButton: {
     paddingVertical: 12,
     alignItems: "center",
+    borderRadius: 16,
+  },
+  cancelButtonPressed: {
+    backgroundColor: "rgba(255,255,255,0.44)",
   },
   cancelText: {
     color: colors.textMuted,

@@ -9,6 +9,8 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { ProtocolForm, type ProtocolFormState } from "@/components/ProtocolForm";
@@ -111,58 +113,65 @@ export default function AddProtocolScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="New Stack"
-        subtitle="Group active supplements into one named protocol or scheduled regime"
-      />
-
-      {supplements.length === 0 && medications.length === 0 && therapies.length === 0 && peptides.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <FontAwesome name="calendar-check-o" size={36} color={colors.border} />
-          <Text style={styles.emptyTitle}>No active items yet</Text>
-          <Text style={styles.emptyText}>
-            Add supplements, medications, or modalities to your protocol first, then bundle them into a stack here.
-          </Text>
-        </View>
-      ) : (
-        <ProtocolForm
-          state={formState}
-          setState={setFormState}
-          supplements={supplements}
-          medications={medications}
-          therapies={therapies}
-          peptides={peptides}
-          saving={saving}
-          primaryLabel="Create Stack"
-          onSubmit={handleSave}
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="New Stack"
+          subtitle="Group active supplements into one named protocol or scheduled regime"
         />
-      )}
 
-      <View style={{ height: 32 }} />
+        {supplements.length === 0 && medications.length === 0 && therapies.length === 0 && peptides.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <FontAwesome name="calendar-check-o" size={36} color={colors.primaryDark} />
+            <Text style={styles.emptyTitle}>No active items yet</Text>
+            <Text style={styles.emptyText}>
+              Add supplements, medications, or modalities to your protocol first, then bundle them into a stack here.
+            </Text>
+          </View>
+        ) : (
+          <ProtocolForm
+            state={formState}
+            setState={setFormState}
+            supplements={supplements}
+            medications={medications}
+            therapies={therapies}
+            peptides={peptides}
+            saving={saving}
+            primaryLabel="Create Stack"
+            onSubmit={handleSave}
+          />
+        )}
+      </FadeInView>
+
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 980 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
   emptyCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginTop: 8,
-    borderRadius: 12,
+    borderRadius: 22,
     padding: 32,
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   emptyTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textSecondary,
     marginTop: 14,
   },

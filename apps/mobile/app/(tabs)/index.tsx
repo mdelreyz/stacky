@@ -20,6 +20,8 @@ import { SkipReasonModal } from "@/components/today/SkipReasonModal";
 import { TodayExerciseCard } from "@/components/today/TodayExerciseCard";
 import { TrackingSummaryCard } from "@/components/today/TrackingSummaryCard";
 import { TodayDateHeader } from "@/components/today/TodayDateHeader";
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { getTodayIsoDate, shiftIsoDate } from "@/lib/date";
 import { showError } from "@/lib/errors";
 import { tracking as trackingApi } from "@/lib/api";
@@ -91,71 +93,75 @@ export default function TodayScreen() {
   return (
     <ScrollView
       style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={() => void loadPlan(selectedDate, true)} />
       }
     >
-      <TodayDateHeader
-        selectedDate={selectedDate}
-        onChangeDay={(delta) => setSelectedDate((current) => shiftIsoDate(current, delta))}
-        onJumpToToday={() => setSelectedDate(getTodayIsoDate())}
-      />
-
-      <TrackingSummaryCard overview={trackingOverview} endDate={selectedDate} />
-      <TodayExerciseCard items={plan?.exercise_plan ?? []} />
-      <NutritionPhaseCard phase={nutritionPhase} />
-      <SkincareGuidanceCard guidance={skincareGuidance} />
-      <CycleAlertsCard alerts={cycleAlerts} />
-      <InteractionWarningsCard warnings={interactionWarnings} />
-
-      {windows.map((windowPlan) => (
-        <DailyPlanWindowCard
-          key={windowPlan.window}
-          windowPlan={windowPlan}
-          pendingActionItemId={pendingActionItemId}
-          onRequestSkip={(item) => setSkipModalItem(item)}
-          onUpdateAdherence={async (item, status, skipReason?) => {
-            setPendingActionItemId(item.id);
-            try {
-              const adherenceByType: Record<string, typeof dailyPlanApi.updateSupplementAdherence> = {
-                supplement: dailyPlanApi.updateSupplementAdherence,
-                medication: dailyPlanApi.updateMedicationAdherence,
-                therapy: dailyPlanApi.updateTherapyAdherence,
-                peptide: dailyPlanApi.updatePeptideAdherence,
-              };
-              const updateAdherence = adherenceByType[item.type] ?? dailyPlanApi.updateSupplementAdherence;
-              try {
-                await updateAdherence(item.id, {
-                  status,
-                  date: selectedDate,
-                  ...(skipReason ? { skip_reason: skipReason } : {}),
-                });
-              } catch {
-                // Offline — queue the write for later
-                const typePathMap: Record<string, string> = {
-                  supplement: "supplements",
-                  medication: "medications",
-                  therapy: "therapies",
-                  peptide: "peptides",
-                };
-                const typePath = typePathMap[item.type] ?? "supplements";
-                await enqueueWrite({
-                  path: `/api/v1/users/me/adherence/${typePath}/${item.id}`,
-                  method: "POST",
-                  body: JSON.stringify({ status, date: selectedDate, ...(skipReason ? { skip_reason: skipReason } : {}) }),
-                });
-              }
-              // Invalidate cache so next fetch gets fresh data
-              await invalidateCache(`daily-plan:${selectedDate}`);
-              await loadPlan(selectedDate, true);
-            } catch (error) {
-              showError("Failed to update adherence");
-            } finally {
-              setPendingActionItemId((current) => (current === item.id ? null : current));
-            }
-          }}
+      <AmbientBackdrop />
+      <FadeInView>
+        <TodayDateHeader
+          selectedDate={selectedDate}
+          onChangeDay={(delta) => setSelectedDate((current) => shiftIsoDate(current, delta))}
+          onJumpToToday={() => setSelectedDate(getTodayIsoDate())}
         />
-      ))}
+
+        <TrackingSummaryCard overview={trackingOverview} endDate={selectedDate} />
+        <TodayExerciseCard items={plan?.exercise_plan ?? []} />
+        <NutritionPhaseCard phase={nutritionPhase} />
+        <SkincareGuidanceCard guidance={skincareGuidance} />
+        <CycleAlertsCard alerts={cycleAlerts} />
+        <InteractionWarningsCard warnings={interactionWarnings} />
+
+        {windows.map((windowPlan) => (
+          <DailyPlanWindowCard
+            key={windowPlan.window}
+            windowPlan={windowPlan}
+            pendingActionItemId={pendingActionItemId}
+            onRequestSkip={(item) => setSkipModalItem(item)}
+            onUpdateAdherence={async (item, status, skipReason?) => {
+              setPendingActionItemId(item.id);
+              try {
+                const adherenceByType: Record<string, typeof dailyPlanApi.updateSupplementAdherence> = {
+                  supplement: dailyPlanApi.updateSupplementAdherence,
+                  medication: dailyPlanApi.updateMedicationAdherence,
+                  therapy: dailyPlanApi.updateTherapyAdherence,
+                  peptide: dailyPlanApi.updatePeptideAdherence,
+                };
+                const updateAdherence = adherenceByType[item.type] ?? dailyPlanApi.updateSupplementAdherence;
+                try {
+                  await updateAdherence(item.id, {
+                    status,
+                    date: selectedDate,
+                    ...(skipReason ? { skip_reason: skipReason } : {}),
+                  });
+                } catch {
+                  // Offline — queue the write for later
+                  const typePathMap: Record<string, string> = {
+                    supplement: "supplements",
+                    medication: "medications",
+                    therapy: "therapies",
+                    peptide: "peptides",
+                  };
+                  const typePath = typePathMap[item.type] ?? "supplements";
+                  await enqueueWrite({
+                    path: `/api/v1/users/me/adherence/${typePath}/${item.id}`,
+                    method: "POST",
+                    body: JSON.stringify({ status, date: selectedDate, ...(skipReason ? { skip_reason: skipReason } : {}) }),
+                  });
+                }
+                await invalidateCache(`daily-plan:${selectedDate}`);
+                await loadPlan(selectedDate, true);
+              } catch (error) {
+                showError("Failed to update adherence");
+              } finally {
+                setPendingActionItemId((current) => (current === item.id ? null : current));
+              }
+            }}
+          />
+        ))}
+      </FadeInView>
 
       <SkipReasonModal
         visible={skipModalItem !== null}
@@ -211,6 +217,10 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
+  },
+  content: {
+    paddingBottom: 28,
+    position: "relative",
   },
   centered: { flex: 1, justifyContent: "center", alignItems: "center" },
 });

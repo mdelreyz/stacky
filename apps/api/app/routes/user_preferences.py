@@ -53,6 +53,7 @@ from app.services.recommendation_engine import (
     _therapy_to_dict,
     _peptide_to_dict,
 )
+from app.services.supplement_visibility import get_visible_supplement
 
 router = APIRouter(prefix="/users/me/preferences", tags=["preferences"])
 
@@ -119,7 +120,11 @@ async def _load_catalog(session: AsyncSession, item_types: list[str]) -> Catalog
     peptides = []
 
     if "supplement" in item_types:
-        result = await session.execute(select(Supplement).order_by(Supplement.name))
+        result = await session.execute(
+            select(Supplement)
+            .where(Supplement.created_by_user_id.is_(None))
+            .order_by(Supplement.name)
+        )
         supplements = [_supplement_to_dict(s) for s in result.scalars().all()]
     if "medication" in item_types:
         result = await session.execute(select(Medication).order_by(Medication.name))
@@ -273,10 +278,7 @@ async def apply_recommendations(
         frequency = item.frequency or "daily"
 
         if item.item_type == "supplement":
-            existing = await session.execute(
-                select(Supplement).where(Supplement.id == item.catalog_id)
-            )
-            catalog_item = existing.scalar_one_or_none()
+            catalog_item = await get_visible_supplement(session, item.catalog_id, current_user.id)
             if catalog_item is None:
                 raise HTTPException(status_code=400, detail=f"Supplement {item.catalog_id} not found")
 

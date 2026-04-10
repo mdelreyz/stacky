@@ -2,6 +2,8 @@ import { useState } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import {
@@ -45,16 +47,19 @@ export default function AddNutritionPlanScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader title="New Nutrition Plan" subtitle="Build the current phase for your diet or macro protocol" />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader title="New Nutrition Plan" subtitle="Build the current phase for your diet or macro protocol" />
 
-      <NutritionPlanForm
-        state={formState}
-        setState={setFormState}
-        saving={saving}
-        primaryLabel="Save Nutrition Plan"
-        onSubmit={handleSave}
-      />
+        <NutritionPlanForm
+          state={formState}
+          setState={setFormState}
+          saving={saving}
+          primaryLabel="Save Nutrition Plan"
+          onSubmit={handleSave}
+        />
+      </FadeInView>
 
       <View style={{ height: 24 }} />
     </ScrollView>
@@ -65,5 +70,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
+  },
+  content: {
+    paddingBottom: 24,
+    position: "relative",
+  },
+  backdrop: {
+    top: -48,
+    height: 1120,
   },
 });

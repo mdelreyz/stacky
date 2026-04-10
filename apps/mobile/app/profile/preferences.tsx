@@ -11,6 +11,8 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { OptionGrid } from "@/components/forms/OptionGrid";
@@ -151,154 +153,169 @@ export default function PreferencesScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="Preferences"
-        subtitle="Configure your protocol constraints and AI behavior"
-      />
-
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Interaction Mode</Text>
-        <Text style={styles.hint}>
-          Controls how much AI assistance you receive. Guided mode asks questions to build your stack. Expert mode gives you full manual control.
-        </Text>
-        <OptionGrid
-          options={INTERACTION_MODE_OPTIONS}
-          selected={interactionMode}
-          onSelect={(value) => setInteractionMode(value as InteractionMode)}
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="Preferences"
+          subtitle="Configure your protocol constraints and AI behavior"
         />
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Health Goals</Text>
-        <Text style={styles.hint}>Select up to 5 goals that drive your supplement recommendations.</Text>
-        <View style={styles.goalGrid}>
-          {GOAL_OPTIONS.map((goal) => {
-            const selected = primaryGoals.includes(goal.value);
-            return (
-              <Pressable
-                key={goal.value}
-                style={[styles.goalChip, selected && styles.goalChipSelected]}
-                onPress={() => toggleGoal(goal.value)}
-                accessibilityRole="checkbox"
-                accessibilityLabel={goal.label}
-                accessibilityState={{ checked: selected }}
-              >
-                <Text style={[styles.goalChipText, selected && styles.goalChipTextSelected]}>
-                  {goal.label}
-                </Text>
-              </Pressable>
-            );
-          })}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Interaction Mode</Text>
+          <Text style={styles.hint}>
+            Controls how much AI assistance you receive. Guided mode asks questions to build your stack. Expert mode gives you full manual control.
+          </Text>
+          <OptionGrid
+            options={INTERACTION_MODE_OPTIONS}
+            selected={interactionMode}
+            onSelect={(value) => setInteractionMode(value as InteractionMode)}
+          />
         </View>
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>About You</Text>
-        <View style={styles.row}>
-          <View style={styles.ageField}>
-            <Text style={styles.fieldLabel}>Age</Text>
-            <TextInput
-              style={[styles.input, styles.ageInput]}
-              keyboardType="number-pad"
-              value={age}
-              onChangeText={setAge}
-              placeholder="—"
-              placeholderTextColor={colors.textPlaceholder}
-            />
-          </View>
-          <View style={styles.sexField}>
-            <Text style={styles.fieldLabel}>Biological Sex</Text>
-            <View style={styles.sexRow}>
-              {SEX_OPTIONS.map((opt) => (
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Health Goals</Text>
+          <Text style={styles.hint}>Select up to 5 goals that drive your supplement recommendations.</Text>
+          <View style={styles.goalGrid}>
+            {GOAL_OPTIONS.map((goal) => {
+              const selected = primaryGoals.includes(goal.value);
+              return (
                 <Pressable
-                  key={opt.value}
-                  style={[styles.sexChip, biologicalSex === opt.value && styles.sexChipSelected]}
-                  onPress={() => setBiologicalSex(biologicalSex === opt.value ? "" : opt.value as typeof biologicalSex)}
-                  accessibilityRole="radio"
-                  accessibilityLabel={opt.label}
-                  accessibilityState={{ checked: biologicalSex === opt.value }}
+                  key={goal.value}
+                  style={({ pressed }) => [
+                    styles.goalChip,
+                    selected && styles.goalChipSelected,
+                    pressed && styles.softPressed,
+                  ]}
+                  onPress={() => toggleGoal(goal.value)}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={goal.label}
+                  accessibilityState={{ checked: selected }}
                 >
-                  <Text style={[styles.sexChipText, biologicalSex === opt.value && styles.sexChipTextSelected]}>
-                    {opt.label}
+                  <Text style={[styles.goalChipText, selected && styles.goalChipTextSelected]}>
+                    {goal.label}
                   </Text>
                 </Pressable>
-              ))}
+              );
+            })}
+          </View>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>About You</Text>
+          <View style={styles.row}>
+            <View style={styles.ageField}>
+              <Text style={styles.fieldLabel}>Age</Text>
+              <TextInput
+                style={[styles.input, styles.ageInput]}
+                keyboardType="number-pad"
+                value={age}
+                onChangeText={setAge}
+                placeholder="—"
+                placeholderTextColor={colors.textPlaceholder}
+              />
+            </View>
+            <View style={styles.sexField}>
+              <Text style={styles.fieldLabel}>Biological Sex</Text>
+              <View style={styles.sexRow}>
+                {SEX_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt.value}
+                    style={({ pressed }) => [
+                      styles.sexChip,
+                      biologicalSex === opt.value && styles.sexChipSelected,
+                      pressed && styles.softPressed,
+                    ]}
+                    onPress={() => setBiologicalSex(biologicalSex === opt.value ? "" : opt.value as typeof biologicalSex)}
+                    accessibilityRole="radio"
+                    accessibilityLabel={opt.label}
+                    accessibilityState={{ checked: biologicalSex === opt.value }}
+                  >
+                    <Text style={[styles.sexChipText, biologicalSex === opt.value && styles.sexChipTextSelected]}>
+                      {opt.label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Slot Budgets</Text>
-        <Text style={styles.hint}>Limits how many items the AI will recommend.</Text>
-        <NumberField label="Max supplements per day" value={maxSupplements} onChangeText={setMaxSupplements} />
-        <NumberField label="Max tablets per day" value={maxTablets} onChangeText={setMaxTablets} />
-        <NumberField label="Max medications" value={maxMedications} onChangeText={setMaxMedications} />
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Slot Budgets</Text>
+          <Text style={styles.hint}>Limits how many items the AI will recommend.</Text>
+          <NumberField label="Max supplements per day" value={maxSupplements} onChangeText={setMaxSupplements} />
+          <NumberField label="Max tablets per day" value={maxTablets} onChangeText={setMaxTablets} />
+          <NumberField label="Max medications" value={maxMedications} onChangeText={setMaxMedications} />
+        </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Exercise</Text>
-        <NumberField label="Exercise blocks per week" value={exerciseBlocks} onChangeText={setExerciseBlocks} />
-        <NumberField label="Exercise minutes per day" value={exerciseMinutes} onChangeText={setExerciseMinutes} />
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Exercise</Text>
+          <NumberField label="Exercise blocks per week" value={exerciseBlocks} onChangeText={setExerciseBlocks} />
+          <NumberField label="Exercise minutes per day" value={exerciseMinutes} onChangeText={setExerciseMinutes} />
+        </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Focus Concerns</Text>
-        <Text style={styles.hint}>Free-text concerns that shift AI picks (e.g., "brain fog, joint pain").</Text>
-        <TextInput
-          style={[styles.input, styles.multilineInput]}
-          multiline
-          value={focusConcerns}
-          onChangeText={setFocusConcerns}
-          placeholder="brain fog, joint pain, poor sleep"
-          placeholderTextColor={colors.textPlaceholder}
-        />
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Focus Concerns</Text>
+          <Text style={styles.hint}>Free-text concerns that shift AI picks (e.g., "brain fog, joint pain").</Text>
+          <TextInput
+            style={[styles.input, styles.multilineInput]}
+            multiline
+            value={focusConcerns}
+            onChangeText={setFocusConcerns}
+            placeholder="brain fog, joint pain, poor sleep"
+            placeholderTextColor={colors.textPlaceholder}
+          />
+        </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Excluded Ingredients</Text>
-        <Text style={styles.hint}>Allergy or preference exclusions, comma-separated.</Text>
-        <TextInput
-          style={[styles.input, styles.multilineInput]}
-          multiline
-          value={excludedIngredients}
-          onChangeText={setExcludedIngredients}
-          placeholder="shellfish, soy, gluten"
-          placeholderTextColor={colors.textPlaceholder}
-        />
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Excluded Ingredients</Text>
+          <Text style={styles.hint}>Allergy or preference exclusions, comma-separated.</Text>
+          <TextInput
+            style={[styles.input, styles.multilineInput]}
+            multiline
+            value={excludedIngredients}
+            onChangeText={setExcludedIngredients}
+            placeholder="shellfish, soy, gluten"
+            placeholderTextColor={colors.textPlaceholder}
+          />
+        </View>
 
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Notes</Text>
-        <TextInput
-          style={[styles.input, styles.multilineInput]}
-          multiline
-          value={notes}
-          onChangeText={setNotes}
-          placeholder="Any additional context for AI recommendations"
-          placeholderTextColor={colors.textPlaceholder}
-        />
-      </View>
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Notes</Text>
+          <TextInput
+            style={[styles.input, styles.multilineInput]}
+            multiline
+            value={notes}
+            onChangeText={setNotes}
+            placeholder="Any additional context for AI recommendations"
+            placeholderTextColor={colors.textPlaceholder}
+          />
+        </View>
 
-      <Pressable
-        style={[styles.primaryButton, saving && styles.buttonDisabled]}
-        onPress={handleSave}
-        disabled={saving}
-        accessibilityRole="button"
-        accessibilityLabel="Save preferences"
-      >
-        {saving ? (
-          <ActivityIndicator color={colors.white} />
-        ) : (
-          <>
-            <FontAwesome name="check" size={16} color={colors.white} />
-            <Text style={styles.primaryButtonText}>Save Preferences</Text>
-          </>
-        )}
-      </Pressable>
+        <Pressable
+          style={({ pressed }) => [
+            styles.primaryButton,
+            saving && styles.buttonDisabled,
+            pressed && !saving && styles.buttonPressed,
+          ]}
+          onPress={handleSave}
+          disabled={saving}
+          accessibilityRole="button"
+          accessibilityLabel="Save preferences"
+        >
+          {saving ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <>
+              <FontAwesome name="check" size={16} color={colors.white} />
+              <Text style={styles.primaryButtonText}>Save Preferences</Text>
+            </>
+          )}
+        </Pressable>
+      </FadeInView>
 
-      <View style={{ height: 32 }} />
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
@@ -329,17 +346,21 @@ function NumberField({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center" },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1380 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   sectionTitle: {
@@ -364,11 +385,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 16,
     color: colors.textPrimary,
   },
@@ -398,13 +419,15 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   sexChip: {
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderRadius: 8,
-    backgroundColor: colors.surface,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+    borderRadius: 14,
+    backgroundColor: "rgba(243,247,251,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   sexChipSelected: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "rgba(234,242,248,0.94)",
   },
   sexChipText: {
     fontSize: 13,
@@ -421,12 +444,14 @@ const styles = StyleSheet.create({
   },
   goalChip: {
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 9,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(243,247,251,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   goalChipSelected: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "rgba(234,242,248,0.94)",
   },
   goalChipText: {
     fontSize: 13,
@@ -440,9 +465,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingVertical: 8,
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: colors.surface,
+    borderBottomColor: "rgba(230,236,242,0.74)",
   },
   numberFieldLabel: {
     fontSize: 14,
@@ -452,11 +477,11 @@ const styles = StyleSheet.create({
   numberFieldInput: {
     width: 64,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 16,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: colors.backgroundSecondary,
+    paddingVertical: 10,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 16,
     color: colors.textPrimary,
     textAlign: "center",
@@ -467,9 +492,14 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     marginHorizontal: 16,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primaryDark,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   primaryButtonText: {
     color: colors.white,
@@ -478,5 +508,13 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
+  },
+  softPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
   },
 });

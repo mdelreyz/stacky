@@ -13,6 +13,8 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { preferences as prefsApi } from "@/lib/api";
@@ -139,132 +141,143 @@ export default function WizardScreen() {
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={90}
     >
-      <FlowScreenHeader
-        title="Protocol Wizard"
-        subtitle="AI-guided protocol building"
-      />
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView style={styles.body}>
+        <FlowScreenHeader
+          title="Protocol Wizard"
+          subtitle="AI-guided protocol building"
+        />
 
-      {conversation.length === 0 && !sending && (
-        <View style={styles.welcomeCard}>
-          <FontAwesome name="magic" size={28} color={colors.primary} />
-          <Text style={styles.welcomeTitle}>Build Your Protocol</Text>
-          <Text style={styles.welcomeText}>
-            Tell me about your health goals, concerns, or what you're looking to optimize.
-            I'll ask follow-up questions and build a personalized protocol for you.
-          </Text>
-          <View style={styles.promptGrid}>
-            {[
-              "I want to optimize for longevity and cognitive performance",
-              "I'm dealing with poor sleep and high stress",
-              "Help me build a recovery stack for training",
-              "I want to improve my skin and hair health",
-            ].map((prompt) => (
-              <Pressable
-                key={prompt}
-                style={styles.promptChip}
-                onPress={() => {
-                  setInput(prompt);
-                }}
-                accessibilityRole="button"
-                accessibilityLabel={prompt}
-              >
-                <Text style={styles.promptChipText}>{prompt}</Text>
-              </Pressable>
-            ))}
-          </View>
-        </View>
-      )}
-
-      <FlatList
-        ref={listRef}
-        data={visibleConversation}
-        keyExtractor={(_, index) => String(index)}
-        contentContainerStyle={styles.messageList}
-        onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
-        renderItem={({ item: turn }) => (
-          <View
-            style={[
-              styles.messageBubble,
-              turn.role === "user" ? styles.userBubble : styles.assistantBubble,
-            ]}
-          >
-            {turn.role === "assistant" && (
-              <FontAwesome name="bolt" size={12} color={colors.primary} style={{ marginBottom: 4 }} />
-            )}
-            <Text
-              style={[
-                styles.messageText,
-                turn.role === "user" ? styles.userText : styles.assistantText,
-              ]}
-            >
-              {turn.content}
+        {conversation.length === 0 && !sending && (
+          <View style={styles.welcomeCard}>
+            <View style={styles.welcomeGlowLarge} />
+            <View style={styles.welcomeGlowSmall} />
+            <FontAwesome name="magic" size={28} color={colors.primaryDark} />
+            <Text style={styles.welcomeTitle}>Build Your Protocol</Text>
+            <Text style={styles.welcomeText}>
+              Tell me about your health goals, concerns, or what you're looking to optimize.
+              I'll ask follow-up questions and build a personalized protocol for you.
             </Text>
+            <View style={styles.promptGrid}>
+              {[
+                "I want to optimize for longevity and cognitive performance",
+                "I'm dealing with poor sleep and high stress",
+                "Help me build a recovery stack for training",
+                "I want to improve my skin and hair health",
+              ].map((prompt) => (
+                <Pressable
+                  key={prompt}
+                  style={({ pressed }) => [styles.promptChip, pressed && styles.softPressed]}
+                  onPress={() => {
+                    setInput(prompt);
+                  }}
+                  accessibilityRole="button"
+                  accessibilityLabel={prompt}
+                >
+                  <Text style={styles.promptChipText}>{prompt}</Text>
+                </Pressable>
+              ))}
+            </View>
           </View>
         )}
-        ListFooterComponent={
-          <>
-            {sending && (
-              <View style={[styles.messageBubble, styles.assistantBubble]}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.thinkingText}>Thinking...</Text>
-              </View>
-            )}
 
-            {result && (
-              <View style={styles.resultCard}>
-                <Text style={styles.resultTitle}>Recommended Protocol</Text>
-                {result.protocolName && (
-                  <Text style={styles.resultProtocolName}>{result.protocolName}</Text>
-                )}
-                {result.summary && (
-                  <Text style={styles.resultSummary}>{result.summary}</Text>
-                )}
-                {result.items.map((item, i) => (
-                  <View key={item.catalog_id || `${item.name}-${i}`} style={styles.resultItem}>
-                    <Text style={styles.resultItemName}>{item.name}</Text>
-                    <View style={styles.resultItemMeta}>
-                      <Text style={styles.resultItemType}>{snakeCaseToLabel(item.item_type)}</Text>
-                      {item.suggested_dosage && (
-                        <Text style={styles.resultItemDosage}>{item.suggested_dosage}</Text>
-                      )}
-                      {item.suggested_window && (
-                        <Text style={styles.resultItemWindow}>{snakeCaseToLabel(item.suggested_window)}</Text>
-                      )}
-                    </View>
-                    <Text style={styles.resultItemReason}>{item.reason}</Text>
-                  </View>
-                ))}
+        <FlatList
+          ref={listRef}
+          data={visibleConversation}
+          keyExtractor={(_, index) => String(index)}
+          contentContainerStyle={styles.messageList}
+          style={styles.list}
+          showsVerticalScrollIndicator={false}
+          onContentSizeChange={() => listRef.current?.scrollToEnd({ animated: true })}
+          renderItem={({ item: turn }) => (
+            <View
+              style={[
+                styles.messageBubble,
+                turn.role === "user" ? styles.userBubble : styles.assistantBubble,
+              ]}
+            >
+              {turn.role === "assistant" && (
+                <FontAwesome name="bolt" size={12} color={colors.primaryDark} style={{ marginBottom: 4 }} />
+              )}
+              <Text
+                style={[
+                  styles.messageText,
+                  turn.role === "user" ? styles.userText : styles.assistantText,
+                ]}
+              >
+                {turn.content}
+              </Text>
+            </View>
+          )}
+          ListFooterComponent={
+            <>
+              {sending && (
+                <View style={[styles.messageBubble, styles.assistantBubble]}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={styles.thinkingText}>Thinking...</Text>
+                </View>
+              )}
 
-                <Pressable
-                  style={[styles.applyButton, applying && styles.buttonDisabled]}
-                  onPress={handleApply}
-                  disabled={applying}
-                  accessibilityRole="button"
-                  accessibilityLabel="Add all to my protocol"
-                >
-                  {applying ? (
-                    <ActivityIndicator color={colors.white} />
-                  ) : (
-                    <>
-                      <FontAwesome name="check" size={16} color={colors.white} />
-                      <Text style={styles.applyButtonText}>Add All to My Protocol</Text>
-                    </>
+              {result && (
+                <View style={styles.resultCard}>
+                  <Text style={styles.resultTitle}>Recommended Protocol</Text>
+                  {result.protocolName && (
+                    <Text style={styles.resultProtocolName}>{result.protocolName}</Text>
                   )}
-                </Pressable>
+                  {result.summary && (
+                    <Text style={styles.resultSummary}>{result.summary}</Text>
+                  )}
+                  {result.items.map((item, i) => (
+                    <View key={item.catalog_id || `${item.name}-${i}`} style={styles.resultItem}>
+                      <Text style={styles.resultItemName}>{item.name}</Text>
+                      <View style={styles.resultItemMeta}>
+                        <Text style={styles.resultItemType}>{snakeCaseToLabel(item.item_type)}</Text>
+                        {item.suggested_dosage && (
+                          <Text style={styles.resultItemDosage}>{item.suggested_dosage}</Text>
+                        )}
+                        {item.suggested_window && (
+                          <Text style={styles.resultItemWindow}>{snakeCaseToLabel(item.suggested_window)}</Text>
+                        )}
+                      </View>
+                      <Text style={styles.resultItemReason}>{item.reason}</Text>
+                    </View>
+                  ))}
 
-                <Pressable
-                  style={styles.startOverButton}
-                  onPress={startOver}
-                  accessibilityRole="button"
-                  accessibilityLabel="Start over"
-                >
-                  <Text style={styles.startOverText}>Start Over</Text>
-                </Pressable>
-              </View>
-            )}
-          </>
-        }
-      />
+                  <Pressable
+                    style={({ pressed }) => [
+                      styles.applyButton,
+                      applying && styles.buttonDisabled,
+                      pressed && !applying && styles.buttonPressed,
+                    ]}
+                    onPress={handleApply}
+                    disabled={applying}
+                    accessibilityRole="button"
+                    accessibilityLabel="Add all to my protocol"
+                  >
+                    {applying ? (
+                      <ActivityIndicator color={colors.white} />
+                    ) : (
+                      <>
+                        <FontAwesome name="check" size={16} color={colors.white} />
+                        <Text style={styles.applyButtonText}>Add All to My Protocol</Text>
+                      </>
+                    )}
+                  </Pressable>
+
+                  <Pressable
+                    style={({ pressed }) => [styles.startOverButton, pressed && styles.softPressed]}
+                    onPress={startOver}
+                    accessibilityRole="button"
+                    accessibilityLabel="Start over"
+                  >
+                    <Text style={styles.startOverText}>Start Over</Text>
+                  </Pressable>
+                </View>
+              )}
+            </>
+          }
+        />
+      </FadeInView>
 
       {!isComplete && (
         <View style={styles.inputBar}>
@@ -281,7 +294,11 @@ export default function WizardScreen() {
             blurOnSubmit
           />
           <Pressable
-            style={[styles.sendButton, (!input.trim() || sending) && styles.sendButtonDisabled]}
+            style={({ pressed }) => [
+              styles.sendButton,
+              (!input.trim() || sending) && styles.sendButtonDisabled,
+              pressed && input.trim() && !sending && styles.buttonPressed,
+            ]}
             onPress={handleSend}
             disabled={!input.trim() || sending}
             accessibilityRole="button"
@@ -300,22 +317,50 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
   },
+  backdrop: {
+    top: -48,
+    height: 1120,
+  },
+  body: {
+    flex: 1,
+  },
   welcomeCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 24,
     padding: 24,
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
+    overflow: "hidden",
+  },
+  welcomeGlowLarge: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: "rgba(123,220,225,0.12)",
+    top: -48,
+    right: -12,
+  },
+  welcomeGlowSmall: {
+    position: "absolute",
+    width: 110,
+    height: 110,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,194,116,0.12)",
+    bottom: -18,
+    left: -10,
   },
   welcomeTitle: {
     fontSize: 20,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.textPrimary,
     marginTop: 12,
   },
@@ -332,39 +377,52 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   promptChip: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "rgba(243,247,251,0.92)",
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingVertical: 11,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   promptChipText: {
     fontSize: 13,
     color: colors.primaryDarker,
     lineHeight: 18,
   },
+  list: {
+    flex: 1,
+  },
   messageList: {
     padding: 16,
     gap: 8,
+    paddingBottom: 24,
   },
   messageBubble: {
     maxWidth: "85%",
-    borderRadius: 16,
+    borderRadius: 20,
     padding: 14,
     marginBottom: 4,
   },
   userBubble: {
     alignSelf: "flex-end",
-    backgroundColor: colors.primary,
-    borderBottomRightRadius: 4,
+    backgroundColor: colors.primaryDark,
+    borderBottomRightRadius: 8,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
+    elevation: 2,
   },
   assistantBubble: {
     alignSelf: "flex-start",
-    backgroundColor: colors.white,
-    borderBottomLeftRadius: 4,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    backgroundColor: "rgba(255,255,255,0.76)",
+    borderBottomLeftRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
     elevation: 1,
   },
   messageText: {
@@ -383,14 +441,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   resultCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
+    backgroundColor: "rgba(255,255,255,0.76)",
+    borderRadius: 24,
+    padding: 18,
     marginTop: 8,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   resultTitle: {
@@ -401,8 +461,8 @@ const styles = StyleSheet.create({
   },
   resultProtocolName: {
     fontSize: 14,
-    fontWeight: "600",
-    color: colors.primary,
+    fontWeight: "700",
+    color: colors.primaryDark,
     marginBottom: 4,
   },
   resultSummary: {
@@ -412,10 +472,10 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   resultItem: {
-    borderTopWidth: 1,
-    borderTopColor: colors.surface,
-    paddingTop: 10,
-    paddingBottom: 6,
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: "rgba(248,251,255,0.72)",
+    marginTop: 10,
   },
   resultItemName: {
     fontSize: 15,
@@ -431,29 +491,29 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: "600",
     color: colors.textMuted,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    backgroundColor: "rgba(243,247,251,0.94)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
     textTransform: "capitalize",
   },
   resultItemDosage: {
     fontSize: 11,
     fontWeight: "600",
     color: colors.primaryDark,
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    backgroundColor: "rgba(234,242,248,0.94)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
   },
   resultItemWindow: {
     fontSize: 11,
     fontWeight: "600",
     color: colors.success,
-    backgroundColor: colors.successLight,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
+    backgroundColor: "rgba(234,245,239,0.94)",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 999,
     textTransform: "capitalize",
   },
   resultItemReason: {
@@ -469,8 +529,13 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: colors.success,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
     marginTop: 16,
+    shadowColor: colors.success,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   applyButtonText: {
     color: colors.white,
@@ -481,6 +546,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingVertical: 12,
     marginTop: 8,
+    borderRadius: 16,
   },
   startOverText: {
     fontSize: 14,
@@ -495,19 +561,19 @@ const styles = StyleSheet.create({
     alignItems: "flex-end",
     padding: 12,
     paddingBottom: Platform.OS === "ios" ? 24 : 12,
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.78)",
     borderTopWidth: 1,
-    borderTopColor: colors.borderLight,
+    borderTopColor: "rgba(255,255,255,0.92)",
     gap: 8,
   },
   textInput: {
     flex: 1,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 22,
     paddingHorizontal: 16,
-    paddingVertical: 10,
-    backgroundColor: colors.backgroundSecondary,
+    paddingVertical: 11,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 15,
     color: colors.textPrimary,
     maxHeight: 100,
@@ -516,11 +582,24 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primaryDark,
     alignItems: "center",
     justifyContent: "center",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 14,
+    elevation: 2,
   },
   sendButtonDisabled: {
     backgroundColor: colors.border,
+  },
+  buttonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
+  },
+  softPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
   },
 });

@@ -32,7 +32,12 @@ export function SessionExerciseCard({ exercise, onLogSet }: SessionExerciseCardP
 
   return (
     <View style={styles.card}>
-      <Pressable style={styles.header} onPress={() => setExpanded(!expanded)} accessibilityRole="button" accessibilityLabel={`${exercise.exercise.name}, ${expanded ? "collapse" : "expand"}`}>
+      <Pressable
+        style={({ pressed }) => [styles.header, pressed && styles.softPressed]}
+        onPress={() => setExpanded(!expanded)}
+        accessibilityRole="button"
+        accessibilityLabel={`${exercise.exercise.name}, ${expanded ? "collapse" : "expand"}`}
+      >
         <View style={styles.headerLeft}>
           <Text style={styles.exerciseName}>{exercise.exercise.name}</Text>
           <Text style={styles.exerciseMeta}>
@@ -87,10 +92,17 @@ export function SessionExerciseCard({ exercise, onLogSet }: SessionExerciseCardP
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.surface,
-    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.76)",
+    borderRadius: 20,
     marginBottom: 10,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 1,
   },
   header: {
     flexDirection: "row",
@@ -121,9 +133,10 @@ const styles = StyleSheet.create({
     width: 30,
     height: 20,
     borderRadius: 10,
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "rgba(234,242,248,0.94)",
     alignItems: "center",
     justifyContent: "center",
   },
-  warmupBadgeText: { fontSize: 10, fontWeight: "700", color: colors.primary },
+  warmupBadgeText: { fontSize: 10, fontWeight: "700", color: colors.primaryDark },
+  softPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
 });

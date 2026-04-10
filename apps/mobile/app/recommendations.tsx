@@ -11,6 +11,8 @@ import {
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { preferences as prefsApi } from "@/lib/api";
@@ -101,130 +103,145 @@ export default function RecommendationsScreen() {
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <FlowScreenHeader
-        title="AI Recommendations"
-        subtitle="Get personalized suggestions based on your goals and current stack"
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="AI Recommendations"
+          subtitle="Get personalized suggestions based on your goals and current stack"
+        />
 
-      {/* Request form */}
-      <View style={styles.card}>
-        <Text style={styles.sectionTitle}>What to recommend</Text>
-        <View style={styles.typeRow}>
-          {ITEM_TYPE_OPTIONS.map((opt) => {
-            const selected = selectedTypes.includes(opt.value);
-            return (
-              <Pressable
-                key={opt.value}
-                style={[styles.typeChip, selected && styles.typeChipSelected]}
-                onPress={() => toggleType(opt.value)}
-                accessibilityRole="checkbox"
-                accessibilityLabel={opt.label}
-                accessibilityState={{ checked: selected }}
-              >
-                <FontAwesome
-                  name={opt.icon}
-                  size={13}
-                  color={selected ? colors.primaryDark : colors.textMuted}
-                />
-                <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>
-                  {opt.label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </View>
-
-        <View style={styles.countRow}>
-          <Text style={styles.countLabel}>How many</Text>
-          <TextInput
-            style={styles.countInput}
-            keyboardType="number-pad"
-            value={count}
-            onChangeText={setCount}
-          />
-        </View>
-
-        <Pressable
-          style={[styles.generateButton, loading && styles.buttonDisabled]}
-          onPress={handleGetRecommendations}
-          disabled={loading}
-          accessibilityRole="button"
-          accessibilityLabel="Get recommendations"
-        >
-          {loading ? (
-            <ActivityIndicator color={colors.white} />
-          ) : (
-            <>
-              <FontAwesome name="magic" size={16} color={colors.white} />
-              <Text style={styles.generateButtonText}>Get Recommendations</Text>
-            </>
-          )}
-        </Pressable>
-      </View>
-
-      {/* Results */}
-      {recommendation && (
-        <>
-          <View style={styles.card}>
-            <Text style={styles.sectionTitle}>Recommendations</Text>
-            <Text style={styles.reasoning}>{recommendation.reasoning_summary}</Text>
-            <View style={styles.metaRow}>
-              <Text style={styles.metaText}>
-                Goals: {recommendation.goals_used.map((g) => snakeCaseToLabel(g)).join(", ") || "None set"}
-              </Text>
-              <Text style={styles.metaText}>
-                Budget: {recommendation.slot_budget} slots · {recommendation.items_excluded_current} already in stack
-              </Text>
-            </View>
+        {/* Request form */}
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>What to recommend</Text>
+          <View style={styles.typeRow}>
+            {ITEM_TYPE_OPTIONS.map((opt) => {
+              const selected = selectedTypes.includes(opt.value);
+              return (
+                <Pressable
+                  key={opt.value}
+                  style={({ pressed }) => [
+                    styles.typeChip,
+                    selected && styles.typeChipSelected,
+                    pressed && styles.softPressed,
+                  ]}
+                  onPress={() => toggleType(opt.value)}
+                  accessibilityRole="checkbox"
+                  accessibilityLabel={opt.label}
+                  accessibilityState={{ checked: selected }}
+                >
+                  <FontAwesome
+                    name={opt.icon}
+                    size={13}
+                    color={selected ? colors.primaryDark : colors.textMuted}
+                  />
+                  <Text style={[styles.typeChipText, selected && styles.typeChipTextSelected]}>
+                    {opt.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
 
-          {recommendation.items.map((item) => (
-            <RecommendationCard
-              key={item.catalog_id}
-              item={item}
-              selected={selectedItems.has(item.catalog_id)}
-              onToggle={() => toggleItem(item.catalog_id)}
+          <View style={styles.countRow}>
+            <Text style={styles.countLabel}>How many</Text>
+            <TextInput
+              style={styles.countInput}
+              keyboardType="number-pad"
+              value={count}
+              onChangeText={setCount}
             />
-          ))}
+          </View>
 
-          {recommendation.items.length > 0 && (
+          <Pressable
+            style={({ pressed }) => [
+              styles.generateButton,
+              loading && styles.buttonDisabled,
+              pressed && !loading && styles.buttonPressed,
+            ]}
+            onPress={handleGetRecommendations}
+            disabled={loading}
+            accessibilityRole="button"
+            accessibilityLabel="Get recommendations"
+          >
+            {loading ? (
+              <ActivityIndicator color={colors.white} />
+            ) : (
+              <>
+                <FontAwesome name="magic" size={16} color={colors.white} />
+                <Text style={styles.generateButtonText}>Get Recommendations</Text>
+              </>
+            )}
+          </Pressable>
+        </View>
+
+        {/* Results */}
+        {recommendation && (
+          <>
             <View style={styles.card}>
-              <Text style={styles.sectionTitle}>Apply Selection</Text>
-              <Text style={styles.hint}>
-                {selectedItems.size} of {recommendation.items.length} items selected. Optionally name a protocol stack.
-              </Text>
-              <TextInput
-                style={styles.input}
-                value={protocolName}
-                onChangeText={setProtocolName}
-                placeholder="Protocol name (optional)"
-                placeholderTextColor={colors.textPlaceholder}
-              />
-              <Pressable
-                style={[styles.applyButton, (applying || selectedItems.size === 0) && styles.buttonDisabled]}
-                onPress={handleApply}
-                disabled={applying || selectedItems.size === 0}
-                accessibilityRole="button"
-                accessibilityLabel={`Add ${selectedItems.size} item${selectedItems.size !== 1 ? "s" : ""} to my protocol`}
-              >
-                {applying ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <>
-                    <FontAwesome name="check" size={16} color={colors.white} />
-                    <Text style={styles.applyButtonText}>
-                      Add {selectedItems.size} to My Protocol{selectedItems.size !== 1 ? "s" : ""}
-                    </Text>
-                  </>
-                )}
-              </Pressable>
+              <Text style={styles.sectionTitle}>Recommendations</Text>
+              <Text style={styles.reasoning}>{recommendation.reasoning_summary}</Text>
+              <View style={styles.metaRow}>
+                <Text style={styles.metaText}>
+                  Goals: {recommendation.goals_used.map((g) => snakeCaseToLabel(g)).join(", ") || "None set"}
+                </Text>
+                <Text style={styles.metaText}>
+                  Budget: {recommendation.slot_budget} slots · {recommendation.items_excluded_current} already in stack
+                </Text>
+              </View>
             </View>
-          )}
-        </>
-      )}
 
-      <View style={{ height: 32 }} />
+            {recommendation.items.map((item) => (
+              <RecommendationCard
+                key={item.catalog_id}
+                item={item}
+                selected={selectedItems.has(item.catalog_id)}
+                onToggle={() => toggleItem(item.catalog_id)}
+              />
+            ))}
+
+            {recommendation.items.length > 0 && (
+              <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Apply Selection</Text>
+                <Text style={styles.hint}>
+                  {selectedItems.size} of {recommendation.items.length} items selected. Optionally name a protocol stack.
+                </Text>
+                <TextInput
+                  style={styles.input}
+                  value={protocolName}
+                  onChangeText={setProtocolName}
+                  placeholder="Protocol name (optional)"
+                  placeholderTextColor={colors.textPlaceholder}
+                />
+                <Pressable
+                  style={({ pressed }) => [
+                    styles.applyButton,
+                    (applying || selectedItems.size === 0) && styles.buttonDisabled,
+                    pressed && !applying && selectedItems.size > 0 && styles.buttonPressed,
+                  ]}
+                  onPress={handleApply}
+                  disabled={applying || selectedItems.size === 0}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Add ${selectedItems.size} item${selectedItems.size !== 1 ? "s" : ""} to my protocol`}
+                >
+                  {applying ? (
+                    <ActivityIndicator color={colors.white} />
+                  ) : (
+                    <>
+                      <FontAwesome name="check" size={16} color={colors.white} />
+                      <Text style={styles.applyButtonText}>
+                        Add {selectedItems.size} to My Protocol{selectedItems.size !== 1 ? "s" : ""}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              </View>
+            )}
+          </>
+        )}
+      </FadeInView>
+
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
@@ -247,7 +264,11 @@ function RecommendationCard({
 
   return (
     <Pressable
-      style={[styles.recCard, selected && styles.recCardSelected]}
+      style={({ pressed }) => [
+        styles.recCard,
+        selected && styles.recCardSelected,
+        pressed && styles.softPressed,
+      ]}
       onPress={onToggle}
       accessibilityRole="checkbox"
       accessibilityLabel={`${item.name}, ${snakeCaseToLabel(item.item_type)}`}
@@ -294,16 +315,20 @@ function RecommendationCard({
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1040 },
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
     elevation: 2,
   },
   sectionTitle: {
@@ -342,17 +367,19 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 13,
+    paddingVertical: 9,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(243,247,251,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   typeChipSelected: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "rgba(234,242,248,0.94)",
   },
   typeChipText: {
     fontSize: 13,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textSecondary,
   },
   typeChipTextSelected: {
@@ -371,11 +398,11 @@ const styles = StyleSheet.create({
   countInput: {
     width: 64,
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 16,
     paddingHorizontal: 10,
-    paddingVertical: 8,
-    backgroundColor: colors.backgroundSecondary,
+    paddingVertical: 10,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 16,
     color: colors.textPrimary,
     textAlign: "center",
@@ -385,9 +412,14 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.primaryDark,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   generateButtonText: {
     color: colors.white,
@@ -396,11 +428,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    borderColor: "rgba(255,255,255,0.92)",
+    borderRadius: 18,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    backgroundColor: "rgba(248,251,255,0.84)",
     fontSize: 16,
     color: colors.textPrimary,
     marginBottom: 12,
@@ -412,7 +444,12 @@ const styles = StyleSheet.create({
     gap: 8,
     backgroundColor: colors.success,
     paddingVertical: 14,
-    borderRadius: 12,
+    borderRadius: 18,
+    shadowColor: colors.success,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   applyButtonText: {
     color: colors.white,
@@ -422,18 +459,27 @@ const styles = StyleSheet.create({
   buttonDisabled: {
     opacity: 0.6,
   },
+  buttonPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
+  },
   recCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 1,
   },
   recCardSelected: {
-    borderColor: colors.primary,
-    backgroundColor: colors.infoLighter,
+    borderColor: "rgba(104,138,160,0.34)",
+    backgroundColor: "rgba(246,249,252,0.9)",
   },
   recHeader: {
     flexDirection: "row",
@@ -454,10 +500,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   recBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 6,
-    backgroundColor: colors.surface,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    backgroundColor: "rgba(243,247,251,0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.9)",
   },
   recBadgeText: {
     fontSize: 11,
@@ -466,7 +514,7 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   rankBadge: {
-    backgroundColor: colors.primaryLight,
+    backgroundColor: "rgba(234,242,248,0.94)",
   },
   rankBadgeText: {
     fontSize: 11,
@@ -482,5 +530,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textMuted,
     marginTop: 6,
+  },
+  softPressed: {
+    transform: [{ scale: 0.992 }],
+    opacity: 0.95,
   },
 });

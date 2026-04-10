@@ -24,6 +24,18 @@ export function ProtocolsLogo({ size = 40 }: ProtocolsLogoProps) {
       accessibilityRole="image"
       accessibilityLabel="Protocols logo"
     >
+      <View style={[styles.glow, { width: size * 0.86, height: size * 0.86, borderRadius: size * 0.43 }]} />
+      <View style={[styles.ring, { borderRadius: size * 0.25 }]} />
+      <View
+        style={[
+          styles.highlight,
+          {
+            width: size * 0.44,
+            height: size * 0.44,
+            borderRadius: size * 0.22,
+          },
+        ]}
+      />
       <View
         style={[
           styles.layer,
@@ -68,11 +80,29 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: "center",
     justifyContent: "center",
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.38)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
     elevation: 6,
+  },
+  glow: {
+    position: "absolute",
+    backgroundColor: "rgba(255,255,255,0.12)",
+  },
+  ring: {
+    ...StyleSheet.absoluteFillObject,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.18)",
+  },
+  highlight: {
+    position: "absolute",
+    top: -4,
+    right: -2,
+    backgroundColor: "rgba(255,255,255,0.16)",
   },
   layer: {
     alignSelf: "center",

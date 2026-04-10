@@ -49,7 +49,11 @@ export function SetInputRow({ setNumber, onLog, previousSet }: SetInputRowProps)
         keyboardType="numeric"
       />
       <Pressable
-        style={[styles.warmupBtn, isWarmup && styles.warmupBtnActive]}
+        style={({ pressed }) => [
+          styles.warmupBtn,
+          isWarmup && styles.warmupBtnActive,
+          pressed && styles.softPressed,
+        ]}
         onPress={() => setIsWarmup(!isWarmup)}
         accessibilityRole="checkbox"
         accessibilityLabel="Warmup set"
@@ -57,7 +61,12 @@ export function SetInputRow({ setNumber, onLog, previousSet }: SetInputRowProps)
       >
         <Text style={[styles.warmupText, isWarmup && styles.warmupTextActive]}>W</Text>
       </Pressable>
-      <Pressable style={styles.logBtn} onPress={handleLog} accessibilityRole="button" accessibilityLabel={`Log set ${setNumber}`}>
+      <Pressable
+        style={({ pressed }) => [styles.logBtn, pressed && styles.softPressed]}
+        onPress={handleLog}
+        accessibilityRole="button"
+        accessibilityLabel={`Log set ${setNumber}`}
+      >
         <FontAwesome name="check" size={14} color={colors.textWhite} />
       </Pressable>
     </View>
@@ -80,13 +89,15 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 8,
+    backgroundColor: "rgba(248,251,255,0.84)",
+    borderRadius: 16,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 9,
     fontSize: 14,
     color: colors.textPrimary,
     textAlign: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   warmupBtn: {
     width: 30,
@@ -94,11 +105,13 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: "center",
     justifyContent: "center",
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(243,247,251,0.9)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
-  warmupBtnActive: { backgroundColor: colors.primaryLight },
+  warmupBtnActive: { backgroundColor: "rgba(234,242,248,0.94)" },
   warmupText: { fontSize: 12, fontWeight: "700", color: colors.textMuted },
-  warmupTextActive: { color: colors.primary },
+  warmupTextActive: { color: colors.primaryDark },
   logBtn: {
     width: 34,
     height: 34,
@@ -107,4 +120,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     backgroundColor: colors.success,
   },
+  softPressed: { transform: [{ scale: 0.96 }], opacity: 0.95 },
 });

@@ -3,6 +3,8 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { SessionExerciseCard } from "@/components/exercise/SessionExerciseCard";
@@ -105,9 +107,11 @@ export default function ActiveSessionScreen() {
   if (showPicker) {
     return (
       <View style={styles.container}>
+        <AmbientBackdrop canvasStyle={styles.backdrop} />
         <View style={styles.pickerHeader}>
           <Pressable
             onPress={() => setShowPicker(false)}
+            style={({ pressed }) => [styles.pickerIconButton, pressed && styles.softPressed]}
             accessibilityRole="button"
             accessibilityLabel="Go back"
           >
@@ -134,11 +138,13 @@ export default function ActiveSessionScreen() {
   );
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <FlowScreenHeader
-        title={session.name}
-        subtitle={isComplete ? "Completed" : `In progress \u00b7 ${elapsedMin} min`}
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title={session.name}
+          subtitle={isComplete ? "Completed" : `In progress \u00b7 ${elapsedMin} min`}
+        />
 
       {/* Session stats bar */}
       <View style={styles.statsBar}>
@@ -175,12 +181,12 @@ export default function ActiveSessionScreen() {
         {/* Add exercise */}
         {!isComplete && (
           <Pressable
-            style={styles.addExBtn}
+            style={({ pressed }) => [styles.addExBtn, pressed && styles.softPressed]}
             onPress={() => setShowPicker(true)}
             accessibilityRole="button"
             accessibilityLabel="Add Exercise"
           >
-            <FontAwesome name="plus" size={14} color={colors.primary} />
+            <FontAwesome name="plus" size={14} color={colors.primaryDark} />
             <Text style={styles.addExText}>Add Exercise</Text>
           </Pressable>
         )}
@@ -190,7 +196,7 @@ export default function ActiveSessionScreen() {
       {!isComplete && (
         <View style={styles.footer}>
           <Pressable
-            style={styles.completeBtn}
+            style={({ pressed }) => [styles.completeBtn, pressed && styles.buttonPressed]}
             onPress={handleComplete}
             accessibilityRole="button"
             accessibilityLabel="Finish Workout"
@@ -200,15 +206,18 @@ export default function ActiveSessionScreen() {
           </Pressable>
         </View>
       )}
+      </FadeInView>
 
-      <View style={{ height: 40 }} />
+      <View style={{ height: 24 }} />
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1080 },
+  centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.backgroundSecondary },
   errorText: { fontSize: 16, color: colors.textMuted },
 
   statsBar: {
@@ -219,10 +228,12 @@ const styles = StyleSheet.create({
   },
   statItem: {
     flex: 1,
-    backgroundColor: colors.surface,
-    borderRadius: 10,
-    padding: 10,
+    backgroundColor: "rgba(255,255,255,0.76)",
+    borderRadius: 18,
+    padding: 12,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   statValue: { fontSize: 18, fontWeight: "700", color: colors.textPrimary },
   statLabel: { fontSize: 10, color: colors.textMuted, marginTop: 2 },
@@ -234,14 +245,15 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 6,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
+    borderWidth: 1,
+    borderColor: "rgba(104,138,160,0.34)",
     borderStyle: "dashed",
-    borderRadius: 10,
+    borderRadius: 18,
     paddingVertical: 14,
     marginTop: 4,
+    backgroundColor: "rgba(255,255,255,0.5)",
   },
-  addExText: { fontSize: 15, fontWeight: "600", color: colors.primary },
+  addExText: { fontSize: 15, fontWeight: "600", color: colors.primaryDark },
 
   footer: { paddingHorizontal: 16, marginTop: 24 },
   completeBtn: {
@@ -250,8 +262,13 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     backgroundColor: colors.success,
-    borderRadius: 10,
+    borderRadius: 18,
     paddingVertical: 16,
+    shadowColor: colors.success,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   completeBtnText: { fontSize: 16, fontWeight: "600", color: colors.textWhite },
 
@@ -262,7 +279,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: colors.border,
+    borderBottomColor: "rgba(216,224,232,0.6)",
   },
   pickerTitle: { fontSize: 16, fontWeight: "600", color: colors.textPrimary },
+  pickerIconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+  },
+  softPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
+  buttonPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
 });

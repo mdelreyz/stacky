@@ -154,15 +154,17 @@ export function TherapyScheduleForm({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   sectionTitle: {
@@ -173,11 +175,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
+    borderColor: "rgba(255,255,255,0.9)",
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: "rgba(240,244,248,0.82)",
     fontSize: 16,
     color: colors.textPrimary,
   },
@@ -190,11 +192,11 @@ const styles = StyleSheet.create({
   },
   readonlyCard: {
     marginTop: 12,
-    borderRadius: 10,
+    borderRadius: 14,
     padding: 12,
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: "rgba(240,244,248,0.82)",
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: "rgba(255,255,255,0.88)",
   },
   readonlyLabel: {
     fontSize: 12,

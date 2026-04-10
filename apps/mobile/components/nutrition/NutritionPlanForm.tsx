@@ -123,7 +123,11 @@ export function NutritionPlanForm({
         <View style={styles.toggleHeader}>
           <Text style={styles.sectionTitle}>Macro Profile</Text>
           <Pressable
-            style={[styles.toggleRow, state.useMacroProfile && styles.toggleRowActive]}
+            style={({ pressed }) => [
+              styles.toggleRow,
+              state.useMacroProfile && styles.toggleRowActive,
+              pressed && styles.pressed,
+            ]}
             onPress={() => setState((current) => ({ ...current, useMacroProfile: !current.useMacroProfile }))}
             accessibilityRole="checkbox"
             accessibilityLabel="Track macros"
@@ -186,7 +190,11 @@ export function NutritionPlanForm({
       </View>
 
       <Pressable
-        style={[styles.primaryButton, saving && styles.buttonDisabled]}
+        style={({ pressed }) => [
+          styles.primaryButton,
+          saving && styles.buttonDisabled,
+          pressed && !saving && styles.pressed,
+        ]}
         onPress={onSubmit}
         disabled={saving}
         accessibilityRole="button"
@@ -204,7 +212,11 @@ export function NutritionPlanForm({
 
       {secondaryLabel && onSecondaryAction ? (
         <Pressable
-          style={[styles.secondaryButton, saving && styles.buttonDisabled]}
+          style={({ pressed }) => [
+            styles.secondaryButton,
+            saving && styles.buttonDisabled,
+            pressed && !saving && styles.pressed,
+          ]}
           onPress={onSecondaryAction}
           disabled={saving}
           accessibilityRole="button"
@@ -252,7 +264,11 @@ function OptionGrid({
       {options.map((option) => (
         <Pressable
           key={option.value}
-          style={[styles.optionChip, option.value === selected && styles.optionChipSelected]}
+          style={({ pressed }) => [
+            styles.optionChip,
+            option.value === selected && styles.optionChipSelected,
+            pressed && styles.pressed,
+          ]}
           onPress={() => onSelect(option.value)}
           accessibilityRole="button"
           accessibilityLabel={option.label}
@@ -282,15 +298,17 @@ function patternPlaceholder(cycleType: NutritionCycleType): string {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   sectionTitle: {
@@ -301,11 +319,11 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
+    borderColor: "rgba(255,255,255,0.9)",
+    borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: colors.backgroundSecondary,
+    backgroundColor: "rgba(240,244,248,0.82)",
     fontSize: 16,
     color: colors.textPrimary,
   },
@@ -331,10 +349,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderRadius: 999,
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(255,255,255,0.72)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.9)",
   },
   optionChipSelected: {
-    backgroundColor: colors.infoBorder,
+    backgroundColor: colors.primaryLight,
+    borderColor: colors.infoBorder,
   },
   optionChipText: {
     fontSize: 13,
@@ -352,8 +373,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
     padding: 12,
-    borderRadius: 10,
-    backgroundColor: colors.backgroundSecondary,
+    borderRadius: 14,
+    backgroundColor: "rgba(240,244,248,0.82)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.88)",
   },
   toggleRowActive: {
     backgroundColor: colors.successLight,
@@ -376,13 +399,20 @@ const styles = StyleSheet.create({
   },
   primaryButton: {
     marginHorizontal: 16,
-    borderRadius: 12,
-    backgroundColor: colors.primary,
+    borderRadius: 14,
+    backgroundColor: colors.primaryDark,
     paddingVertical: 14,
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
     gap: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.16)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.16,
+    shadowRadius: 18,
+    elevation: 3,
   },
   primaryButtonText: {
     color: colors.white,
@@ -393,10 +423,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 12,
     marginBottom: 8,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: colors.dangerLight,
     paddingVertical: 14,
     alignItems: "center",
+    borderWidth: 1,
+    borderColor: "#efd3d3",
   },
   secondaryButtonText: {
     color: colors.dangerDark,
@@ -405,5 +437,9 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  pressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.988 }],
   },
 });

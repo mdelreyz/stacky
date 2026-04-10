@@ -216,6 +216,18 @@ async def resolve_medication_ai_status(medication: Medication) -> tuple[AIProfil
     return "failed", "AI profile generation is not running for this item. Retry onboarding to generate it."
 
 
+def _strip_code_fences(text: str) -> str:
+    """Remove markdown code fences that models sometimes add around JSON."""
+    text = text.strip()
+    if text.startswith("```"):
+        # Remove opening fence (```json or ```)
+        first_newline = text.index("\n") if "\n" in text else len(text)
+        text = text[first_newline + 1:]
+    if text.endswith("```"):
+        text = text[:-3]
+    return text.strip()
+
+
 def _build_prompt(name: str, category: str | None, form: str | None) -> str:
     category_line = category or "other"
     form_line = form or "unknown"
@@ -241,6 +253,7 @@ def generate_supplement_profile(name: str, category: str | None, form: str | Non
     if unavailable_reason:
         raise AIProfileGenerationError(unavailable_reason)
 
+    schema_json = json.dumps(SupplementAIProfile.model_json_schema(), indent=2)
     client = Anthropic(api_key=settings.anthropic_api_key)
     response = client.messages.create(
         model=settings.ai_model,
@@ -248,19 +261,23 @@ def generate_supplement_profile(name: str, category: str | None, form: str | Non
         temperature=0.2,
         system=(
             "You generate supplement reference data for a health app. "
-            "Return only structured output that matches the provided schema."
+            "Return ONLY valid JSON that matches the provided schema. "
+            "No markdown, no code fences, no explanation — just the JSON object."
         ),
-        messages=[{"role": "user", "content": _build_prompt(name, category, form)}],
-        output_config={
-            "effort": "low",
-            "format": {
-                "type": "json_schema",
-                "schema": SupplementAIProfile.model_json_schema(),
-            },
-        },
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    f"{_build_prompt(name, category, form)}\n\n"
+                    f"JSON Schema to follow:\n{schema_json}"
+                ),
+            }
+        ],
     )
 
-    payload = "".join(block.text for block in response.content if getattr(block, "type", None) == "text").strip()
+    payload = _strip_code_fences(
+        "".join(block.text for block in response.content if getattr(block, "type", None) == "text")
+    )
     if not payload:
         raise AIProfileGenerationError("Anthropic returned an empty response.")
 
@@ -324,6 +341,7 @@ def generate_medication_profile(name: str, category: str | None, form: str | Non
     if unavailable_reason:
         raise AIProfileGenerationError(unavailable_reason)
 
+    schema_json = json.dumps(MedicationAIProfile.model_json_schema(), indent=2)
     client = Anthropic(api_key=settings.anthropic_api_key)
     response = client.messages.create(
         model=settings.ai_model,
@@ -331,19 +349,23 @@ def generate_medication_profile(name: str, category: str | None, form: str | Non
         temperature=0.2,
         system=(
             "You generate medication reference data for a health app. "
-            "Return only structured output that matches the provided schema."
+            "Return ONLY valid JSON that matches the provided schema. "
+            "No markdown, no code fences, no explanation — just the JSON object."
         ),
-        messages=[{"role": "user", "content": _build_medication_prompt(name, category, form)}],
-        output_config={
-            "effort": "low",
-            "format": {
-                "type": "json_schema",
-                "schema": MedicationAIProfile.model_json_schema(),
-            },
-        },
+        messages=[
+            {
+                "role": "user",
+                "content": (
+                    f"{_build_medication_prompt(name, category, form)}\n\n"
+                    f"JSON Schema to follow:\n{schema_json}"
+                ),
+            }
+        ],
     )
 
-    payload = "".join(block.text for block in response.content if getattr(block, "type", None) == "text").strip()
+    payload = _strip_code_fences(
+        "".join(block.text for block in response.content if getattr(block, "type", None) == "text")
+    )
     if not payload:
         raise AIProfileGenerationError("Anthropic returned an empty response.")
 

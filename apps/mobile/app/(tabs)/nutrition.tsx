@@ -7,6 +7,8 @@ import { colors } from "@/constants/Colors";
 import { nutrition as nutritionApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
 import { formatNutritionPhaseSummary, getNutritionCycleTypeLabel } from "@/lib/nutrition";
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import type { NutritionCycle } from "@/lib/api";
 
 export default function NutritionScreen() {
@@ -40,65 +42,78 @@ export default function NutritionScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <View style={styles.headerCopy}>
-          <Text style={styles.title}>Nutrition Plans</Text>
-          <Text style={styles.subtitle}>
-            Macro profiles, named diets, elimination phases, and custom food rules
-          </Text>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop />
+      <FadeInView>
+        <View style={styles.header}>
+          <View style={styles.heroGlowLarge} />
+          <View style={styles.heroGlowSmall} />
+          <View style={styles.headerCopy}>
+            <Text style={styles.title}>Nutrition Plans</Text>
+            <Text style={styles.subtitle}>
+              Macro profiles, named diets, elimination phases, and custom food rules
+            </Text>
+          </View>
+          <Link href="/nutrition/add" asChild>
+            <Pressable
+              style={({ pressed }) => [styles.addButton, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Add nutrition plan"
+            >
+              <FontAwesome name="plus" size={14} color={colors.primaryDark} />
+              <Text style={styles.addButtonText}>New</Text>
+            </Pressable>
+          </Link>
         </View>
-        <Link href="/nutrition/add" asChild>
-          <Pressable style={styles.addButton} accessibilityRole="button" accessibilityLabel="Add nutrition plan">
-            <FontAwesome name="plus" size={14} color={colors.white} />
-            <Text style={styles.addButtonText}>New</Text>
-          </Pressable>
-        </Link>
-      </View>
 
-      {plans.length === 0 ? (
-        <View style={styles.emptyCard}>
-          <FontAwesome name="pie-chart" size={40} color={colors.border} style={{ marginBottom: 12 }} />
-          <Text style={styles.emptyText}>No nutrition plans configured</Text>
-          <Text style={styles.emptyHint}>
-            Build a macro profile, low FODMAP block, Atkins phase, or custom restriction plan and Today will surface the current phase.
-          </Text>
-        </View>
-      ) : (
-        plans.map((plan) => {
-          const currentPhase = plan.phases[plan.current_phase_idx] ?? plan.phases[0];
-          const summary = currentPhase ? formatNutritionPhaseSummary(currentPhase) : [];
+        {plans.length === 0 ? (
+          <View style={styles.emptyCard}>
+            <FontAwesome name="pie-chart" size={32} color={colors.primaryDark} style={{ marginBottom: 12 }} />
+            <Text style={styles.emptyText}>No nutrition plans configured</Text>
+            <Text style={styles.emptyHint}>
+              Build a macro profile, low FODMAP block, Atkins phase, or custom restriction plan and Today will surface the current phase.
+            </Text>
+          </View>
+        ) : (
+          plans.map((plan) => {
+            const currentPhase = plan.phases[plan.current_phase_idx] ?? plan.phases[0];
+            const summary = currentPhase ? formatNutritionPhaseSummary(currentPhase) : [];
 
-          return (
-            <Link key={plan.id} href={`/nutrition/${plan.id}`} asChild>
-              <Pressable style={styles.planCard} accessibilityRole="button" accessibilityLabel={plan.name}>
-                <View style={styles.planHeader}>
-                  <View style={styles.planInfo}>
-                    <Text style={styles.planName}>{plan.name}</Text>
-                    <Text style={styles.planMeta}>
-                      {getNutritionCycleTypeLabel(plan.cycle_type)} · Phase {plan.current_phase_idx + 1} of {plan.phases.length}
-                    </Text>
+            return (
+              <Link key={plan.id} href={`/nutrition/${plan.id}`} asChild>
+                <Pressable
+                  style={({ pressed }) => [styles.planCard, pressed && styles.pressedCard]}
+                  accessibilityRole="button"
+                  accessibilityLabel={plan.name}
+                >
+                  <View style={styles.planHeader}>
+                    <View style={styles.planInfo}>
+                      <Text style={styles.planName}>{plan.name}</Text>
+                      <Text style={styles.planMeta}>
+                        {getNutritionCycleTypeLabel(plan.cycle_type)} · Phase {plan.current_phase_idx + 1} of {plan.phases.length}
+                      </Text>
+                    </View>
+                    <View style={[styles.statusPill, plan.is_active ? styles.activePill : styles.inactivePill]}>
+                      <Text style={[styles.statusText, plan.is_active ? styles.activeText : styles.inactiveText]}>
+                        {plan.is_active ? "Active" : "Inactive"}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={[styles.statusPill, plan.is_active ? styles.activePill : styles.inactivePill]}>
-                    <Text style={[styles.statusText, plan.is_active ? styles.activeText : styles.inactiveText]}>
-                      {plan.is_active ? "Active" : "Inactive"}
-                    </Text>
-                  </View>
-                </View>
 
-                {currentPhase ? <Text style={styles.phaseName}>{currentPhase.name}</Text> : null}
-                {summary.map((line) => (
-                  <Text key={line} style={styles.summaryLine}>
-                    {line}
-                  </Text>
-                ))}
-                {currentPhase?.notes ? <Text style={styles.notes}>{currentPhase.notes}</Text> : null}
-                <Text style={styles.transitionMeta}>Next transition {plan.next_transition}</Text>
-              </Pressable>
-            </Link>
-          );
-        })
-      )}
+                  {currentPhase ? <Text style={styles.phaseName}>{currentPhase.name}</Text> : null}
+                  {summary.map((line) => (
+                    <Text key={line} style={styles.summaryLine}>
+                      {line}
+                    </Text>
+                  ))}
+                  {currentPhase?.notes ? <Text style={styles.notes}>{currentPhase.notes}</Text> : null}
+                  <Text style={styles.transitionMeta}>Next transition {plan.next_transition}</Text>
+                </Pressable>
+              </Link>
+            );
+          })
+        )}
+      </FadeInView>
 
       <View style={{ height: 24 }} />
     </ScrollView>
@@ -110,6 +125,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.backgroundSecondary,
   },
+  content: {
+    paddingBottom: 24,
+    position: "relative",
+  },
   centered: {
     flex: 1,
     justifyContent: "center",
@@ -117,24 +136,53 @@ const styles = StyleSheet.create({
     backgroundColor: colors.backgroundSecondary,
   },
   header: {
+    margin: 16,
+    marginTop: 10,
     padding: 20,
-    paddingTop: 10,
     flexDirection: "row",
     alignItems: "flex-start",
     justifyContent: "space-between",
     gap: 12,
+    borderRadius: 26,
+    backgroundColor: "rgba(54,94,130,0.94)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.14)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.16,
+    shadowRadius: 24,
+    elevation: 3,
+    overflow: "hidden",
+  },
+  heroGlowLarge: {
+    position: "absolute",
+    width: 180,
+    height: 180,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,255,255,0.11)",
+    top: -50,
+    right: -18,
+  },
+  heroGlowSmall: {
+    position: "absolute",
+    width: 120,
+    height: 120,
+    borderRadius: 999,
+    backgroundColor: "rgba(255,194,116,0.12)",
+    bottom: -20,
+    left: -12,
   },
   headerCopy: {
     flex: 1,
   },
   title: {
     fontSize: 28,
-    fontWeight: "700",
-    color: colors.textPrimary,
+    fontWeight: "800",
+    color: colors.textWhite,
   },
   subtitle: {
     fontSize: 14,
-    color: colors.gray,
+    color: "rgba(255,255,255,0.78)",
     marginTop: 4,
     lineHeight: 20,
   },
@@ -142,27 +190,31 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: colors.primary,
+    backgroundColor: "rgba(255,255,255,0.74)",
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   addButtonText: {
-    color: colors.white,
+    color: colors.primaryDark,
     fontWeight: "700",
     fontSize: 13,
   },
   emptyCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 16,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 32,
     alignItems: "center",
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   emptyText: {
@@ -178,16 +230,26 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   planCard: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
+  },
+  pressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.985 }],
+  },
+  pressedCard: {
+    opacity: 0.94,
+    transform: [{ scale: 0.988 }],
   },
   planHeader: {
     flexDirection: "row",
@@ -217,7 +279,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.successLight,
   },
   inactivePill: {
-    backgroundColor: colors.surface,
+    backgroundColor: "rgba(240,244,248,0.86)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.88)",
   },
   statusText: {
     fontSize: 11,

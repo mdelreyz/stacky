@@ -28,12 +28,35 @@ export default function Root({ children }: { children: React.ReactNode }) {
 }
 
 const responsiveBackground = `
-body {
-  background-color: #f9fafb;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+html, body, #root {
+  min-height: 100%;
 }
-@media (prefers-color-scheme: dark) {
-  body {
-    background-color: #101820;
-  }
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at 12% 18%, rgba(126, 188, 226, 0.22), transparent 28%),
+    radial-gradient(circle at 84% 22%, rgba(139, 224, 228, 0.18), transparent 24%),
+    radial-gradient(circle at 30% 72%, rgba(255, 201, 132, 0.14), transparent 26%),
+    linear-gradient(180deg, #fbfdff 0%, #f3f8fc 48%, #eef4f9 100%);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  color: #1a2332;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.52), rgba(255,255,255,0.1)),
+    radial-gradient(circle at top right, rgba(255,255,255,0.65), transparent 26%);
+  z-index: 0;
+}
+
+#root {
+  position: relative;
+  z-index: 1;
 }`;

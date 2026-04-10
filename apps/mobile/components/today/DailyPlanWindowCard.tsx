@@ -36,7 +36,11 @@ export function DailyPlanWindowCard({
         <Text style={styles.sectionTitle}>{windowPlan.display_time}</Text>
         {hasPending && windowPlan.items.length > 1 && (
           <Pressable
-            style={[styles.markAllButton, markingAll && styles.markAllDisabled]}
+            style={({ pressed }) => [
+              styles.markAllButton,
+              markingAll && styles.markAllDisabled,
+              pressed && !markingAll && styles.pressed,
+            ]}
             onPress={handleMarkAll}
             disabled={markingAll}
             accessibilityRole="button"
@@ -101,11 +105,12 @@ function AdherenceActions({
   return (
     <View style={styles.actionsRow}>
       <Pressable
-        style={[
+        style={({ pressed }) => [
           styles.actionButton,
           styles.takeButton,
           loading && styles.actionButtonDisabled,
           item.adherence_status === "taken" && styles.actionButtonActive,
+          pressed && !loading && styles.pressed,
         ]}
         onPress={onTake}
         disabled={loading}
@@ -123,11 +128,12 @@ function AdherenceActions({
         </Text>
       </Pressable>
       <Pressable
-        style={[
+        style={({ pressed }) => [
           styles.actionButton,
           styles.skipButton,
           loading && styles.actionButtonDisabled,
           item.adherence_status === "skipped" && styles.skipButtonActive,
+          pressed && !loading && styles.pressed,
         ]}
         onPress={onSkip}
         disabled={loading}
@@ -158,15 +164,17 @@ function StatusPill({ status }: { status: "pending" | "taken" | "skipped" }) {
 
 const styles = StyleSheet.create({
   section: {
-    backgroundColor: colors.white,
+    backgroundColor: "rgba(255,255,255,0.76)",
     marginHorizontal: 16,
     marginBottom: 12,
-    borderRadius: 12,
+    borderRadius: 20,
     padding: 16,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
     elevation: 2,
   },
   sectionHeader: {
@@ -177,7 +185,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
     color: colors.textSecondary,
   },
   markAllButton: {
@@ -187,7 +195,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.successLight,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: 8,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.successBadge,
   },
   markAllDisabled: {
     opacity: 0.6,
@@ -208,10 +218,14 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
   },
   itemCard: {
-    paddingTop: 10,
-    paddingBottom: 8,
-    borderTopWidth: 1,
-    borderTopColor: colors.surface,
+    paddingTop: 12,
+    paddingBottom: 10,
+    marginTop: 10,
+    paddingHorizontal: 14,
+    borderRadius: 16,
+    backgroundColor: "rgba(240,244,248,0.76)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.88)",
   },
   itemHeader: {
     flexDirection: "row",
@@ -251,8 +265,9 @@ const styles = StyleSheet.create({
   actionButton: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 12,
     alignItems: "center",
+    borderWidth: 1,
   },
   actionButtonDisabled: {
     opacity: 0.6,
@@ -263,6 +278,7 @@ const styles = StyleSheet.create({
   },
   takeButton: {
     backgroundColor: colors.successLight,
+    borderColor: colors.successBadge,
   },
   takeButtonText: {
     color: colors.success,
@@ -271,6 +287,7 @@ const styles = StyleSheet.create({
   },
   skipButton: {
     backgroundColor: colors.dangerLight,
+    borderColor: "#efd3d3",
   },
   skipButtonActive: {
     borderWidth: 1,
@@ -285,9 +302,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 999,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.72)",
   },
   statusText: {
     fontSize: 11,
     fontWeight: "700",
+  },
+  pressed: {
+    opacity: 0.94,
+    transform: [{ scale: 0.988 }],
   },
 });

@@ -3,6 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { router } from "expo-router";
 
+import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
+import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { exercises as exercisesApi } from "@/lib/api";
@@ -93,13 +95,15 @@ export default function CreateExerciseScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} keyboardShouldPersistTaps="handled">
-      <FlowScreenHeader
-        title="New Exercise"
-        subtitle="Create a custom exercise for your routines"
-      />
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <AmbientBackdrop canvasStyle={styles.backdrop} />
+      <FadeInView>
+        <FlowScreenHeader
+          title="New Exercise"
+          subtitle="Create a custom exercise for your routines"
+        />
 
-      <View style={styles.form}>
+        <View style={styles.form}>
         <Text style={styles.label}>Name *</Text>
         <TextInput
           style={styles.input}
@@ -114,7 +118,11 @@ export default function CreateExerciseScreen() {
           {CATEGORIES.map((c) => (
             <Pressable
               key={c.value}
-              style={[styles.chip, category === c.value && styles.chipSelected]}
+              style={({ pressed }) => [
+                styles.chip,
+                category === c.value && styles.chipSelected,
+                pressed && styles.softPressed,
+              ]}
               accessibilityRole="button"
               accessibilityLabel={`Category: ${c.label}`}
               accessibilityState={{ selected: category === c.value }}
@@ -135,7 +143,11 @@ export default function CreateExerciseScreen() {
           {MUSCLE_GROUPS.map((m) => (
             <Pressable
               key={m.value}
-              style={[styles.chip, primaryMuscle === m.value && styles.chipSelected]}
+              style={({ pressed }) => [
+                styles.chip,
+                primaryMuscle === m.value && styles.chipSelected,
+                pressed && styles.softPressed,
+              ]}
               accessibilityRole="button"
               accessibilityLabel={`Primary muscle: ${m.label}`}
               accessibilityState={{ selected: primaryMuscle === m.value }}
@@ -158,7 +170,11 @@ export default function CreateExerciseScreen() {
           {EQUIPMENT.map((e) => (
             <Pressable
               key={e.value}
-              style={[styles.chip, equipment === e.value && styles.chipSelected]}
+              style={({ pressed }) => [
+                styles.chip,
+                equipment === e.value && styles.chipSelected,
+                pressed && styles.softPressed,
+              ]}
               accessibilityRole="button"
               accessibilityLabel={`Equipment: ${e.label}`}
               accessibilityState={{ selected: equipment === e.value }}
@@ -176,7 +192,11 @@ export default function CreateExerciseScreen() {
           {MUSCLE_GROUPS.filter((m) => m.value !== primaryMuscle).map((m) => (
             <Pressable
               key={m.value}
-              style={[styles.chip, secondaryMuscles.includes(m.value) && styles.chipSelectedSoft]}
+              style={({ pressed }) => [
+                styles.chip,
+                secondaryMuscles.includes(m.value) && styles.chipSelectedSoft,
+                pressed && styles.softPressed,
+              ]}
               accessibilityRole="checkbox"
               accessibilityLabel={`Secondary muscle: ${m.label}`}
               accessibilityState={{ checked: secondaryMuscles.includes(m.value) }}
@@ -213,53 +233,62 @@ export default function CreateExerciseScreen() {
           placeholderTextColor={colors.textPlaceholder}
           multiline
         />
-      </View>
+        </View>
 
-      <View style={styles.footer}>
-        <Pressable
-          style={[styles.saveBtn, saving && styles.saveBtnDisabled]}
-          onPress={handleSave}
-          disabled={saving}
-          accessibilityRole="button"
-          accessibilityLabel="Create Exercise"
-        >
-          <FontAwesome name="plus-circle" size={16} color={colors.textWhite} />
-          <Text style={styles.saveBtnText}>{saving ? "Creating..." : "Create Exercise"}</Text>
-        </Pressable>
-      </View>
+        <View style={styles.footer}>
+          <Pressable
+            style={({ pressed }) => [
+              styles.saveBtn,
+              saving && styles.saveBtnDisabled,
+              pressed && !saving && styles.buttonPressed,
+            ]}
+            onPress={handleSave}
+            disabled={saving}
+            accessibilityRole="button"
+            accessibilityLabel="Create Exercise"
+          >
+            <FontAwesome name="plus-circle" size={16} color={colors.textWhite} />
+            <Text style={styles.saveBtnText}>{saving ? "Creating..." : "Create Exercise"}</Text>
+          </Pressable>
+        </View>
+      </FadeInView>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.backgroundSecondary },
+  content: { paddingBottom: 24, position: "relative" },
+  backdrop: { top: -48, height: 1180 },
   form: { paddingHorizontal: 20, gap: 6 },
   label: { fontSize: 14, fontWeight: "600", color: colors.textSecondary, marginTop: 12 },
   input: {
-    backgroundColor: colors.surface,
-    borderRadius: 10,
+    backgroundColor: "rgba(248,251,255,0.84)",
+    borderRadius: 18,
     paddingHorizontal: 14,
-    paddingVertical: 12,
+    paddingVertical: 13,
     fontSize: 15,
     color: colors.textPrimary,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
 
   chipGrid: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4 },
   chip: {
-    backgroundColor: colors.surface,
-    borderRadius: 8,
+    backgroundColor: "rgba(243,247,251,0.9)",
+    borderRadius: 14,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderWidth: 1.5,
-    borderColor: "transparent",
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.92)",
   },
   chipSelected: {
-    backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
+    backgroundColor: "rgba(234,242,248,0.94)",
+    borderColor: "rgba(104,138,160,0.34)",
   },
   chipSelectedSoft: {
-    backgroundColor: colors.successLight,
-    borderColor: colors.success,
+    backgroundColor: "rgba(234,245,239,0.94)",
+    borderColor: "rgba(74,138,106,0.28)",
   },
   chipText: { fontSize: 13, fontWeight: "500", color: colors.textSecondary },
   chipTextSelected: { color: colors.primary, fontWeight: "600" },
@@ -271,10 +300,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
-    backgroundColor: colors.primary,
-    borderRadius: 10,
+    backgroundColor: colors.primaryDark,
+    borderRadius: 18,
     paddingVertical: 16,
+    shadowColor: colors.primaryDark,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 3,
   },
   saveBtnDisabled: { opacity: 0.6 },
   saveBtnText: { fontSize: 16, fontWeight: "600", color: colors.textWhite },
+  softPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
+  buttonPressed: { transform: [{ scale: 0.992 }], opacity: 0.95 },
 });
