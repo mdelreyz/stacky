@@ -125,7 +125,7 @@ export default function ScheduleTherapyScreen() {
   if (!therapy) {
     return (
       <View style={styles.centered}>
-        <Text>Protocol not found</Text>
+        <Text>Therapy not found</Text>
       </View>
     );
   }

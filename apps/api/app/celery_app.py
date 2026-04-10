@@ -24,4 +24,5 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
+    result_expires=3600,  # expire task results after 1 hour
 )

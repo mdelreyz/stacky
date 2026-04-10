@@ -128,7 +128,7 @@ export default function ManageUserTherapyScreen() {
   if (!userTherapy) {
     return (
       <View style={styles.centered}>
-        <Text>Protocol not found</Text>
+        <Text>Therapy not found</Text>
       </View>
     );
   }

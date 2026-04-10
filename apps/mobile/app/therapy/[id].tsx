@@ -54,7 +54,7 @@ export default function TherapyDetailScreen() {
   if (!therapy) {
     return (
       <View style={styles.centered}>
-        <Text style={{ color: colors.textSecondary }}>Protocol not found</Text>
+        <Text style={{ color: colors.textSecondary }}>Therapy not found</Text>
       </View>
     );
   }

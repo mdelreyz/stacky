@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
 
 from app.config import settings
 from app.database import Base, engine
 from app.models import *  # noqa: F401, F403 — register all models with Base
+from app.rate_limit import limiter
 from app.routes import v1_router
 
 
@@ -28,6 +31,13 @@ app = FastAPI(
     version="0.1.0",
     lifespan=lifespan,
 )
+app.state.limiter = limiter
+
+
+@app.exception_handler(RateLimitExceeded)
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(status_code=429, content={"detail": "Too many requests. Please try again later."})
+
 
 app.add_middleware(
     CORSMiddleware,
