@@ -1,30 +1,32 @@
 # Session Resume
 
 ## What was worked on
-Built the product far beyond the initial supplement-only foundation. Recent milestones added AI onboarding, supplement scheduling and adherence, regimen management, protocol stacks, medication and modality flows, nutrition cycles, UV/skincare guidance, supplement refill workflows, scheduled regime activation, tracking analytics, adherence context snapshots, and richer modality session state.
+Polished the current Expo/FastAPI product loop rather than expanding new pillars. The main work was on web/mobile shell behavior, the protocol wizard contract, AI onboarding failure states, local Anthropic env handling, workbook-backed supplement seeding, and stricter repo-local noomix rules.
 
 ## Current state
 
 ### Done
-- AI onboarding with shared supplement profiles and status lifecycle
-- Today execution loop with date navigation, adherence writes, interaction warnings, and active regime labels
-- User flows for supplements, medications, modalities/therapies, protocols, and nutrition
-- Protocol stacks with manual and calendarized activation rules
-- Tracking overview with recent events, streaks, family filters, and schedule-fit suggestions
-- UV guidance and supplement refill tracking, including generated reorder/prescription text
-- Historical adherence snapshots for future analytics stability
-- Modality session metadata with last pattern, volume, response, and completion timestamp
+- Web auth guard now blocks unauthenticated access into app routes and auth screens redirect correctly after login/signup
+- Tabs/header chrome was simplified, preferences were tightened, and several rough UI issues were removed from exercise/profile flows
+- Wizard flow now avoids duplicate user turns, hides raw completion JSON, returns real `catalog_id` values, and can apply recommendations successfully
+- Preference caps were raised to 100 for supplements and medications
+- AI onboarding now surfaces explicit failure reasons for missing API config, missing SDK, connectivity/auth issues, or exhausted credits instead of appearing stuck
+- Backend now reads `ANTHROPIC_API_KEY` directly from the gitignored repo-root `.env`
+- Supplement seed flow can import additional entries from `data/Supplement_Stack.xls` via a conservative parser
+- `CLAUDE.md` noomix section is now an explicit operational checklist rather than soft guidance
 
-### In progress
-- Broader domain expansion for activities, training structures, skincare procedures, hair/grey-hair protocols, and additional catalog depth
-- Continued refactor and hardening work to keep forms, API seams, and seed data modular as the domain grows
+### Still in progress
+- Live seeding into the real local Postgres database was not applied because nothing was listening on `localhost:5432` from this shell
+- The workbook importer is intentionally conservative and still includes some borderline catalog names that may deserve later curation
+- Mobile type-check still has pre-existing Expo Router `href` typing failures outside this session’s changes
 
 ## Immediate next steps
-1. Expand the seeded catalog and session schemas for activities, training, skincare, hair, and other protocol families the user listed
-2. Decide whether adherence events should also snapshot dosage/session settings before future PEMPTA-style outcome analysis
-3. Continue refactoring large forms and seed scripts so new domain families do not reintroduce hardcoded lists
-4. Add more test coverage around tracking, regime scheduling, and richer modality/session details
+1. Start the local Postgres-backed API database and run `python3 apps/api/scripts/seed.py` to apply the workbook-derived supplement additions for real
+2. Curate the imported supplement list if you want stricter filtering or category/goal mapping from the workbook
+3. Re-test supplement AI onboarding end-to-end with the live backend to confirm provider failures and success states read well in the UI
+4. Clean up the pre-existing `Link href` typing issues in `components/protocols/*` so `npx tsc --noEmit` can go green again
 
 ## Open questions or blockers
-- `main` has no upstream configured, so pushes are currently skipped
-- PEMPTA integration is still future work; keep current APIs neutral and history-preserving rather than speculative
+- `apps/mobile/app.json` and `apps/mobile/components/ProtocolsLogo.tsx` had unrelated pre-existing edits and were intentionally left out of the session commit
+- `data/Supplement_Stack.xls` is local source material and was intentionally not committed
+- The real DB seed is blocked until the local Postgres instance is available
