@@ -10,7 +10,7 @@ from app.schemas.nutrition import ActiveNutritionPhaseResponse
 class DailyPlanItemResponse(BaseModel):
     id: str
     name: str
-    type: Literal["supplement", "medication", "therapy"]
+    type: Literal["supplement", "medication", "therapy", "peptide"]
     details: str | None
     instructions: str
     regimes: list[str]

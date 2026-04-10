@@ -265,7 +265,11 @@ async def update_set(
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Session not found")
 
-    result = await session.execute(select(WorkoutSet).where(WorkoutSet.id == set_id))
+    result = await session.execute(
+        select(WorkoutSet)
+        .join(WorkoutSessionExercise, WorkoutSet.session_exercise_id == WorkoutSessionExercise.id)
+        .where(WorkoutSet.id == set_id, WorkoutSessionExercise.session_id == session_id)
+    )
     ws = result.scalar_one_or_none()
     if not ws:
         raise HTTPException(status_code=404, detail="Set not found")
@@ -293,7 +297,11 @@ async def delete_set(
     if not result.scalar_one_or_none():
         raise HTTPException(status_code=404, detail="Session not found")
 
-    result = await session.execute(select(WorkoutSet).where(WorkoutSet.id == set_id))
+    result = await session.execute(
+        select(WorkoutSet)
+        .join(WorkoutSessionExercise, WorkoutSet.session_exercise_id == WorkoutSessionExercise.id)
+        .where(WorkoutSet.id == set_id, WorkoutSessionExercise.session_id == session_id)
+    )
     ws = result.scalar_one_or_none()
     if not ws:
         raise HTTPException(status_code=404, detail="Set not found")

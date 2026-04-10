@@ -17,7 +17,6 @@ from app.services.exercise_stats import (
     get_exercise_progress,
     get_muscle_group_volume,
     get_stats_overview,
-    get_weekly_overview,
 )
 
 router = APIRouter(prefix="/users/me/exercise-stats", tags=["exercise-stats"])

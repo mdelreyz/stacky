@@ -8,7 +8,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.exercise import Exercise
-from app.models.workout_session import WorkoutSession, WorkoutSessionExercise, WorkoutSet
+from app.models.workout_session import WorkoutSession
 
 
 def _iso_week(d: date) -> str:

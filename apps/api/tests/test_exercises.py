@@ -4,7 +4,6 @@ import asyncio
 
 from app.database import async_session_factory
 from app.models.exercise import Exercise
-from app.models.enums import ExerciseCategory, ExerciseEquipment, MuscleGroup
 
 
 def auth_headers(client):
@@ -44,7 +43,7 @@ def seed_exercise(name="Bench Press", category="compound", muscle="chest", equip
 
 def test_list_exercises_includes_catalog_and_custom(client):
     headers = auth_headers(client)
-    catalog_id = seed_exercise("Barbell Squat")
+    seed_exercise("Barbell Squat")
 
     # Create a custom exercise
     resp = client.post("/api/v1/exercises", json={

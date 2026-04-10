@@ -13,8 +13,8 @@ from anthropic import Anthropic
 from pydantic import BaseModel, ConfigDict
 
 from app.config import settings
-from app.models.supplement import Supplement, SupplementCategory
-from app.models.medication import Medication, MedicationCategory
+from app.models.supplement import Supplement
+from app.models.medication import Medication
 from app.models.therapy import Therapy
 from app.models.peptide import Peptide
 from app.models.user_preferences import UserPreferences

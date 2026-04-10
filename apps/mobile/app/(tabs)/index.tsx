@@ -100,6 +100,7 @@ export default function TodayScreen() {
       />
 
       <TrackingSummaryCard overview={trackingOverview} endDate={selectedDate} />
+      <TodayExerciseCard items={plan?.exercise_plan ?? []} />
       <NutritionPhaseCard phase={nutritionPhase} />
       <SkincareGuidanceCard guidance={skincareGuidance} />
       <CycleAlertsCard alerts={cycleAlerts} />

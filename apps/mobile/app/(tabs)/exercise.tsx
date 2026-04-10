@@ -10,6 +10,7 @@ import {
   workoutRoutines as routinesApi,
   workoutSessions as sessionsApi,
 } from "@/lib/api";
+import { useGymArrival } from "@/lib/gym-geofence";
 import { showError } from "@/lib/errors";
 import type {
   ExerciseStatsOverview,
@@ -20,6 +21,7 @@ import type {
 
 export default function ExerciseScreen() {
   const router = useRouter();
+  const { match: gymMatch, recheck: recheckGym } = useGymArrival();
   const [todayRoutines, setTodayRoutines] = useState<WorkoutRoutine[]>([]);
   const [recentSessions, setRecentSessions] = useState<WorkoutSessionListItem[]>([]);
   const [routines, setRoutines] = useState<WorkoutRoutineListItem[]>([]);
@@ -49,7 +51,8 @@ export default function ExerciseScreen() {
   useFocusEffect(
     useCallback(() => {
       void loadData();
-    }, [loadData])
+      recheckGym();
+    }, [loadData, recheckGym])
   );
 
   const onRefresh = useCallback(async () => {
@@ -73,6 +76,33 @@ export default function ExerciseScreen() {
       style={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
+      {/* Gym Arrival Banner */}
+      {gymMatch?.matched && gymMatch.gym_location && (
+        <Pressable
+          style={styles.gymBanner}
+          onPress={() => {
+            if (gymMatch.default_routine) {
+              router.push(`/workout-session/start?routine_id=${gymMatch.default_routine.id}`);
+            } else {
+              router.push("/workout-session/start");
+            }
+          }}
+        >
+          <FontAwesome name="map-marker" size={18} color={colors.textWhite} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.gymBannerTitle}>
+              You're at {gymMatch.gym_location.name}
+            </Text>
+            <Text style={styles.gymBannerSub}>
+              {gymMatch.default_routine
+                ? `Tap to start ${gymMatch.default_routine.name}`
+                : "Tap to start a workout"}
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textWhite} />
+        </Pressable>
+      )}
+
       {/* Today's Workout */}
       {todayRoutines.length > 0 && (
         <View style={styles.section}>
@@ -222,6 +252,13 @@ export default function ExerciseScreen() {
 
       {/* Navigation links */}
       <View style={styles.section}>
+        <Link href="/exercise/stats" asChild>
+          <Pressable style={styles.navLink}>
+            <FontAwesome name="bar-chart" size={16} color={colors.primary} />
+            <Text style={styles.navLinkText}>Detailed Stats & Progress</Text>
+            <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
+          </Pressable>
+        </Link>
         <Link href="/exercise-regime/create" asChild>
           <Pressable style={styles.navLink}>
             <FontAwesome name="calendar" size={16} color={colors.primary} />
@@ -236,6 +273,13 @@ export default function ExerciseScreen() {
             <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
           </Pressable>
         </Link>
+        <Link href="/exercise/create" asChild>
+          <Pressable style={styles.navLink}>
+            <FontAwesome name="plus-square-o" size={16} color={colors.primary} />
+            <Text style={styles.navLinkText}>Create Custom Exercise</Text>
+            <FontAwesome name="chevron-right" size={12} color={colors.textMuted} />
+          </Pressable>
+        </Link>
       </View>
 
       <View style={{ height: 40 }} />
@@ -246,6 +290,18 @@ export default function ExerciseScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   centered: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: colors.background },
+  gymBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    backgroundColor: colors.primary,
+    marginHorizontal: 16,
+    marginTop: 16,
+    borderRadius: 12,
+    padding: 14,
+  },
+  gymBannerTitle: { fontSize: 15, fontWeight: "700", color: colors.textWhite },
+  gymBannerSub: { fontSize: 12, color: "rgba(255,255,255,0.8)", marginTop: 1 },
   section: { paddingHorizontal: 16, marginTop: 20 },
   sectionHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   sectionTitle: { fontSize: 18, fontWeight: "700", color: colors.textPrimary, marginBottom: 12 },

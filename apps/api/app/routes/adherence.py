@@ -88,7 +88,7 @@ async def _upsert_adherence(
         adherence_log.skipped = True
         adherence_log.skip_reason = data.skip_reason
 
-    await session.commit()
+    await session.flush()
     await session.refresh(adherence_log)
 
     return AdherenceResponse(
@@ -128,7 +128,7 @@ async def upsert_supplement_adherence(
     ):
         raise HTTPException(status_code=400, detail="This supplement is not scheduled for that date")
 
-    return await _upsert_adherence(
+    result = await _upsert_adherence(
         item_type="supplement",
         item_id=user_supplement.id,
         take_window=user_supplement.take_window,
@@ -144,6 +144,8 @@ async def upsert_supplement_adherence(
         data=data,
         session=session,
     )
+    await session.commit()
+    return result
 
 
 @router.post("/therapies/{user_therapy_id}", response_model=AdherenceResponse)
@@ -200,7 +202,7 @@ async def upsert_therapy_adherence(
         next_settings = dict(user_therapy.settings or {})
         next_settings["last_completed_at"] = response.taken_at.isoformat()
         user_therapy.settings = next_settings
-        await session.commit()
+    await session.commit()
     return response
 
 
@@ -232,7 +234,7 @@ async def upsert_medication_adherence(
     ):
         raise HTTPException(status_code=400, detail="This medication is not scheduled for that date")
 
-    return await _upsert_adherence(
+    result = await _upsert_adherence(
         item_type="medication",
         item_id=user_medication.id,
         take_window=user_medication.take_window,
@@ -248,6 +250,8 @@ async def upsert_medication_adherence(
         data=data,
         session=session,
     )
+    await session.commit()
+    return result
 
 
 @router.post("/peptides/{user_peptide_id}", response_model=AdherenceResponse)
@@ -278,7 +282,7 @@ async def upsert_peptide_adherence(
     ):
         raise HTTPException(status_code=400, detail="This peptide is not scheduled for that date")
 
-    return await _upsert_adherence(
+    result = await _upsert_adherence(
         item_type="peptide",
         item_id=user_peptide.id,
         take_window=user_peptide.take_window,
@@ -294,6 +298,8 @@ async def upsert_peptide_adherence(
         data=data,
         session=session,
     )
+    await session.commit()
+    return result
 
 
 def _protocol_with_items_query(user_id: uuid.UUID, protocol_id: uuid.UUID):
@@ -431,8 +437,8 @@ async def batch_protocol_adherence(
         next_settings["last_completed_at"] = taken_at.isoformat()
         user_therapy.settings = next_settings
 
-    if therapies_to_update:
-        await session.commit()
+    # Single atomic commit for the entire batch
+    await session.commit()
 
     if not items_marked:
         raise HTTPException(status_code=400, detail="No items in this protocol are scheduled for that date")

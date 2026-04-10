@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, TextInput, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
+import { useRouter } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { exercises as exercisesApi } from "@/lib/api";
@@ -24,6 +25,7 @@ export function ExerciseSearchPicker({
   onSelect: (exercise: Exercise) => void;
   selectedIds?: string[];
 }) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<Exercise[]>([]);
   const [loading, setLoading] = useState(false);
@@ -83,6 +85,10 @@ export function ExerciseSearchPicker({
           </Pressable>
         )}
       </View>
+      <Pressable style={styles.createBtn} onPress={() => router.push("/exercise/create")}>
+        <FontAwesome name="plus" size={12} color={colors.primary} />
+        <Text style={styles.createBtnText}>Create Custom Exercise</Text>
+      </Pressable>
       {loading ? (
         <ActivityIndicator style={{ marginTop: 20 }} color={colors.primary} />
       ) : (
@@ -111,6 +117,19 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   searchInput: { flex: 1, fontSize: 15, color: colors.textPrimary },
+  createBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    marginBottom: 4,
+    borderWidth: 1.5,
+    borderColor: colors.primary,
+    borderStyle: "dashed",
+    borderRadius: 8,
+  },
+  createBtnText: { fontSize: 13, fontWeight: "600", color: colors.primary },
   list: { flex: 1 },
   item: {
     flexDirection: "row",

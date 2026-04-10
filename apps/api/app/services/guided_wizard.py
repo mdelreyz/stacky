@@ -12,10 +12,9 @@ from __future__ import annotations
 
 import json
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from anthropic import Anthropic
-from pydantic import BaseModel, ConfigDict
 
 from app.config import settings
 from app.services.recommendation_engine import CatalogSnapshot

@@ -13,7 +13,7 @@ Each dimension returns a 0-1 float. The final score is a weighted sum × 100.
 from __future__ import annotations
 
 import logging
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from app.models.user_preferences import UserPreferences
 from app.services.interaction_checker import Interaction
@@ -166,7 +166,6 @@ def _compute_goal_coverage(item_dicts: list[dict], goals: list[str]) -> float:
     covered_goals = 0
     for goal in goals:
         relevant_categories = GOAL_CATEGORY_MAP.get(goal, set())
-        relevant_goal_tags = {goal}
 
         has_category_match = any(
             item.get("category") in relevant_categories for item in item_dicts

@@ -11,7 +11,7 @@ Cross-platform health protocol management app — supplements, medications, ther
 | **Backend** | FastAPI (Python 3.12+), async SQLAlchemy 2.0, PostgreSQL, Alembic |
 | **Workers** | Celery + Redis (AI profile generation, background tasks) |
 | **Frontend** | Expo (React Native) + Expo Router — iOS, Android, Web |
-| **Styling** | NativeWind (Tailwind CSS for React Native) |
+| **Styling** | `StyleSheet.create` + `colors` design token (`Colors.ts`) |
 | **AI** | Claude Sonnet via `anthropic` SDK — onboarding, recommendations |
 | **Monorepo** | pnpm workspaces + Turborepo |
 
@@ -23,12 +23,12 @@ Cross-platform health protocol management app — supplements, medications, ther
 apps/
   api/                  FastAPI backend
     app/
-      models/           SQLAlchemy domain models (16 models)
-      routes/           API endpoints (16 routers)
+      models/           SQLAlchemy domain models (23 mapped classes)
+      routes/           API endpoints (22 routers)
       schemas/          Pydantic v2 request/response schemas
-      services/         Business logic (scheduling, recommendations, AI)
+      services/         Business logic (scheduling, recommendations, AI, stats)
     scripts/            Seed data, catalog definitions
-    tests/              56 integration tests
+    tests/              102 integration tests
   worker/               Celery task definitions
   mobile/               Expo app (iOS + Android + Web)
 
@@ -41,7 +41,7 @@ packages/
 
 ## Domain Pillars
 
-Five independent item types, each with a shared catalog and per-user instances:
+Six independent item types, each with a shared catalog and per-user instances:
 
 | Pillar | Catalog Model | User Model | Key Fields |
 |--------|--------------|------------|------------|
@@ -50,6 +50,7 @@ Five independent item types, each with a shared catalog and per-user instances:
 | **Therapies** | `Therapy` | `UserTherapy` | Duration, settings JSON, last_completed_at tracking |
 | **Peptides** | `Peptide` | `UserPeptide` | Route (subQ/IM/topical), reconstitution, storage_notes |
 | **Nutrition** | `NutritionCycle` | (self-contained) | Cycle types, phases, macro profiles, fasting patterns |
+| **Exercise** | `Exercise` | `WorkoutRoutine` / `ExerciseRegime` / `WorkoutSession` | Routines with sets/reps/weight, weekly regime scheduling, session logging, per-exercise stats, GPS gym locations |
 
 ### Supplement Taxonomy (3-layer)
 
@@ -125,7 +126,7 @@ alembic upgrade head
 # Seed data
 python -m scripts.seed
 
-# Tests (56 integration tests, SQLite)
+# Tests (102 integration tests, SQLite)
 pytest
 
 # Frontend
@@ -170,6 +171,12 @@ docker compose up
 | Tracking | `GET /users/me/tracking/overview` |
 | Nutrition | `GET/POST /users/me/nutrition`, `GET/PATCH/DELETE .../{id}` |
 | Preferences | `GET/PUT/PATCH /users/me/preferences`, `POST .../recommendations` |
+| Exercises catalog | `GET /exercises`, `GET /exercises/{id}`, `POST /exercises` (custom) |
+| Workout routines | `GET/POST /users/me/routines`, `GET/PATCH/DELETE .../{id}`, `PUT .../{id}/exercises` |
+| Exercise regimes | `GET/POST /users/me/exercise-regimes`, `GET/PATCH/DELETE .../{id}`, `GET .../today` |
+| Workout sessions | `GET/POST /users/me/sessions`, `GET/PATCH/DELETE .../{id}`, sets CRUD |
+| Exercise stats | `GET /users/me/exercise-stats/overview`, `.../exercise/{id}`, `.../muscle-groups` |
+| Gym locations | `GET/POST /users/me/gym-locations`, `PATCH/DELETE .../{id}`, `POST .../match` |
 
 ---
 
