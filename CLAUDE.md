@@ -203,6 +203,7 @@ docker compose up
 - **Design tokens:** All colors in `Colors.ts`, referenced via `colors.tokenName`. Never hardcode hex values.
 - **Accessibility:** Every `Pressable` gets `accessibilityRole` (button/checkbox/radio/switch) + `accessibilityLabel` + `accessibilityState` where applicable
 - **Security:** Rate limiting on auth (slowapi), bcrypt max_length guard, IDOR-safe ownership checks on all user resources, sessionStorage on web (not localStorage)
+- **Docs:** `docs/instructions.html` and `docs/instructions.pdf` must be kept in sync with feature changes. After editing the HTML, regenerate the PDF with `node docs/generate-pdf.mjs`. Update both when adding new pillars, tabs, screens, AI features, or significant UX changes.
 - **Backend patterns match Pempta** (`../vitalsync`): same auth, database, route, and service conventions
 
 ---
