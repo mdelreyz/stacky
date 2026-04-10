@@ -11,8 +11,8 @@ Cross-platform health protocol management app — supplements, medications, ther
 | **Backend** | FastAPI (Python 3.12+), async SQLAlchemy 2.0, PostgreSQL, Alembic |
 | **Workers** | Celery + Redis (AI profile generation, background tasks) |
 | **Frontend** | Expo (React Native) + Expo Router — iOS, Android, Web |
-| **Styling** | `StyleSheet.create` + nordic design token system (`Colors.ts` — cool slate grays, steel blues, frosted glass surfaces) |
-| **AI** | Claude Sonnet via `anthropic` SDK — onboarding, recommendations |
+| **Styling** | `StyleSheet.create` + nordic design token system (`Colors.ts`) |
+| **AI** | Claude Sonnet via `anthropic` SDK — onboarding, recommendations, guided wizard |
 | **Monorepo** | pnpm workspaces + Turborepo |
 
 ---
@@ -26,11 +26,35 @@ apps/
       models/           SQLAlchemy domain models (23 mapped classes)
       routes/           API endpoints (22 routers)
       schemas/          Pydantic v2 request/response schemas
-      services/         Business logic (scheduling, recommendations, AI, stats)
+      services/         Business logic (19 service modules)
     scripts/            Seed data, catalog definitions
     tests/              102 integration tests
   worker/               Celery task definitions
   mobile/               Expo app (iOS + Android + Web)
+    app/
+      (tabs)/           5-tab layout: Today, Protocols, Exercise, Nutrition, Profile
+      auth/             Login, signup
+      supplement/       Catalog detail, add (AI onboard), schedule, refill request
+      medication/       Catalog detail, add (AI onboard), schedule
+      therapy/          Catalog detail, schedule
+      peptide/          Catalog detail, schedule
+      user-*/           Manage user instances (dosage, frequency, remove)
+      nutrition/        Cycle detail, add
+      exercise/         Catalog detail, create custom, stats
+      exercise-regime/  Weekly regime detail, create
+      workout-routine/  Routine detail, create
+      workout-session/  Active session (log sets), start
+      gym-location/     GPS location manager
+      protocol/         Protocol detail, add
+      profile/          Edit, preferences, safety check, location/UV
+    components/
+      today/            Daily plan cards (window, exercise, nutrition, skincare, interactions, skip modal)
+      protocols/        Stack score, catalog, schedule, selection
+      exercise/         Search picker, session card, set input
+      nutrition/        Plan form
+      supplement-detail/ Hero, AI profile, fallback
+      forms/            Shared buttons, option grid
+      tracking/         Adherence calendar
 
 packages/
   domain/               Shared TypeScript types (source of truth for frontend)
@@ -74,20 +98,25 @@ Users group items into named protocols ("Morning Stack", "Hair Protocol"). Proto
 - Checks frequency scheduling (daily, EOD, weekly) + protocol schedule gates
 - Renders adherence status (taken/skipped/pending)
 - Includes nutrition phase, skincare/UV guidance, interaction warnings
+- Today's exercise routine from active regime
 
 ### Adherence Tracking
 - **Individual**: `POST /users/me/adherence/{type}/{id}` — upsert per item per day
 - **Batch**: `POST /users/me/adherence/protocols/{id}` — one tap marks all scheduled items in a protocol
+- **Mark all**: batch mark all items in a take window as taken
 - Snapshots at time of recording: item name, take window, dosage, therapy settings, active regimes
 - Idempotent (calling twice updates the existing log, doesn't duplicate)
 
 ### Tracking Overview
-`GET /users/me/tracking/overview` — completion rates, streaks, per-item stats, AI suggestions
+`GET /users/me/tracking/overview` — completion rates, streaks, per-item stats
 
 ### AI Systems
 - **Onboarding** — user names a supplement/medication, Claude generates a structured profile (dosages, interactions, timing, cycling). Dispatched via Celery with in-process fallback.
-- **Recommendations** — slot-constrained, goal-aware item selection. User says "give me 3 supplements for longevity" → engine ranks catalog by evidence-based priority, filtered by goals and current stack. Claude-powered with static fallback.
-- **Status tracking** — Redis (with in-memory fallback) tracks generation progress per item.
+- **Recommendations** — slot-constrained, goal-aware, synergy-boosted item selection. Claude-powered with full static fallback (longevity essentials + goal-priority tiers).
+- **Guided Wizard** — multi-turn conversational protocol builder. Claude asks questions to understand goals and constraints, then proposes a complete stack. Client-managed conversation state with static fallback.
+- **Stack Score** — 0-100 composite rating across 5 dimensions (goal coverage 40%, evidence quality 20%, interaction safety 20%, synergy bonus 10%, diversity 10%). 15 known synergy pairs. Contextual improvement suggestions.
+- **Interaction Checker** — scans active stack for known contraindications and caution pairs. Severity-ranked warnings (critical/major/moderate/minor).
+- **Status tracking** — Redis (with in-memory fallback) tracks AI generation progress per item.
 
 ### User Preferences & Interaction Modes
 `PUT /users/me/preferences` — stores constraints that drive all AI-assisted features:
@@ -107,6 +136,29 @@ Users group items into named protocols ("Morning Stack", "Hair Protocol"). Proto
 - **Advanced** — AI assists with onboarding and profiles, user drives selection
 - **Automated** — AI proposes complete protocols, user approves/tweaks
 - **Guided** — wizard Q&A: AI asks constraint questions, builds entire stack
+
+### Weather & UV
+`services/weather.py` — fetches UV index for user's location to drive skincare/sun guidance on the daily plan.
+
+---
+
+## Design Language
+
+Nordic/glass aesthetic — cool, calm, and elegant:
+
+| Token Group | Direction | Examples |
+|---|---|---|
+| **Text** | Deep slate, never pure black | `textPrimary: #1a2332`, `textSecondary: #4b5c72` |
+| **Surfaces** | Cloud white, frosted glass | `background: #f9fafb`, `surface: #e6ecf2` |
+| **Primary** | Steel blue | `primary: #5a8ab5` |
+| **Success** | Scandinavian sage | `success: #4a8a6a` |
+| **Danger** | Dusty rose | `danger: #c45858` |
+| **Warning** | Nordic gold | `warning: #b88a35` |
+| **Accent** | Twilight lavender | `accent: #6858a5` |
+| **Borders** | Frost lines, barely visible | `border: #d8e0e8` |
+| **Neutrals** | Cool-toned slate | `gray: #6a7888`, `black: #101820` |
+
+All colors live in `Colors.ts`. Zero hardcoded hex values in any component or screen file. Muscle group chart has its own desaturated spectrum. Every `Pressable` element has `accessibilityRole` + `accessibilityLabel`.
 
 ---
 
@@ -148,9 +200,10 @@ docker compose up
 - **AI profiles:** JSONB on catalog rows — generated once per item, shared across all users
 - **Serialization:** Dedicated `*_serialization.py` services for complex nested responses
 - **Tests:** Integration tests with real SQLite DB, `reset_db` fixture drops/recreates all tables per test
+- **Design tokens:** All colors in `Colors.ts`, referenced via `colors.tokenName`. Never hardcode hex values.
+- **Accessibility:** Every `Pressable` gets `accessibilityRole` (button/checkbox/radio/switch) + `accessibilityLabel` + `accessibilityState` where applicable
+- **Security:** Rate limiting on auth (slowapi), bcrypt max_length guard, IDOR-safe ownership checks on all user resources, sessionStorage on web (not localStorage)
 - **Backend patterns match Pempta** (`../vitalsync`): same auth, database, route, and service conventions
-- **Design language:** Nordic/glass — cool slate grays, steel blues, frosted surfaces, desaturated semantic colors (sage green, dusty rose, golden amber, twilight lavender). All colors in `Colors.ts`; zero hardcoded hex values in components. Every `Pressable` has `accessibilityRole` + `accessibilityLabel`.
-- **Security:** Rate limiting on auth (slowapi), bcrypt max_length guard, IDOR-safe ownership checks, sessionStorage on web
 
 ---
 
@@ -172,13 +225,39 @@ docker compose up
 | Adherence | `POST /users/me/adherence/{type}/{id}`, `POST .../protocols/{id}` |
 | Tracking | `GET /users/me/tracking/overview` |
 | Nutrition | `GET/POST /users/me/nutrition`, `GET/PATCH/DELETE .../{id}` |
-| Preferences | `GET/PUT/PATCH /users/me/preferences`, `POST .../recommendations` |
+| Preferences | `GET/PUT/PATCH /users/me/preferences` |
+| Recommendations | `POST /users/me/preferences/recommendations`, `POST .../recommendations/apply` |
+| Stack score | `GET /users/me/preferences/stack-score` |
+| Interactions | `GET /users/me/preferences/interactions` |
+| Guided wizard | `POST /users/me/preferences/wizard` |
 | Exercises catalog | `GET /exercises`, `GET /exercises/{id}`, `POST /exercises` (custom) |
 | Workout routines | `GET/POST /users/me/routines`, `GET/PATCH/DELETE .../{id}`, `PUT .../{id}/exercises` |
 | Exercise regimes | `GET/POST /users/me/exercise-regimes`, `GET/PATCH/DELETE .../{id}`, `GET .../today` |
 | Workout sessions | `GET/POST /users/me/sessions`, `GET/PATCH/DELETE .../{id}`, sets CRUD |
 | Exercise stats | `GET /users/me/exercise-stats/overview`, `.../exercise/{id}`, `.../muscle-groups` |
 | Gym locations | `GET/POST /users/me/gym-locations`, `PATCH/DELETE .../{id}`, `POST .../match` |
+
+---
+
+## Services
+
+| Service | File | Purpose |
+|---------|------|---------|
+| Daily Plan | `daily_plan.py` | Assembles daily plan with frequency/schedule gates, window grouping |
+| AI Onboarding | `ai_onboarding.py` | Claude-powered profile generation for supplements/medications |
+| Recommendations | `recommendation_engine.py` | Goal-aware, synergy-boosted item selection with static fallback |
+| Guided Wizard | `guided_wizard.py` | Multi-turn conversational protocol builder |
+| Stack Score | `stack_score.py` | 5-dimension composite score with synergy detection |
+| Interactions | `interaction_checker.py` | Scans stack for contraindications and caution pairs |
+| Tracking | `tracking.py` | Completion rates, streaks, per-item adherence stats |
+| Exercise Stats | `exercise_stats.py` | Volume, max weight, 1RM estimates, muscle distribution |
+| Gym Geofence | `gym_geofence.py` | GPS location matching for auto-loading routines |
+| Weather/UV | `weather.py` | UV index fetch for skincare guidance |
+| Nutrition | `nutrition_cycles.py` | Phase management, macro computation |
+| Protocol Schedule | `protocol_schedule.py` | Schedule gate logic (date range, week-of-month, manual) |
+| Regimen Schedule | `regimen_schedule.py` | Supplement cycling/regimen schedule |
+| Pagination | `pagination.py` | Shared paginated response helper |
+| Serialization | `user_*_serialization.py` | Nested response builders (4 files, one per user item type) |
 
 ---
 
