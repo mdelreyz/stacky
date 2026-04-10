@@ -1,6 +1,6 @@
 # Protocols
 
-Cross-platform health protocol management app — supplements, medications, therapies, peptides, and nutrition orchestrated into personalized daily plans with AI-powered recommendations and one-tap tracking.
+Cross-platform health protocol management app — supplements, medications, therapies, peptides, nutrition, and exercise orchestrated into personalized daily plans with AI-powered recommendations, workout tracking, and one-tap adherence logging.
 
 ---
 
@@ -11,7 +11,7 @@ Cross-platform health protocol management app — supplements, medications, ther
 | **Backend** | FastAPI (Python 3.12+), async SQLAlchemy 2.0, PostgreSQL, Alembic |
 | **Workers** | Celery + Redis (AI profile generation, background tasks) |
 | **Frontend** | Expo (React Native) + Expo Router — iOS, Android, Web |
-| **Styling** | `StyleSheet.create` + `colors` design token (`Colors.ts`) |
+| **Styling** | `StyleSheet.create` + nordic design token system (`Colors.ts` — cool slate grays, steel blues, frosted glass surfaces) |
 | **AI** | Claude Sonnet via `anthropic` SDK — onboarding, recommendations |
 | **Monorepo** | pnpm workspaces + Turborepo |
 
@@ -149,6 +149,8 @@ docker compose up
 - **Serialization:** Dedicated `*_serialization.py` services for complex nested responses
 - **Tests:** Integration tests with real SQLite DB, `reset_db` fixture drops/recreates all tables per test
 - **Backend patterns match Pempta** (`../vitalsync`): same auth, database, route, and service conventions
+- **Design language:** Nordic/glass — cool slate grays, steel blues, frosted surfaces, desaturated semantic colors (sage green, dusty rose, golden amber, twilight lavender). All colors in `Colors.ts`; zero hardcoded hex values in components. Every `Pressable` has `accessibilityRole` + `accessibilityLabel`.
+- **Security:** Rate limiting on auth (slowapi), bcrypt max_length guard, IDOR-safe ownership checks, sessionStorage on web
 
 ---
 

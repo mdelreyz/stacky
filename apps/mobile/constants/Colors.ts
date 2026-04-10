@@ -1,91 +1,91 @@
 export const colors = {
-  // Text
-  textPrimary: "#212529",
-  textSecondary: "#495057",
-  textMuted: "#868e96",
-  textPlaceholder: "#adb5bd",
+  // Text — deep slate, never pure black
+  textPrimary: "#1a2332",
+  textSecondary: "#4b5c72",
+  textMuted: "#8c99a8",
+  textPlaceholder: "#b8c4d0",
   textWhite: "#ffffff",
 
-  // Backgrounds
-  background: "#ffffff",
-  backgroundSecondary: "#f8f9fa",
-  surface: "#f1f3f5",
+  // Backgrounds — cloud white with cool undertone
+  background: "#f9fafb",
+  backgroundSecondary: "#f0f4f8",
+  surface: "#e6ecf2",
 
-  // Borders
-  border: "#dee2e6",
-  borderLight: "#e9ecef",
+  // Borders — frost lines
+  border: "#d8e0e8",
+  borderLight: "#e8eef4",
 
-  // Primary (blue)
-  primary: "#228be6",
-  primaryDark: "#1c7ed6",
-  primaryDarker: "#1864ab",
-  primaryLight: "#e7f5ff",
+  // Primary — nordic steel blue
+  primary: "#5a8ab5",
+  primaryDark: "#4878a0",
+  primaryDarker: "#365e82",
+  primaryLight: "#eaf2f8",
 
-  // Success (green)
-  success: "#2b8a3e",
-  successLight: "#ebfbee",
-  successBadge: "#d3f9d8",
+  // Success — scandinavian sage
+  success: "#4a8a6a",
+  successLight: "#eaf5ef",
+  successBadge: "#d0e8da",
 
-  // Danger (red)
-  danger: "#e03131",
-  dangerDark: "#c92a2a",
-  dangerLight: "#fff5f5",
-  dangerAccent: "#ef4444",
+  // Danger — dusty rose
+  danger: "#c45858",
+  dangerDark: "#a84848",
+  dangerLight: "#f8eded",
+  dangerAccent: "#d06565",
 
-  // Warning (amber)
-  warning: "#e67700",
-  warningDark: "#8f5b00",
-  warningLight: "#fff4e6",
-  warningBorder: "#ffd8a8",
-  warningAmber: "#ffa94d",
-  warningSkincare: "#f08c00",
-  warningBrown: "#9a3412",
-  warningBrownDark: "#7c2d12",
+  // Warning — nordic gold
+  warning: "#b88a35",
+  warningDark: "#856328",
+  warningLight: "#f8f3e8",
+  warningBorder: "#e2d4b0",
+  warningAmber: "#cca040",
+  warningSkincare: "#a88030",
+  warningBrown: "#785530",
+  warningBrownDark: "#5a3e22",
 
-  // Info (blue tint)
-  info: "#1c3d5a",
-  infoSecondary: "#5c7c94",
-  infoLight: "#eef7ff",
-  infoLighter: "#fafcff",
-  infoBorder: "#d0ebff",
-  infoSelect: "#74c0fc",
+  // Info — fjord blue
+  info: "#3a5570",
+  infoSecondary: "#688aa0",
+  infoLight: "#ecf2f8",
+  infoLighter: "#f6f9fc",
+  infoBorder: "#c8d8e5",
+  infoSelect: "#78aed0",
 
-  // Accent (purple)
-  accent: "#5f3dc4",
-  accentDark: "#6741d9",
-  accentIcon: "#7048e8",
-  accentLight: "#f3f0ff",
-  accentBorder: "#e5dbff",
+  // Accent — twilight lavender
+  accent: "#6858a5",
+  accentDark: "#7565b2",
+  accentIcon: "#8272c0",
+  accentLight: "#f0eef8",
+  accentBorder: "#d8d2ea",
 
-  // Badge (yellow)
-  badgeYellow: "#fff3bf",
-  badgeYellowLight: "#fff9db",
-  badgeYellowBorder: "#ffe8a1",
+  // Badge — soft cream
+  badgeYellow: "#f2ebd5",
+  badgeYellowLight: "#f8f5ec",
+  badgeYellowBorder: "#e5dcc5",
 
-  // Safety severity
-  safetyCriticalBg: "#ffe3e3",
-  safetyModerateBg: "#f4fce3",
-  safetyModerateText: "#5c940d",
+  // Safety severity — muted diagnostic
+  safetyCriticalBg: "#f5e5e5",
+  safetyModerateBg: "#ecf2e5",
+  safetyModerateText: "#557838",
 
-  // Muscle group chart palette
-  muscleChest: "#ef4444",
-  muscleBack: "#3b82f6",
-  muscleShoulders: "#f59e0b",
-  muscleBiceps: "#10b981",
-  muscleTriceps: "#8b5cf6",
-  muscleForearms: "#ec4899",
-  muscleQuadriceps: "#06b6d4",
-  muscleHamstrings: "#f97316",
-  muscleGlutes: "#14b8a6",
-  muscleCalves: "#6366f1",
-  muscleCore: "#84cc16",
-  muscleFullBody: "#78716c",
-  muscleCardio: "#e11d48",
+  // Muscle group chart — desaturated, elegant spectrum
+  muscleChest: "#c45858",
+  muscleBack: "#5a8ab5",
+  muscleShoulders: "#c8a040",
+  muscleBiceps: "#4a8a6a",
+  muscleTriceps: "#8272c0",
+  muscleForearms: "#b56888",
+  muscleQuadriceps: "#52a0b2",
+  muscleHamstrings: "#c07845",
+  muscleGlutes: "#48958a",
+  muscleCalves: "#686cc0",
+  muscleCore: "#72a040",
+  muscleFullBody: "#788090",
+  muscleCardio: "#b04868",
 
-  // Neutral grays
-  gray: "#6c757d",
-  grayDark: "#343a40",
-  black: "#000000",
+  // Neutral — cool-toned slate
+  gray: "#6a7888",
+  grayDark: "#384450",
+  black: "#101820",
   white: "#ffffff",
 } as const;
 
