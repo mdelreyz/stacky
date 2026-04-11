@@ -1,24 +1,27 @@
 # Session Resume
 
 ## What was worked on
-Recalibrated supplement detail scoring so `Essential` means broad, universal usefulness instead of generic supplement quality. The work was limited to the mobile score model, the shared supplement evidence-tier type, and session documentation.
+Traced the post-auth "Failed to load daily plan" bug from the Expo web client into the backend and confirmed it was a server-side enum regression, not an auth failure. Added take-window compatibility handling so legacy persisted values no longer crash daily-plan and tracking reads, normalized the live SQLite rows on API startup, and hardened the recommendation-apply path so legacy aliases stop being written back into enum-backed columns.
 
 ## Current state
 
 ### Done
-- `apps/mobile/lib/supplement-score.ts` now uses a sparse essential-scoring model based on normalized core-system coverage, nutrient-repletion signals, and niche penalties
-- The shared supplement type now accepts `traditional` and `speculative` evidence tiers in `packages/domain/src/supplement.ts`
-- The current local catalog distribution is roughly 12 supplements above 90, 33 between 50 and 90, and 260 below 50 for `Essential`
-- Validation completed with `pnpm typecheck` and `pnpm --dir apps/mobile exec tsc --noEmit`
+- `apps/api/app/services/take_window_compat.py` now normalizes legacy `take_window` values in persisted regimen rows and adherence snapshots on startup
+- `apps/api/app/models/enums.py` now canonicalizes legacy labels like `evening_with_food` and `with_meals` into the supported `TakeWindow` set
+- `apps/api/app/services/recommendation_application.py` now normalizes recommendation-applied windows before writing to user item tables
+- `apps/api/app/services/tracking.py` now normalizes legacy snapshot windows instead of failing to decode them
+- The local API/dev web stack was restarted, and the live SQLite `user_supplements` rows were normalized to canonical values
+- Validation completed with `pytest apps/api/tests/test_daily_plan.py apps/api/tests/test_tracking.py apps/api/tests/test_apply_and_interactions.py`
 
 ### Still in progress
-- Unrelated API-model and test changes were already present in the working tree and were intentionally left untouched
+- Unrelated local edits remain in `apps/mobile/lib/supplement-score.ts` and `packages/domain/src/supplement.ts`; they were intentionally left out of this session's commits
+- No frontend-specific follow-up was done for error messaging because the root cause was backend-only
 
 ## Immediate next steps
-1. Open the supplement detail UI and sanity-check whether the 90+ names match product expectations
-2. If needed, tune the near-threshold bonuses again to move the top tier slightly up or down without affecting the lower bands
-3. Decide whether the backend/manual profile schema should formally widen its evidence enum to match the existing local catalog values
+1. Reload `http://localhost:8081` and verify the previously failing account now loads Today without the daily-plan alert
+2. Audit other persisted free-text timing fields or imported catalog labels for similar enum-drift risk beyond `take_window`
+3. If more legacy timing variants exist in historical data, consider a formal migration instead of relying only on startup normalization
 
 ## Open questions or blockers
-- Some 90+ results are still judgment calls, so the next useful pass is product review rather than more blind formula tweaking
-- The backend Python schema still advertises only `strong|moderate|limited|emerging`, even though the local catalog and TS client now carry `traditional` and `speculative`
+- The compatibility layer handles the legacy values seen locally, but it is still heuristic for free-text aliases outside the canonical set
+- The unrelated mobile/domain edits still need their own review and commit path
