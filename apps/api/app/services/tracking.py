@@ -7,7 +7,7 @@ from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
 from app.models.user import User
 from app.models.user_medication import UserMedication
-from app.models.enums import TakeWindow
+from app.models.enums import TakeWindow, normalize_take_window
 from app.models.user_peptide import UserPeptide
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
@@ -47,12 +47,7 @@ def _item_type_label(item_type: TrackingItemType | None) -> str:
 
 
 def _take_window_from_snapshot(value: str | None) -> TakeWindow | None:
-    if not value:
-        return None
-    for option in TakeWindow:
-        if option.value == value:
-            return option
-    return None
+    return normalize_take_window(value)
 
 
 def _build_item_suggestion(stat: dict) -> dict | None:

@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import select
+from sqlalchemy import select, text
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
@@ -12,6 +12,7 @@ from app.models.user_medication import UserMedication
 from app.models.enums import Frequency, TakeWindow
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
+from app.services.take_window_compat import normalize_legacy_take_window_data
 
 
 def signup(client) -> tuple[dict[str, str], str]:
@@ -626,3 +627,50 @@ def test_daily_plan_honors_week_of_month_protocol_regimes(client):
     ]
     assert len(active_items) == 1
     assert active_items[0]["regimes"] == ["Week One Reset"]
+
+
+def test_daily_plan_normalizes_legacy_take_window_values(client):
+    headers, user_id = signup(client)
+
+    zinc_id = create_supplement("Zinc Picolinate")
+    potassium_id = create_supplement("Kalium (citrate)")
+    zinc_user_item_id = create_user_supplement(
+        user_id,
+        zinc_id,
+        take_window=TakeWindow.evening,
+        with_food=True,
+        started_at=date(2026, 4, 11),
+    )
+    potassium_user_item_id = create_user_supplement(
+        user_id,
+        potassium_id,
+        take_window=TakeWindow.morning_with_food,
+        with_food=False,
+        started_at=date(2026, 4, 11),
+    )
+
+    async def _mutate_and_normalize():
+        async with async_session_factory() as session:
+            await session.execute(
+                text("UPDATE user_supplements SET take_window = 'evening_with_food' WHERE id = :item_id"),
+                {"item_id": str(zinc_user_item_id)},
+            )
+            await session.execute(
+                text("UPDATE user_supplements SET take_window = 'with_meals', with_food = 0 WHERE id = :item_id"),
+                {"item_id": str(potassium_user_item_id)},
+            )
+            await session.commit()
+        await normalize_legacy_take_window_data()
+
+    import asyncio
+
+    asyncio.run(_mutate_and_normalize())
+
+    response = client.get("/api/v1/users/me/daily-plan?date=2026-04-11", headers=headers)
+
+    assert response.status_code == 200
+    windows = {window["window"]: window for window in response.json()["windows"]}
+    assert [item["name"] for item in windows["evening"]["items"]] == ["Zinc Picolinate"]
+    assert windows["evening"]["items"][0]["instructions"] == "Once daily. Take with food"
+    assert [item["name"] for item in windows["morning_with_food"]["items"]] == ["Kalium (citrate)"]
+    assert windows["morning_with_food"]["items"][0]["instructions"] == "Once daily. Take with food"

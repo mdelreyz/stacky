@@ -26,7 +26,9 @@ class UserTherapy(Base):
         Enum(Frequency, name="frequency_enum", create_type=False), nullable=False, default=Frequency.daily
     )
     take_window: Mapped[TakeWindow] = mapped_column(
-        Enum(TakeWindow, name="take_window_enum", create_type=False), nullable=False, default=TakeWindow.morning_fasted
+        Enum(TakeWindow, name="take_window_enum", create_type=False, validate_strings=True),
+        nullable=False,
+        default=TakeWindow.morning_fasted,
     )
     settings: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     notes: Mapped[str | None] = mapped_column(Text, nullable=True)

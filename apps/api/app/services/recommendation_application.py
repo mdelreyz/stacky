@@ -6,6 +6,7 @@ from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.models.enums import TakeWindow, normalize_take_window, take_window_requires_food
 from app.models.medication import Medication
 from app.models.peptide import Peptide
 from app.models.protocol import Protocol, ProtocolItem
@@ -29,10 +30,10 @@ _DEFAULT_DOSAGES = {
 }
 
 _DEFAULT_WINDOWS = {
-    "supplement": "morning_with_food",
-    "medication": "evening",
-    "therapy": "afternoon",
-    "peptide": "morning_fasted",
+    "supplement": TakeWindow.morning_with_food,
+    "medication": TakeWindow.evening,
+    "therapy": TakeWindow.afternoon,
+    "peptide": TakeWindow.morning_fasted,
 }
 
 
@@ -44,11 +45,12 @@ class _AppliedUserItemIds:
     peptides: list[uuid.UUID] = field(default_factory=list)
 
 
-def _resolve_defaults(item: ApplyRecommendationItem) -> tuple[float, str, str, str]:
+def _resolve_defaults(item: ApplyRecommendationItem) -> tuple[float, str, TakeWindow, str]:
     default_amount, default_unit = _DEFAULT_DOSAGES.get(item.item_type, (1.0, "unit"))
     dosage_amount = item.dosage_amount or default_amount
     dosage_unit = item.dosage_unit or default_unit
-    take_window = item.take_window or _DEFAULT_WINDOWS.get(item.item_type, "morning_with_food")
+    default_window = _DEFAULT_WINDOWS.get(item.item_type, TakeWindow.morning_with_food)
+    take_window = normalize_take_window(item.take_window, fallback=default_window) or default_window
     frequency = item.frequency or "daily"
     return dosage_amount, dosage_unit, take_window, frequency
 
@@ -82,7 +84,7 @@ async def _apply_supplement(
         dosage_unit=dosage_unit,
         frequency=frequency,
         take_window=take_window,
-        with_food="with_food" in take_window,
+        with_food=take_window_requires_food(item.take_window, fallback=take_window),
         started_at=started_at,
     )
     session.add(user_item)
@@ -126,6 +128,7 @@ async def _apply_medication(
         dosage_unit=dosage_unit,
         frequency=frequency,
         take_window=take_window,
+        with_food=take_window_requires_food(item.take_window, fallback=take_window),
         started_at=started_at,
     )
     session.add(user_item)
@@ -211,6 +214,7 @@ async def _apply_peptide(
         dosage_unit=dosage_unit,
         frequency=frequency,
         take_window=take_window,
+        with_food=take_window_requires_food(item.take_window, fallback=take_window),
         started_at=started_at,
     )
     session.add(user_item)

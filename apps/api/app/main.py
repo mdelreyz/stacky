@@ -10,6 +10,7 @@ from app.database import Base, engine
 from app.models import *  # noqa: F401, F403 — register all models with Base
 from app.rate_limit import limiter
 from app.routes import v1_router
+from app.services.take_window_compat import normalize_legacy_take_window_data
 
 
 @asynccontextmanager
@@ -18,6 +19,7 @@ async def lifespan(app: FastAPI):
     if "sqlite" in settings.database_url:
         async with engine.begin() as conn:
             await conn.run_sync(Base.metadata.create_all)
+    await normalize_legacy_take_window_data()
     yield
     await engine.dispose()
     from app.jwt import close_redis
@@ -47,6 +49,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
 )
+
 
 @app.get("/health")
 async def health():

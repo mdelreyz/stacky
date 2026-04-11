@@ -26,7 +26,9 @@ class UserSupplement(Base):
         Enum(Frequency, name="frequency_enum"), nullable=False, default=Frequency.daily
     )
     take_window: Mapped[TakeWindow] = mapped_column(
-        Enum(TakeWindow, name="take_window_enum"), nullable=False, default=TakeWindow.morning_with_food
+        Enum(TakeWindow, name="take_window_enum", validate_strings=True),
+        nullable=False,
+        default=TakeWindow.morning_with_food,
     )
     with_food: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     is_out_of_stock: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

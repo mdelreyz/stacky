@@ -1,8 +1,13 @@
 import asyncio
 
+from sqlalchemy import select
+
 from app.database import async_session_factory
+from app.models.enums import TakeWindow
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.medication import Medication, MedicationCategory
+from app.models.user_medication import UserMedication
+from app.models.user_supplement import UserSupplement
 
 
 def signup(client) -> tuple[dict[str, str], str]:
@@ -178,6 +183,40 @@ def test_apply_recommendations_creates_protocol(client):
     protocol_response = client.get(f"/api/v1/users/me/protocols/{body['protocol_id']}", headers=headers)
     assert protocol_response.status_code == 200
     assert len(protocol_response.json()["items"]) == 2
+
+
+def test_apply_recommendations_normalizes_legacy_take_window_aliases(client):
+    headers, user_id = signup(client)
+    ids = seed_catalog()
+
+    response = client.post(
+        "/api/v1/users/me/preferences/recommendations/apply",
+        json={
+            "items": [
+                {"catalog_id": ids["omega_id"], "item_type": "supplement", "take_window": "with_meals"},
+                {"catalog_id": ids["warfarin_id"], "item_type": "medication", "take_window": "evening_with_food"},
+            ],
+        },
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+
+    async def _load():
+        async with async_session_factory() as session:
+            supplement = (
+                await session.execute(select(UserSupplement).where(UserSupplement.user_id == user_id))
+            ).scalar_one()
+            medication = (
+                await session.execute(select(UserMedication).where(UserMedication.user_id == user_id))
+            ).scalar_one()
+            return supplement, medication
+
+    supplement, medication = asyncio.run(_load())
+    assert supplement.take_window == TakeWindow.morning_with_food
+    assert supplement.with_food is True
+    assert medication.take_window == TakeWindow.evening
+    assert medication.with_food is True
 
 
 def test_apply_skips_already_active_items(client):
