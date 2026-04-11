@@ -16,8 +16,10 @@ let _portDiscovered = !!process.env.EXPO_PUBLIC_API_URL;
 
 async function _probePort(baseUrl: string): Promise<boolean> {
   try {
-    const res = await fetch(`${baseUrl}/docs`, { method: "HEAD" });
-    return res.ok;
+    const res = await fetch(`${baseUrl}/health`);
+    if (!res.ok) return false;
+    const data = await res.json();
+    return data?.app === "protocols";
   } catch {
     return false;
   }

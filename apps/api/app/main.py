@@ -48,4 +48,9 @@ app.add_middleware(
     allow_headers=["Authorization", "Content-Type"],
 )
 
+@app.get("/health")
+async def health():
+    return {"status": "ok", "app": "protocols"}
+
+
 app.include_router(v1_router)
