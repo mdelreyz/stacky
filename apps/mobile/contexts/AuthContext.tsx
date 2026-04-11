@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { auth as authApi, setToken } from "@/lib/api";
 import { clearAllCache, clearWriteQueue } from "@/lib/cache";
+import { registerPushToken, deregisterPushToken } from "@/lib/push-notifications";
 import { loadToken, saveToken, clearToken } from "@/lib/token-store";
 import type { User } from "@/lib/api";
 
@@ -42,7 +43,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setToken(stored);
         try {
           const me = await authApi.me();
-          if (!cancelled) setUser(me);
+          if (!cancelled) {
+            setUser(me);
+            registerPushToken().catch(() => {});
+          }
         } catch {
           // Token expired or invalid — clear it
           setToken(null);
@@ -63,6 +67,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(result.access_token);
     await saveToken(result.access_token);
     setUser(result.user);
+    registerPushToken().catch(() => {});
   }, []);
 
   const signup = useCallback(
@@ -76,11 +81,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setToken(result.access_token);
       await saveToken(result.access_token);
       setUser(result.user);
+      registerPushToken().catch(() => {});
     },
     []
   );
 
   const logout = useCallback(async () => {
+    await deregisterPushToken().catch(() => {});
     setToken(null);
     setUser(null);
     await clearToken();

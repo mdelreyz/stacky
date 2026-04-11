@@ -38,3 +38,6 @@ class User(Base):
     exercise_regimes = relationship("ExerciseRegime", back_populates="user")
     workout_sessions = relationship("WorkoutSession", back_populates="user")
     gym_locations = relationship("GymLocation", back_populates="user")
+    notification_preferences = relationship("NotificationPreferences", back_populates="user", uselist=False)
+    push_tokens = relationship("PushToken", back_populates="user")
+    health_journal_entries = relationship("HealthJournalEntry", back_populates="user")

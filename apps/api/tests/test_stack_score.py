@@ -3,6 +3,7 @@ import asyncio
 from app.database import async_session_factory
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.medication import Medication, MedicationCategory
+from app.services.stack_score import _compute_evidence_quality, _evidence_label
 
 
 def signup(client) -> tuple[dict[str, str], str]:
@@ -316,3 +317,16 @@ def test_stack_score_high_diversity_well_covered(client):
     diversity_dim = next(d for d in body["dimensions"] if d["name"] == "Diversity")
     assert diversity_dim["score"] >= 0.75  # 4+ categories covered
     assert body["total_score"] >= 50  # Should be a solid score
+
+
+def test_stack_score_supports_extended_evidence_quality_tiers():
+    evidence_quality = _compute_evidence_quality([
+        {"ai_profile": {"evidence_quality": "traditional"}},
+        {"ai_profile": {"evidence_quality": "speculative"}},
+        {"ai_profile": {"evidence_quality": "emerging"}},
+    ])
+
+    assert abs(evidence_quality - ((0.25 + 0.1 + 0.55) / 3)) < 1e-9
+    assert _evidence_label(0.25) == "traditional"
+    assert _evidence_label(0.1) == "speculative"
+    assert _evidence_label(0.55) == "emerging"

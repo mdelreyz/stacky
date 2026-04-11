@@ -90,6 +90,9 @@ class SynergyProfile(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
+EvidenceQuality = Literal["strong", "moderate", "emerging", "limited", "traditional", "speculative"]
+
+
 class SupplementAIProfile(BaseModel):
     common_names: list[str]
     category: SupplementCategory
@@ -105,7 +108,7 @@ class SupplementAIProfile(BaseModel):
     contraindications: list[str]
     side_effects: list[str]
     safety_notes: str
-    evidence_quality: Literal["strong", "moderate", "limited", "emerging"]
+    evidence_quality: EvidenceQuality
     sources_summary: str
 
     model_config = ConfigDict(extra="forbid")
@@ -126,7 +129,7 @@ class MedicationAIProfile(BaseModel):
     side_effects: list[str]
     monitoring_notes: str
     safety_notes: str
-    evidence_quality: Literal["strong", "moderate", "limited", "emerging"]
+    evidence_quality: EvidenceQuality
     sources_summary: str
 
     model_config = ConfigDict(extra="forbid")
@@ -204,6 +207,7 @@ Requested form: {form_line}
 Requirements:
 - Use evidence-grounded, consumer-safe language.
 - Keep every field populated. Use empty arrays when needed, never null except where the schema allows it.
+- Use the evidence_quality scale consistently: strong, moderate, emerging, limited, traditional, speculative.
 - Prefer the allowed take windows only: morning_fasted, morning_with_food, midday, afternoon, evening, bedtime.
 - Keep interaction and contraindication names machine-friendly with snake_case strings.
 - If the exact branded form is unclear, infer a reasonable generic supplement profile.
@@ -233,6 +237,7 @@ Requested form: {form_line}
 Requirements:
 - Use evidence-grounded, clinician-facing language.
 - Keep every field populated. Use empty arrays when needed, never null except where the schema allows it.
+- Use the evidence_quality scale consistently: strong, moderate, emerging, limited, traditional, speculative.
 - Prefer the allowed take windows only: morning_fasted, morning_with_food, midday, afternoon, evening, bedtime.
 - Keep interaction and contraindication names machine-friendly with snake_case strings.
 - Include drug_class (e.g. "mTOR inhibitor", "biguanide", "alpha-glucosidase inhibitor").

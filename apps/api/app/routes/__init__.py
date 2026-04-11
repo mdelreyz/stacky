@@ -7,6 +7,12 @@ from app.routes.exercise_regimes import router as exercise_regimes_router
 from app.routes.exercise_stats import router as exercise_stats_router
 from app.routes.exercises import router as exercises_router
 from app.routes.gym_locations import router as gym_locations_router
+from app.routes.data_export import router as data_export_router
+from app.routes.health_journal import router as health_journal_router
+from app.routes.weekly_digest import router as weekly_digest_router
+from app.routes.goal_progress import router as goal_progress_router
+from app.routes.notifications import router as notifications_router
+from app.routes.protocol_templates import router as protocol_templates_router
 from app.routes.health import router as health_router
 from app.routes.medications import router as medications_router
 from app.routes.nutrition import router as nutrition_router
@@ -46,3 +52,9 @@ v1_router.include_router(exercise_regimes_router)
 v1_router.include_router(workout_sessions_router)
 v1_router.include_router(exercise_stats_router)
 v1_router.include_router(gym_locations_router)
+v1_router.include_router(data_export_router)
+v1_router.include_router(notifications_router)
+v1_router.include_router(protocol_templates_router)
+v1_router.include_router(health_journal_router)
+v1_router.include_router(weekly_digest_router)
+v1_router.include_router(goal_progress_router)

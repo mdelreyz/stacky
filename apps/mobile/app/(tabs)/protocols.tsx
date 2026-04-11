@@ -210,6 +210,22 @@ export default function ProtocolsScreen() {
               <FontAwesome name="chevron-right" size={13} color={colors.textPlaceholder} />
             </Pressable>
           </Link>
+          <Link href="/protocol-templates" asChild>
+            <Pressable
+              style={({ pressed }) => [styles.aiButton, pressed && styles.aiButtonPressed]}
+              accessibilityRole="button"
+              accessibilityLabel="Protocol Library"
+            >
+              <View style={styles.aiButtonIconWrap}>
+                <FontAwesome name="book" size={16} color={colors.primaryDark} />
+              </View>
+              <View style={styles.aiButtonBody}>
+                <Text style={styles.aiButtonText}>Protocol Library</Text>
+                <Text style={styles.aiButtonHint}>Browse curated stacks and adopt with one tap.</Text>
+              </View>
+              <FontAwesome name="chevron-right" size={13} color={colors.textPlaceholder} />
+            </Pressable>
+          </Link>
         </View>
 
         <ProtocolStacksSection stacks={stacks} />

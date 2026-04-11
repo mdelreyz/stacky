@@ -70,6 +70,24 @@ export default function ProfileScreen() {
 
         <Pressable
           style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/goal-progress")}
+          accessibilityRole="button"
+          accessibilityLabel="Goal Progress"
+        >
+          <FontAwesome name="bullseye" size={18} color={colors.textSecondary} />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Goal Progress</Text>
+            <Text style={styles.menuHint}>
+              Per-goal adherence, supporting items, and journal correlation
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
           onPress={() => router.push("/profile/safety")}
           accessibilityRole="button"
           accessibilityLabel="Safety Check"
@@ -88,6 +106,24 @@ export default function ProfileScreen() {
 
         <Pressable
           style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/profile/notifications")}
+          accessibilityRole="button"
+          accessibilityLabel="Notifications"
+        >
+          <FontAwesome name="bell" size={18} color={colors.textSecondary} />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Notifications</Text>
+            <Text style={styles.menuHint}>
+              Reminders, quiet hours, and alert preferences
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
           onPress={() => router.push("/tracking")}
           accessibilityRole="button"
           accessibilityLabel="Adherence Stats"
@@ -97,6 +133,42 @@ export default function ProfileScreen() {
             <Text style={styles.menuText}>Adherence Stats</Text>
             <Text style={styles.menuHint}>
               Completion rates, streaks, and per-item tracking
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/weekly-digest")}
+          accessibilityRole="button"
+          accessibilityLabel="Weekly Digest"
+        >
+          <FontAwesome name="calendar" size={18} color={colors.textSecondary} />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Weekly Digest</Text>
+            <Text style={styles.menuHint}>
+              Adherence, journal, and exercise summary for the week
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/health-journal")}
+          accessibilityRole="button"
+          accessibilityLabel="Health Journal"
+        >
+          <FontAwesome name="book" size={18} color={colors.textSecondary} />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Health Journal</Text>
+            <Text style={styles.menuHint}>
+              Track energy, mood, sleep, symptoms, and daily notes
             </Text>
           </View>
           <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />

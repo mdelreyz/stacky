@@ -4,12 +4,14 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useLocalSearchParams } from "expo-router";
 
+import { Linking, Platform } from "react-native";
 import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { AdherenceCalendar } from "@/components/tracking/AdherenceCalendar";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { tracking as trackingApi } from "@/lib/api";
+import { getToken } from "@/lib/api";
 import { formatIsoDate } from "@/lib/date";
 import { showError } from "@/lib/errors";
 import type { TrackingOverview } from "@/lib/api";
@@ -161,6 +163,62 @@ export default function TrackingScreen() {
             ))
           )}
         </SectionCard>
+
+        <View style={styles.exportRow}>
+          <Pressable
+            style={({ pressed }) => [styles.exportButton, pressed && styles.exportButtonPressed]}
+            onPress={() => {
+              const token = getToken();
+              if (!token) return;
+              // Open CSV export in browser — the auth header is needed
+              // For web, we can use a direct download link approach
+              if (Platform.OS === "web") {
+                const url = `/api/v1/users/me/export/adherence`;
+                fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+                  .then((res) => res.blob())
+                  .then((blob) => {
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = "adherence_export.csv";
+                    a.click();
+                  })
+                  .catch(() => {});
+              } else {
+                // Native — use share/Linking
+                Linking.openURL(`/api/v1/users/me/export/adherence`).catch(() => {});
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Export adherence data"
+          >
+            <FontAwesome name="download" size={14} color={colors.primary} />
+            <Text style={styles.exportText}>Export Adherence CSV</Text>
+          </Pressable>
+          <Pressable
+            style={({ pressed }) => [styles.exportButton, pressed && styles.exportButtonPressed]}
+            onPress={() => {
+              const token = getToken();
+              if (!token) return;
+              if (Platform.OS === "web") {
+                const url = `/api/v1/users/me/export/stack`;
+                fetch(url, { headers: { Authorization: `Bearer ${token}` } })
+                  .then((res) => res.blob())
+                  .then((blob) => {
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(blob);
+                    a.download = "stack_export.csv";
+                    a.click();
+                  })
+                  .catch(() => {});
+              }
+            }}
+            accessibilityRole="button"
+            accessibilityLabel="Export current stack"
+          >
+            <FontAwesome name="download" size={14} color={colors.primary} />
+            <Text style={styles.exportText}>Export Stack CSV</Text>
+          </Pressable>
+        </View>
       </FadeInView>
 
       <View style={{ height: 24 }} />
@@ -380,5 +438,33 @@ const styles = StyleSheet.create({
   softPressed: {
     transform: [{ scale: 0.992 }],
     opacity: 0.95,
+  },
+  exportRow: {
+    flexDirection: "row",
+    gap: 10,
+    marginHorizontal: 16,
+    marginTop: 4,
+    marginBottom: 8,
+  },
+  exportButton: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.76)",
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  exportButtonPressed: {
+    opacity: 0.85,
+    transform: [{ scale: 0.995 }],
+  },
+  exportText: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: colors.primary,
   },
 });

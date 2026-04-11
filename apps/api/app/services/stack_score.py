@@ -61,9 +61,11 @@ GOAL_CATEGORY_MAP: dict[str, set[str]] = {
 
 EVIDENCE_SCORES = {
     "strong": 1.0,
-    "moderate": 0.7,
-    "limited": 0.4,
-    "emerging": 0.2,
+    "moderate": 0.75,
+    "emerging": 0.55,
+    "limited": 0.35,
+    "traditional": 0.25,
+    "speculative": 0.1,
 }
 
 
@@ -245,13 +247,17 @@ def _category_count(item_dicts: list[dict]) -> int:
 
 
 def _evidence_label(score: float) -> str:
-    if score >= 0.85:
+    if score >= 0.9:
         return "strong"
-    if score >= 0.6:
+    if score >= 0.65:
         return "moderate"
+    if score >= 0.45:
+        return "emerging"
     if score >= 0.3:
         return "limited"
-    return "emerging"
+    if score >= 0.18:
+        return "traditional"
+    return "speculative"
 
 
 def _generate_suggestions(

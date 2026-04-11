@@ -5,6 +5,7 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy.exc import OperationalError
 
 TESTS_DIR = Path(__file__).resolve().parent
 API_ROOT = TESTS_DIR.parent
@@ -25,9 +26,15 @@ from app.services.ai_onboarding import reset_ai_status_cache  # noqa: E402
 @pytest.fixture(autouse=True)
 def reset_db():
     async def _reset() -> None:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-            await conn.run_sync(Base.metadata.create_all)
+        try:
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.drop_all)
+                await conn.run_sync(Base.metadata.create_all)
+        except OperationalError:
+            await engine.dispose()
+            TEST_DB_PATH.unlink(missing_ok=True)
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
 
     asyncio.run(_reset())
     reset_ai_status_cache()

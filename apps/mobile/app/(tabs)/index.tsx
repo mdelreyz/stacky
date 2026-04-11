@@ -14,6 +14,7 @@ import { dailyPlan as dailyPlanApi } from "@/lib/api";
 import { CycleAlertsCard } from "@/components/today/CycleAlertsCard";
 import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
 import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
+import { JournalPromptCard } from "@/components/today/JournalPromptCard";
 import { NutritionPhaseCard } from "@/components/today/NutritionPhaseCard";
 import { SkincareGuidanceCard } from "@/components/today/SkincareGuidanceCard";
 import { SkipReasonModal } from "@/components/today/SkipReasonModal";
@@ -108,6 +109,7 @@ export default function TodayScreen() {
         />
 
         <TrackingSummaryCard overview={trackingOverview} endDate={selectedDate} />
+        <JournalPromptCard date={selectedDate} />
         <TodayExerciseCard items={plan?.exercise_plan ?? []} />
         <NutritionPhaseCard phase={nutritionPhase} />
         <SkincareGuidanceCard guidance={skincareGuidance} />

@@ -72,6 +72,41 @@ export type {
 } from "./preferences";
 export type { User, AuthResponse } from "./user";
 export type {
+  AdoptTemplateResponse,
+  ProtocolTemplate,
+  ProtocolTemplateListItem,
+  TemplateCategory,
+  TemplateItemBlueprint,
+} from "./protocol-template";
+export type {
+  NotificationPreferences,
+  NotificationPreferencesUpdate,
+  PushToken,
+  PushTokenCreate,
+  ReminderSchedule,
+  ReminderScheduleItem,
+} from "./notification";
+export type {
+  HealthJournalEntry,
+  HealthJournalEntryCreate,
+  HealthJournalEntryUpdate,
+  HealthJournalSummary,
+  HealthJournalTrendPoint,
+} from "./health-journal";
+export type {
+  GoalProgressItem,
+  GoalProgressResponse,
+  GoalSupportingItem,
+  GoalTrendPoint,
+} from "./goal-progress";
+export type {
+  DailyAdherenceRate,
+  DigestAdherence,
+  DigestExercise,
+  DigestJournal,
+  WeeklyDigest,
+} from "./weekly-digest";
+export type {
   Exercise,
   ExerciseCategory,
   ExerciseCreate,

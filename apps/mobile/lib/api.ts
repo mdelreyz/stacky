@@ -19,6 +19,11 @@ export { exerciseRegimes } from "./api/exercise-regimes";
 export { workoutSessions } from "./api/workout-sessions";
 export { exerciseStats } from "./api/exercise-stats";
 export { gymLocations } from "./api/gym-locations";
+export { notifications } from "./api/notifications";
+export { protocolTemplates } from "./api/protocol-templates";
+export { healthJournal } from "./api/health-journal";
+export { weeklyDigest } from "./api/weekly-digest";
+export { goalProgress } from "./api/goal-progress";
 
 export type {
   AdherenceResult,
@@ -90,4 +95,22 @@ export type {
   WorkoutSet,
   WorkoutSetInput,
   SessionExercise,
+  NotificationPreferences,
+  NotificationPreferencesUpdate,
+  PushToken,
+  PushTokenCreate,
+  ReminderSchedule,
+  ReminderScheduleItem,
+  AdoptTemplateResponse,
+  ProtocolTemplate,
+  ProtocolTemplateListItem,
+  TemplateCategory,
+  TemplateItemBlueprint,
+  HealthJournalEntry,
+  HealthJournalEntryCreate,
+  HealthJournalEntryUpdate,
+  HealthJournalSummary,
+  WeeklyDigest,
+  GoalProgressResponse,
+  GoalProgressItem,
 } from "@protocols/domain";
