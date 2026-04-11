@@ -17,7 +17,9 @@ gut_health, weight_management, muscle_recovery, cardiovascular, hormonal_balance
 2a. If the user already answered goals, constraints, or concerns in the latest \
 message, do not ask for them again. Only ask for the next missing detail.
 3. Then ask about constraints: max pills per day, any excluded ingredients or \
-allergies, age, biological sex (optional).
+allergies. If the USER PROFILE section below already provides age and/or \
+biological_sex, do NOT ask for them — use the provided values. Only ask \
+about age or sex if they are missing from the profile.
 4. Ask about any specific concerns they want to address (e.g., "brain fog", \
 "chronic fatigue", "joint pain").
 5. After collecting enough info (usually 3-5 questions), produce a final \
@@ -51,11 +53,41 @@ recommendation by responding with ONLY a JSON block (no markdown fencing).
 7. Only recommend items that appear in the CATALOG section below.
 8. Be warm and encouraging but professional. No medical diagnoses.
 9. If the user seems confused or wants to skip a question, provide a sensible default.
+10. Use any known profile data (age, sex, goals, concerns, constraints) from \
+the USER PROFILE section to personalize recommendations. Include known values \
+in the final JSON output even if the user didn't mention them in conversation.
 """
 
 
-def build_system_with_catalog(catalog: CatalogSnapshot) -> str:
-    """Append the catalog data to the system prompt."""
+def _build_user_profile_section(user_profile: dict | None) -> str:
+    """Build a USER PROFILE section from known preference data."""
+    if not user_profile:
+        return ""
+
+    parts = []
+    if user_profile.get("age"):
+        parts.append(f"age: {user_profile['age']}")
+    if user_profile.get("biological_sex"):
+        parts.append(f"biological_sex: {user_profile['biological_sex']}")
+    if user_profile.get("primary_goals"):
+        parts.append(f"primary_goals: {json.dumps(user_profile['primary_goals'])}")
+    if user_profile.get("focus_concerns"):
+        parts.append(f"focus_concerns: {json.dumps(user_profile['focus_concerns'])}")
+    if user_profile.get("excluded_ingredients"):
+        parts.append(f"excluded_ingredients: {json.dumps(user_profile['excluded_ingredients'])}")
+    if user_profile.get("max_supplements_per_day") is not None:
+        parts.append(f"max_supplements_per_day: {user_profile['max_supplements_per_day']}")
+    if user_profile.get("max_tablets_per_day") is not None:
+        parts.append(f"max_tablets_per_day: {user_profile['max_tablets_per_day']}")
+
+    if not parts:
+        return ""
+
+    return "\n\nUSER PROFILE (already known — do not re-ask these):\n" + "\n".join(parts)
+
+
+def build_system_with_catalog(catalog: CatalogSnapshot, user_profile: dict | None = None) -> str:
+    """Append the catalog data and user profile to the system prompt."""
     sections = []
     if catalog.supplements:
         sections.append(
@@ -103,4 +135,5 @@ def build_system_with_catalog(catalog: CatalogSnapshot) -> str:
         )
 
     catalog_text = "\n".join(sections) if sections else "No catalog items available."
-    return _SYSTEM_PROMPT + f"\n\nCATALOG:\n{catalog_text}"
+    profile_text = _build_user_profile_section(user_profile)
+    return _SYSTEM_PROMPT + profile_text + f"\n\nCATALOG:\n{catalog_text}"

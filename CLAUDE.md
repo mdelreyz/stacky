@@ -169,7 +169,7 @@ All colors live in `Colors.ts`. Zero hardcoded hex values in any component or sc
 cd apps/api
 uv venv && source .venv/bin/activate
 uv pip install -e ".[test]"
-uvicorn app.main:app --reload --port 8000
+python -m app.server --reload  # auto-selects free port, writes .api-port
 
 # Migrations
 alembic revision --autogenerate -m "description"

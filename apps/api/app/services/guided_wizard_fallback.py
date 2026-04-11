@@ -194,7 +194,11 @@ def _wants_general_optimization(texts: list[str]) -> bool:
     return any(phrase in text for text in normalized_texts for phrase in _GENERAL_OPTIMIZATION_PHRASES)
 
 
-def infer_preferences(conversation: list[WizardTurn], user_message: str) -> dict:
+def infer_preferences(
+    conversation: list[WizardTurn],
+    user_message: str,
+    user_profile: dict | None = None,
+) -> dict:
     user_texts = [turn.content for turn in conversation if turn.role == "user"] + [user_message]
     goals = _extract_goals(user_texts)
     concerns = _extract_focus_concerns(user_texts)
@@ -202,13 +206,29 @@ def infer_preferences(conversation: list[WizardTurn], user_message: str) -> dict
     exclusions, exclusions_answered = _extract_exclusions(user_texts)
     general_optimization = _wants_general_optimization(user_texts)
 
+    # Seed from user profile (stored preferences) if available
+    profile = user_profile or {}
+    age = _extract_age(user_texts) or profile.get("age")
+    biological_sex = _extract_biological_sex(user_texts) or profile.get("biological_sex")
+
+    if not goals and profile.get("primary_goals"):
+        goals = [g for g in profile["primary_goals"] if g in _GOAL_ALIASES]
+    if not concerns and profile.get("focus_concerns"):
+        concerns = list(profile["focus_concerns"])
+    if pill_limit is None and profile.get("max_supplements_per_day") is not None:
+        pill_limit = profile["max_supplements_per_day"]
+        pill_limit_answered = True
+    if not exclusions and profile.get("excluded_ingredients"):
+        exclusions = list(profile["excluded_ingredients"])
+        exclusions_answered = True
+
     return {
         "primary_goals": goals,
         "max_supplements_per_day": pill_limit,
         "max_tablets_per_day": pill_limit,
         "excluded_ingredients": exclusions,
-        "age": _extract_age(user_texts),
-        "biological_sex": _extract_biological_sex(user_texts),
+        "age": age,
+        "biological_sex": biological_sex,
         "focus_concerns": concerns,
         "notes": f"Built via guided wizard. User responses collected over {len(user_texts)} turns.",
         "_has_pill_limit_answer": pill_limit_answered,
@@ -429,9 +449,14 @@ def parse_completion_payload(assistant_text: str, inferred: dict, catalog: Catal
     }
 
 
-def static_fallback(conversation: list[WizardTurn], user_message: str, catalog: CatalogSnapshot) -> str | dict:
+def static_fallback(
+    conversation: list[WizardTurn],
+    user_message: str,
+    catalog: CatalogSnapshot,
+    user_profile: dict | None = None,
+) -> str | dict:
     """Provide a question-by-question fallback when Claude is unavailable."""
-    inferred = infer_preferences(conversation, user_message)
+    inferred = infer_preferences(conversation, user_message, user_profile=user_profile)
     next_question = build_follow_up_question(inferred)
     if next_question is not None:
         return next_question

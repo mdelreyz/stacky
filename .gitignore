@@ -36,6 +36,9 @@ Thumbs.db
 # Docker
 docker-compose.override.yml
 
+# Runtime
+.api-port
+
 # Noomix
 .noomix/
 .serena/

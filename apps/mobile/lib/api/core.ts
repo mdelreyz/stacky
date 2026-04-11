@@ -1,14 +1,52 @@
+const _PORT_RANGE_START = 8000;
+const _PORT_RANGE_END = 8010;
+
 function getDefaultApiUrl() {
   if (typeof window !== "undefined" && window.location) {
     const protocol = window.location.protocol === "https:" ? "https:" : "http:";
     const host = window.location.hostname === "localhost" ? "127.0.0.1" : window.location.hostname;
-    return `${protocol}//${host}:8000`;
+    return `${protocol}//${host}:${_PORT_RANGE_START}`;
   }
 
-  return "http://127.0.0.1:8000";
+  return `http://127.0.0.1:${_PORT_RANGE_START}`;
 }
 
-const API_URL = (process.env.EXPO_PUBLIC_API_URL || getDefaultApiUrl()).replace(/\/$/, "");
+let API_URL = (process.env.EXPO_PUBLIC_API_URL || getDefaultApiUrl()).replace(/\/$/, "");
+let _portDiscovered = !!process.env.EXPO_PUBLIC_API_URL;
+
+async function _probePort(baseUrl: string): Promise<boolean> {
+  try {
+    const res = await fetch(`${baseUrl}/docs`, { method: "HEAD" });
+    return res.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function _discoverApiPort(): Promise<void> {
+  if (_portDiscovered) return;
+
+  // First check the current URL
+  if (await _probePort(API_URL)) {
+    _portDiscovered = true;
+    return;
+  }
+
+  // Probe the port range for the Protocols API
+  const protocol = API_URL.replace(/(:\d+)$/, "").replace(/\/+$/, "");
+  // protocol is e.g. "http://127.0.0.1"
+  const baseHost = protocol.replace(/:\d+$/, "");
+
+  for (let port = _PORT_RANGE_START; port < _PORT_RANGE_END; port++) {
+    const candidate = `${baseHost}:${port}`;
+    if (candidate === API_URL) continue; // already tried
+    if (await _probePort(candidate)) {
+      API_URL = candidate;
+      _portDiscovered = true;
+      return;
+    }
+  }
+}
 
 let token: string | null = null;
 
@@ -122,10 +160,23 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
   try {
     response = await fetch(`${API_URL}${path}`, { ...options, headers });
   } catch {
-    throw new APIError(
-      0,
-      `Could not reach the API at ${API_URL}. Check that the backend is running and EXPO_PUBLIC_API_URL points to the Protocols API.`
-    );
+    // Port may have changed — try discovering the correct one
+    if (!_portDiscovered) {
+      await _discoverApiPort();
+      try {
+        response = await fetch(`${API_URL}${path}`, { ...options, headers });
+      } catch {
+        throw new APIError(
+          0,
+          `Could not reach the API at ${API_URL}. Check that the backend is running.`
+        );
+      }
+    } else {
+      throw new APIError(
+        0,
+        `Could not reach the API at ${API_URL}. Check that the backend is running.`
+      );
+    }
   }
 
   if (!response.ok) {

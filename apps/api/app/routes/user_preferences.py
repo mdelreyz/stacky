@@ -382,6 +382,20 @@ async def wizard_turn(
     """
     catalog = await _load_catalog(session, ["supplement", "medication", "therapy", "peptide"])
 
+    # Load user preferences to provide as context (age, sex, goals, etc.)
+    prefs = await _get_or_none(session, current_user.id)
+    user_profile = None
+    if prefs is not None:
+        user_profile = {
+            "age": prefs.age,
+            "biological_sex": prefs.biological_sex,
+            "primary_goals": prefs.primary_goals,
+            "focus_concerns": prefs.focus_concerns,
+            "excluded_ingredients": prefs.excluded_ingredients,
+            "max_supplements_per_day": prefs.max_supplements_per_day,
+            "max_tablets_per_day": prefs.max_tablets_per_day,
+        }
+
     conversation = [
         WizardTurn(role=t.role, content=t.content)
         for t in data.conversation
@@ -391,6 +405,7 @@ async def wizard_turn(
         conversation=conversation,
         user_message=data.message,
         catalog=catalog,
+        user_profile=user_profile,
     )
 
     return WizardResponse(

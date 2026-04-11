@@ -36,10 +36,11 @@ def run_wizard_turn(
     conversation: list[WizardTurn],
     user_message: str,
     catalog: CatalogSnapshot,
+    user_profile: dict | None = None,
 ) -> WizardResult:
     """Process one turn of the guided wizard conversation."""
-    system = build_system_with_catalog(catalog)
-    inferred = infer_preferences(conversation, user_message)
+    system = build_system_with_catalog(catalog, user_profile=user_profile)
+    inferred = infer_preferences(conversation, user_message, user_profile=user_profile)
     completion_payload: dict | None = None
 
     # Build messages for Claude
@@ -61,7 +62,7 @@ def run_wizard_turn(
         assistant_text = response.content[0].text.strip()
     except Exception as e:
         logger.warning("Wizard AI call failed: %s", e)
-        fallback_result = static_fallback(conversation, user_message, catalog)
+        fallback_result = static_fallback(conversation, user_message, catalog, user_profile=user_profile)
         if isinstance(fallback_result, dict):
             completion_payload = fallback_result
             assistant_text = build_completion_message(fallback_result)
