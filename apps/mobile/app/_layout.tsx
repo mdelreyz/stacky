@@ -276,6 +276,10 @@ function RootLayoutNav() {
               name="protocol-templates"
               options={{ headerShown: false }}
             />
+            <Stack.Screen
+              name="protocol-template/[id]"
+              options={{ headerShown: false }}
+            />
           </>
         )}
       </Stack>
