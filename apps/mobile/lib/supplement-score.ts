@@ -25,10 +25,12 @@ export interface SupplementScoreSummary {
 }
 
 const EVIDENCE_BASE_SCORE = {
-  strong: 90,
-  moderate: 75,
-  emerging: 61,
-  limited: 46,
+  strong: 92,
+  moderate: 72,
+  emerging: 54,
+  limited: 34,
+  traditional: 24,
+  speculative: 12,
 } as const;
 
 const CATEGORY_LABELS: Record<SupplementCategory, string> = {
@@ -47,20 +49,20 @@ const CATEGORY_LABELS: Record<SupplementCategory, string> = {
   other: "General Support",
 };
 
-const CATEGORY_ESSENTIAL_BONUS: Record<SupplementCategory, number> = {
-  healthy_aging: 12,
-  energy_mitochondria: 11,
-  brain_mood_stress: 8,
-  sleep_recovery: 7,
-  cardiovascular: 9,
-  glucose_metabolic: 8,
-  gut_digestion: 8,
-  detox_binding: 4,
-  immune_antimicrobial: 9,
-  inflammation_antioxidant: 10,
-  hormones_fertility: 5,
-  musculoskeletal: 8,
-  other: 4,
+const CATEGORY_ESSENTIAL_WEIGHT: Record<SupplementCategory, number> = {
+  healthy_aging: -6,
+  energy_mitochondria: 2,
+  brain_mood_stress: -10,
+  sleep_recovery: -2,
+  cardiovascular: 6,
+  glucose_metabolic: 5,
+  gut_digestion: 3,
+  detox_binding: -12,
+  immune_antimicrobial: 6,
+  inflammation_antioxidant: 4,
+  hormones_fertility: -12,
+  musculoskeletal: 0,
+  other: -8,
 };
 
 const CATEGORY_LONGEVITY_BONUS: Record<SupplementCategory, number> = {
@@ -111,8 +113,33 @@ const EXPERT_SIGNAL_WEIGHTS = new Map<string, number>([
   ["antioxidant", 4],
 ]);
 
-const FOUNDATION_SIGNALS = new Set([
-  "longevity",
+const SIGNAL_ALIASES = new Map<string, string>([
+  ["antioxidant support", "antioxidant"],
+  ["inflammation", "anti-inflammatory"],
+  ["inflammation support", "anti-inflammatory"],
+  ["anti inflammatory support", "anti-inflammatory"],
+  ["immune support", "immunity"],
+  ["immune modulation", "immunity"],
+  ["cardiovascular support", "cardiovascular"],
+  ["vascular support", "cardiovascular"],
+  ["circulation", "cardiovascular"],
+  ["cardiometabolic support", "metabolic health"],
+  ["glucose regulation", "metabolic health"],
+  ["glucose control", "metabolic health"],
+  ["metabolic support", "metabolic health"],
+  ["gut support", "gut health"],
+  ["microbiome support", "gut health"],
+  ["gut microbiome modulation", "gut health"],
+  ["gut barrier support", "gut health"],
+  ["fiber support", "gut health"],
+  ["regularity support", "gut health"],
+  ["sleep support", "sleep"],
+  ["sleep onset support", "sleep"],
+  ["energy metabolism", "energy"],
+  ["mitochondrial biogenesis", "mitochondrial support"],
+]);
+
+const ESSENTIAL_FOUNDATION_SIGNALS = new Set([
   "energy",
   "immunity",
   "gut health",
@@ -122,6 +149,34 @@ const FOUNDATION_SIGNALS = new Set([
   "anti-inflammatory",
   "antioxidant",
   "mitochondrial support",
+]);
+
+const ESSENTIAL_NUTRIENT_SIGNALS = new Set([
+  "precision vitamin",
+  "precision mineral",
+  "trace mineral",
+  "magnesium repletion",
+  "omega 3 support",
+  "multinutrient coverage",
+  "protein repletion support",
+]);
+
+const ESSENTIAL_NICHE_SIGNALS = new Set([
+  "medication like",
+  "brand formula",
+  "format family entry",
+  "mixed protocol entry",
+  "experimental compound",
+  "condition targeted support",
+  "targeted antimicrobial botanical",
+  "targeted hormone botanical",
+  "cns active nootropic",
+  "data quality issue",
+  "grouped alias entry",
+  "food based support",
+  "whole food",
+  "detox / binder",
+  "formula support",
 ]);
 
 const SOURCE_PRIORITY: Record<SupplementStrengthScore["source"], number> = {
@@ -139,7 +194,8 @@ function roundScore(value: number): number {
 }
 
 function normalizeSignal(value: string): string {
-  return value.trim().replace(/_/g, " ").toLowerCase();
+  const normalized = value.trim().replace(/_/g, " ").toLowerCase();
+  return SIGNAL_ALIASES.get(normalized) ?? normalized;
 }
 
 function startCase(value: string): string {
@@ -159,10 +215,9 @@ function startCase(value: string): string {
 function buildEvidenceScore(supplement: Supplement): number {
   const ai = supplement.ai_profile;
   const base = ai ? EVIDENCE_BASE_SCORE[ai.evidence_quality] : 58;
-  const dosageBonus = ai ? Math.min(5, ai.typical_dosages.length * 2) : 0;
-  const sourcingBonus = ai?.sources_summary ? 4 : 0;
-  const safetyCoverageBonus = ai && (ai.known_interactions.length > 0 || ai.safety_notes) ? 3 : 0;
-  return roundScore(base + dosageBonus + sourcingBonus + safetyCoverageBonus);
+  const dosageBonus = ai ? Math.min(4, ai.typical_dosages.length) : 0;
+  const sourcingBonus = ai?.sources_summary ? 2 : 0;
+  return roundScore(base + dosageBonus + sourcingBonus);
 }
 
 function buildSafetyConfidence(supplement: Supplement): number {
@@ -189,19 +244,47 @@ function collectSignals(supplement: Supplement): { goals: string[]; tags: string
   return { goals, tags };
 }
 
+function buildEssentialBaseline(coreSignalCount: number, nutrientSignalCount: number): number {
+  if (coreSignalCount >= 2 && nutrientSignalCount >= 1) return 76;
+  if (coreSignalCount >= 1 && nutrientSignalCount >= 1) return 64;
+  if (coreSignalCount >= 4) return 62;
+  if (coreSignalCount >= 3) return 52;
+  if (nutrientSignalCount >= 1) return 42;
+  if (coreSignalCount >= 2) return 28;
+  return 8;
+}
+
 function buildEssentialScore(supplement: Supplement, evidenceScore: number, safetyConfidence: number): number {
   const { goals, tags } = collectSignals(supplement);
-  const foundationalMatches = [...goals, ...tags].filter((signal) => FOUNDATION_SIGNALS.has(signal)).length;
-  const breadthScore = goals.length * 5 + Math.min(tags.length, 4) * 3;
+  const signals = Array.from(new Set([...goals, ...tags]));
+  const coreSignalCount = signals.filter((signal) => ESSENTIAL_FOUNDATION_SIGNALS.has(signal)).length;
+  const nutrientSignalCount = signals.filter((signal) => ESSENTIAL_NUTRIENT_SIGNALS.has(signal)).length;
+  const nicheSignalCount = signals.filter((signal) => ESSENTIAL_NICHE_SIGNALS.has(signal)).length;
+  const universalSignalCount = coreSignalCount + nutrientSignalCount;
+  const synergyBonus = universalSignalCount >= 3 ? 9 : 0;
+  const nutrientQualityBonus =
+    nutrientSignalCount >= 1 && evidenceScore >= 75 && safetyConfidence >= 75
+      ? coreSignalCount >= 2
+        ? 14
+        : coreSignalCount >= 1
+          ? 9
+          : 4
+      : 0;
+  const broadCoverageBonus = coreSignalCount >= 4 && evidenceScore >= 75 && safetyConfidence >= 70 ? 4 : 0;
+  const highEvidenceRepletionBonus = nutrientSignalCount >= 1 && evidenceScore >= 90 ? 5 : 0;
 
+  // Essential is intentionally sparse: broad nutrient repletion and universally useful
+  // support should score high, while niche or protocol-specific entries should fall away.
   return roundScore(
-    14
-      + evidenceScore * 0.38
-      + safetyConfidence * 0.16
-      + foundationalMatches * 3.5
-      + breadthScore
-      + CATEGORY_ESSENTIAL_BONUS[supplement.category]
-      + (supplement.source === "catalog" ? 4 : 0),
+    buildEssentialBaseline(coreSignalCount, nutrientSignalCount)
+      + Math.max(0, evidenceScore - 40) * 0.28
+      + Math.max(0, safetyConfidence - 55) * 0.18
+      + CATEGORY_ESSENTIAL_WEIGHT[supplement.category]
+      + synergyBonus
+      + nutrientQualityBonus
+      + broadCoverageBonus
+      + highEvidenceRepletionBonus
+      - nicheSignalCount * 16,
   );
 }
 
@@ -245,13 +328,15 @@ function buildScientificSupportNote(supplement: Supplement): string {
   if (evidence === "strong") return "Strong evidence plus mature dosing guidance";
   if (evidence === "moderate") return "Solid support with practical dosing guidance";
   if (evidence === "emerging") return "Promising data, but still developing";
+  if (evidence === "traditional") return "Longstanding use, but thinner modern evidence";
+  if (evidence === "speculative") return "Interesting rationale, but still highly provisional";
   return "Limited support relative to more established staples";
 }
 
 function buildEssentialNote(score: number): string {
-  if (score >= 80) return "Broad, foundational value in a long-term stack";
-  if (score >= 60) return "Useful, but more context-dependent than core staples";
-  return "Niche support rather than a true foundation layer";
+  if (score >= 90) return "Rare true default pick with broad utility for almost everyone";
+  if (score >= 50) return "Broadly useful, but not close to a universal staple";
+  return "Context-specific rather than an everybody-should-take-it supplement";
 }
 
 function buildExpertNote(signalCount: number): string {

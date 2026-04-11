@@ -92,6 +92,6 @@ export interface SupplementAIProfile {
   contraindications: string[];
   side_effects: string[];
   safety_notes: string;
-  evidence_quality: "strong" | "moderate" | "limited" | "emerging";
+  evidence_quality: "strong" | "moderate" | "limited" | "emerging" | "traditional" | "speculative";
   sources_summary: string;
 }
