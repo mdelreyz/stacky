@@ -1,17 +1,20 @@
 import os
 import warnings
 from pathlib import Path
+from typing import Literal
 
 from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 _ENV_FILES = (str(_REPO_ROOT / ".env"), ".env")
+_DEFAULT_DATABASE_PATH = _REPO_ROOT / "apps" / "api" / "protocols.db"
+_DEFAULT_DATABASE_URL = f"sqlite+aiosqlite:///{_DEFAULT_DATABASE_PATH.as_posix()}"
 
 
 class Settings(BaseSettings):
     # Database
-    database_url: str = "postgresql+asyncpg://protocols:protocols-dev-password@localhost:5432/protocols"
+    database_url: str = _DEFAULT_DATABASE_URL
     database_echo: bool = False
 
     # Redis
@@ -24,6 +27,7 @@ class Settings(BaseSettings):
 
     # CORS
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8081", "http://localhost:19006"]
+    cors_origin_regex: str | None = r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$"
 
     # Rate limiting
     rate_limit_default: str = "120/minute"
@@ -36,6 +40,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("PROTOCOLS_ANTHROPIC_API_KEY", "ANTHROPIC_API_KEY"),
     )
     ai_model: str = "claude-sonnet-4-20250514"
+    ai_task_dispatch_mode: Literal["auto", "background", "celery"] = "auto"
 
     # Weather
     weather_api_base_url: str = "https://api.open-meteo.com/v1/forecast"

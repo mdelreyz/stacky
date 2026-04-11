@@ -18,6 +18,7 @@ from app.services.ai_onboarding import (
     resolve_ai_status,
     run_ai_onboarding_job_sync,
     set_ai_status,
+    should_dispatch_ai_tasks_with_celery,
 )
 from app.services.pagination import paginate, paginated_response
 from app.services.supplement_visibility import get_visible_supplement, supplement_visibility_clause
@@ -77,6 +78,10 @@ async def _find_existing_supplement_match(
 
 
 def _dispatch_ai_onboarding(supplement_id: uuid.UUID, background_tasks: BackgroundTasks) -> None:
+    if not should_dispatch_ai_tasks_with_celery():
+        background_tasks.add_task(run_ai_onboarding_job_sync, str(supplement_id))
+        return
+
     try:
         generate_ai_profile.delay(str(supplement_id))
     except Exception:

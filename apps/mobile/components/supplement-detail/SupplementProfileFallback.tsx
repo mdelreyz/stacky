@@ -53,7 +53,7 @@ export function SupplementProfileFallback({
           <ActivityIndicator size="small" color={colors.primary} />
           <Text style={styles.noProfileText}>Generating AI profile</Text>
           <Text style={styles.noProfileHint}>
-            This page refreshes automatically when the profile is ready.
+            {error || "This page refreshes automatically when the profile is ready."}
           </Text>
         </>
       )}

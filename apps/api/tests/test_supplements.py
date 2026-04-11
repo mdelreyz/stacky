@@ -221,3 +221,27 @@ def test_delete_user_created_supplement_requires_removal_from_protocol(client):
 
     assert response.status_code == 409
     assert response.json()["detail"] == "Remove this supplement from your protocol before deleting it."
+
+
+def test_onboard_runs_in_process_when_celery_dispatch_is_disabled(client, monkeypatch):
+    headers = auth_headers(client)
+    executed_ids = []
+
+    monkeypatch.setattr(supplements_route, "get_ai_unavailable_reason", lambda: None)
+    monkeypatch.setattr(supplements_route, "should_dispatch_ai_tasks_with_celery", lambda: False)
+    monkeypatch.setattr(
+        supplements_route,
+        "run_ai_onboarding_job_sync",
+        lambda supplement_id: executed_ids.append(supplement_id),
+    )
+
+    response = client.post(
+        "/api/v1/supplements/onboard",
+        json={"name": "Rhodiola Rosea"},
+        headers=headers,
+    )
+
+    assert response.status_code == 201
+    body = response.json()
+    assert body["status"] == "generating"
+    assert executed_ids == [body["id"]]

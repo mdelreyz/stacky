@@ -1,7 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
@@ -11,8 +10,15 @@ from app.models.user import User
 from app.models.user_peptide import UserPeptide
 from app.schemas.common import PaginatedResponse
 from app.schemas.peptide import UserPeptideCreate, UserPeptideResponse, UserPeptideUpdate
-from app.services.daily_plan import resolve_user_date
-from app.services.pagination import paginate, paginated_response
+from app.services.user_item_crud import (
+    create_user_owned_item,
+    deactivate_user_owned_item,
+    ensure_catalog_item_exists,
+    ensure_no_active_duplicate,
+    get_user_owned_item_or_404,
+    list_user_owned_items,
+    update_user_owned_item,
+)
 from app.services.user_peptide_serialization import serialize_user_peptide
 
 router = APIRouter(prefix="/users/me/peptides", tags=["user-peptides"])
@@ -26,14 +32,14 @@ async def list_user_peptides(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    query = select(UserPeptide).where(UserPeptide.user_id == current_user.id).order_by(UserPeptide.created_at.desc())
-    if active_only:
-        query = query.where(UserPeptide.is_active.is_(True))
-
-    rows, total, has_more = await paginate(session, query, page, page_size)
-    return paginated_response(
-        items=[await serialize_user_peptide(up) for up in rows],
-        total=total, page=page, page_size=page_size, has_more=has_more,
+    return await list_user_owned_items(
+        session=session,
+        model=UserPeptide,
+        user_id=current_user.id,
+        page=page,
+        page_size=page_size,
+        active_only=active_only,
+        serializer=serialize_user_peptide,
     )
 
 
@@ -43,15 +49,13 @@ async def get_user_peptide(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserPeptide).where(
-            UserPeptide.id == user_peptide_id,
-            UserPeptide.user_id == current_user.id,
-        )
+    user_peptide = await get_user_owned_item_or_404(
+        session=session,
+        model=UserPeptide,
+        item_id=user_peptide_id,
+        user_id=current_user.id,
+        not_found_detail="User peptide not found",
     )
-    user_peptide = result.scalar_one_or_none()
-    if not user_peptide:
-        raise HTTPException(status_code=404, detail="User peptide not found")
     return await serialize_user_peptide(user_peptide)
 
 
@@ -61,39 +65,39 @@ async def add_user_peptide(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(select(Peptide).where(Peptide.id == data.peptide_id))
-    if result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=404, detail="Peptide not found")
-
-    existing_result = await session.execute(
-        select(UserPeptide).where(
-            UserPeptide.user_id == current_user.id,
-            UserPeptide.peptide_id == data.peptide_id,
-            UserPeptide.is_active.is_(True),
-        )
+    await ensure_catalog_item_exists(
+        session=session,
+        model=Peptide,
+        item_id=data.peptide_id,
+        not_found_detail="Peptide not found",
     )
-    if existing_result.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=409, detail="Peptide already active in your protocol")
-
-    user_peptide = UserPeptide(
+    await ensure_no_active_duplicate(
+        session=session,
+        model=UserPeptide,
         user_id=current_user.id,
-        peptide_id=data.peptide_id,
-        dosage_amount=data.dosage_amount,
-        dosage_unit=data.dosage_unit,
-        frequency=data.frequency,
-        take_window=data.take_window,
-        with_food=data.with_food,
-        route=data.route,
-        reconstitution=data.reconstitution,
-        storage_notes=data.storage_notes,
-        notes=data.notes,
-        started_at=data.started_at,
+        foreign_key_field="peptide_id",
+        foreign_key_id=data.peptide_id,
+        conflict_detail="Peptide already active in your protocol",
     )
-    session.add(user_peptide)
-    await session.commit()
-    await session.refresh(user_peptide)
-
-    return await serialize_user_peptide(user_peptide)
+    return await create_user_owned_item(
+        session=session,
+        model=UserPeptide,
+        item_kwargs={
+            "user_id": current_user.id,
+            "peptide_id": data.peptide_id,
+            "dosage_amount": data.dosage_amount,
+            "dosage_unit": data.dosage_unit,
+            "frequency": data.frequency,
+            "take_window": data.take_window,
+            "with_food": data.with_food,
+            "route": data.route,
+            "reconstitution": data.reconstitution,
+            "storage_notes": data.storage_notes,
+            "notes": data.notes,
+            "started_at": data.started_at,
+        },
+        serializer=serialize_user_peptide,
+    )
 
 
 @router.patch("/{user_peptide_id}", response_model=UserPeptideResponse)
@@ -103,23 +107,19 @@ async def update_user_peptide(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserPeptide).where(
-            UserPeptide.id == user_peptide_id,
-            UserPeptide.user_id == current_user.id,
-        )
+    user_peptide = await get_user_owned_item_or_404(
+        session=session,
+        model=UserPeptide,
+        item_id=user_peptide_id,
+        user_id=current_user.id,
+        not_found_detail="User peptide not found",
     )
-    user_peptide = result.scalar_one_or_none()
-    if not user_peptide:
-        raise HTTPException(status_code=404, detail="User peptide not found")
-
-    update_data = data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(user_peptide, key, value)
-
-    await session.commit()
-    await session.refresh(user_peptide)
-    return await serialize_user_peptide(user_peptide)
+    return await update_user_owned_item(
+        session=session,
+        item=user_peptide,
+        update_data=data.model_dump(exclude_unset=True),
+        serializer=serialize_user_peptide,
+    )
 
 
 @router.delete("/{user_peptide_id}", status_code=204)
@@ -128,17 +128,15 @@ async def remove_user_peptide(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserPeptide).where(
-            UserPeptide.id == user_peptide_id,
-            UserPeptide.user_id == current_user.id,
-        )
+    user_peptide = await get_user_owned_item_or_404(
+        session=session,
+        model=UserPeptide,
+        item_id=user_peptide_id,
+        user_id=current_user.id,
+        not_found_detail="User peptide not found",
     )
-    user_peptide = result.scalar_one_or_none()
-    if not user_peptide:
-        raise HTTPException(status_code=404, detail="User peptide not found")
-
-    ended_at, _user_tz = resolve_user_date(None, current_user.timezone)
-    user_peptide.is_active = False
-    user_peptide.ended_at = user_peptide.ended_at or ended_at
-    await session.commit()
+    await deactivate_user_owned_item(
+        session=session,
+        item=user_peptide,
+        user_timezone=current_user.timezone,
+    )

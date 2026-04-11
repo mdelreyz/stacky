@@ -1,5 +1,4 @@
 import uuid
-from datetime import date
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -10,7 +9,6 @@ from app.auth import get_current_user
 from app.database import get_session
 from app.models.medication import Medication
 from app.models.peptide import Peptide
-from app.models.protocol import Protocol, ProtocolItem
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
 from app.models.user import User
@@ -44,6 +42,7 @@ from app.services.interaction_checker import (
     check_interactions,
 )
 from app.services.guided_wizard import WizardTurn, run_wizard_turn
+from app.services.recommendation_application import apply_recommendations_to_user
 from app.services.stack_score import compute_stack_score
 from app.services.recommendation_engine import (
     CatalogSnapshot,
@@ -53,7 +52,6 @@ from app.services.recommendation_engine import (
     _therapy_to_dict,
     _peptide_to_dict,
 )
-from app.services.supplement_visibility import get_visible_supplement
 
 router = APIRouter(prefix="/users/me/preferences", tags=["preferences"])
 
@@ -240,223 +238,18 @@ async def get_recommendations(
     )
 
 
-_DEFAULT_DOSAGES = {
-    "supplement": (1.0, "capsule"),
-    "medication": (1.0, "tablet"),
-    "therapy": (20.0, "minutes"),
-    "peptide": (0.1, "mg"),
-}
-
-_DEFAULT_WINDOWS = {
-    "supplement": "morning_with_food",
-    "medication": "evening",
-    "therapy": "afternoon",
-    "peptide": "morning_fasted",
-}
-
-
 @router.post("/recommendations/apply", response_model=ApplyRecommendationsResponse, status_code=201)
 async def apply_recommendations(
     data: ApplyRecommendationsRequest,
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    today = date.today()
-    started_at = date.fromisoformat(data.started_at) if data.started_at else today
-
-    applied: list[AppliedItem] = []
-    user_supplement_ids: list[uuid.UUID] = []
-    user_medication_ids: list[uuid.UUID] = []
-    user_therapy_ids: list[uuid.UUID] = []
-    user_peptide_ids: list[uuid.UUID] = []
-
-    for item in data.items:
-        default_amount, default_unit = _DEFAULT_DOSAGES.get(item.item_type, (1.0, "unit"))
-        dosage_amount = item.dosage_amount or default_amount
-        dosage_unit = item.dosage_unit or default_unit
-        take_window = item.take_window or _DEFAULT_WINDOWS.get(item.item_type, "morning_with_food")
-        frequency = item.frequency or "daily"
-
-        if item.item_type == "supplement":
-            catalog_item = await get_visible_supplement(session, item.catalog_id, current_user.id)
-            if catalog_item is None:
-                raise HTTPException(status_code=400, detail=f"Supplement {item.catalog_id} not found")
-
-            # Check for existing active entry
-            dup = await session.execute(
-                select(UserSupplement).where(
-                    UserSupplement.user_id == current_user.id,
-                    UserSupplement.supplement_id == item.catalog_id,
-                    UserSupplement.is_active.is_(True),
-                )
-            )
-            if dup.scalar_one_or_none() is not None:
-                continue  # Skip already-active items silently
-
-            user_item = UserSupplement(
-                user_id=current_user.id,
-                supplement_id=item.catalog_id,
-                dosage_amount=dosage_amount,
-                dosage_unit=dosage_unit,
-                frequency=frequency,
-                take_window=take_window,
-                with_food="with_food" in take_window,
-                started_at=started_at,
-            )
-            session.add(user_item)
-            await session.flush()
-            user_supplement_ids.append(user_item.id)
-            applied.append(AppliedItem(
-                user_item_id=str(user_item.id),
-                item_type="supplement",
-                catalog_id=str(item.catalog_id),
-                name=catalog_item.name,
-            ))
-
-        elif item.item_type == "medication":
-            existing = await session.execute(
-                select(Medication).where(Medication.id == item.catalog_id)
-            )
-            catalog_item = existing.scalar_one_or_none()
-            if catalog_item is None:
-                raise HTTPException(status_code=400, detail=f"Medication {item.catalog_id} not found")
-
-            dup = await session.execute(
-                select(UserMedication).where(
-                    UserMedication.user_id == current_user.id,
-                    UserMedication.medication_id == item.catalog_id,
-                    UserMedication.is_active.is_(True),
-                )
-            )
-            if dup.scalar_one_or_none() is not None:
-                continue
-
-            user_item = UserMedication(
-                user_id=current_user.id,
-                medication_id=item.catalog_id,
-                dosage_amount=dosage_amount,
-                dosage_unit=dosage_unit,
-                frequency=frequency,
-                take_window=take_window,
-                started_at=started_at,
-            )
-            session.add(user_item)
-            await session.flush()
-            user_medication_ids.append(user_item.id)
-            applied.append(AppliedItem(
-                user_item_id=str(user_item.id),
-                item_type="medication",
-                catalog_id=str(item.catalog_id),
-                name=catalog_item.name,
-            ))
-
-        elif item.item_type == "therapy":
-            existing = await session.execute(
-                select(Therapy).where(Therapy.id == item.catalog_id)
-            )
-            catalog_item = existing.scalar_one_or_none()
-            if catalog_item is None:
-                raise HTTPException(status_code=400, detail=f"Therapy {item.catalog_id} not found")
-
-            dup = await session.execute(
-                select(UserTherapy).where(
-                    UserTherapy.user_id == current_user.id,
-                    UserTherapy.therapy_id == item.catalog_id,
-                    UserTherapy.is_active.is_(True),
-                )
-            )
-            if dup.scalar_one_or_none() is not None:
-                continue
-
-            user_item = UserTherapy(
-                user_id=current_user.id,
-                therapy_id=item.catalog_id,
-                duration_minutes=int(dosage_amount),
-                frequency=frequency,
-                take_window=take_window,
-                started_at=started_at,
-            )
-            session.add(user_item)
-            await session.flush()
-            user_therapy_ids.append(user_item.id)
-            applied.append(AppliedItem(
-                user_item_id=str(user_item.id),
-                item_type="therapy",
-                catalog_id=str(item.catalog_id),
-                name=catalog_item.name,
-            ))
-
-        elif item.item_type == "peptide":
-            existing = await session.execute(
-                select(Peptide).where(Peptide.id == item.catalog_id)
-            )
-            catalog_item = existing.scalar_one_or_none()
-            if catalog_item is None:
-                raise HTTPException(status_code=400, detail=f"Peptide {item.catalog_id} not found")
-
-            dup = await session.execute(
-                select(UserPeptide).where(
-                    UserPeptide.user_id == current_user.id,
-                    UserPeptide.peptide_id == item.catalog_id,
-                    UserPeptide.is_active.is_(True),
-                )
-            )
-            if dup.scalar_one_or_none() is not None:
-                continue
-
-            user_item = UserPeptide(
-                user_id=current_user.id,
-                peptide_id=item.catalog_id,
-                dosage_amount=dosage_amount,
-                dosage_unit=dosage_unit,
-                frequency=frequency,
-                take_window=take_window,
-                started_at=started_at,
-            )
-            session.add(user_item)
-            await session.flush()
-            user_peptide_ids.append(user_item.id)
-            applied.append(AppliedItem(
-                user_item_id=str(user_item.id),
-                item_type="peptide",
-                catalog_id=str(item.catalog_id),
-                name=catalog_item.name,
-            ))
-
-    if not applied:
-        raise HTTPException(status_code=400, detail="All recommended items are already in your active regimen")
-
-    # Optionally create a protocol grouping all applied items
-    protocol_id = None
-    if data.protocol_name:
-        protocol = Protocol(
-            user_id=current_user.id,
-            name=data.protocol_name,
-        )
-        session.add(protocol)
-        await session.flush()
-        protocol_id = str(protocol.id)
-
-        sort_idx = 0
-        for uid in user_supplement_ids:
-            session.add(ProtocolItem(protocol_id=protocol.id, item_type="supplement", user_supplement_id=uid, sort_order=sort_idx))
-            sort_idx += 1
-        for uid in user_medication_ids:
-            session.add(ProtocolItem(protocol_id=protocol.id, item_type="medication", user_medication_id=uid, sort_order=sort_idx))
-            sort_idx += 1
-        for uid in user_therapy_ids:
-            session.add(ProtocolItem(protocol_id=protocol.id, item_type="therapy", user_therapy_id=uid, sort_order=sort_idx))
-            sort_idx += 1
-        for uid in user_peptide_ids:
-            session.add(ProtocolItem(protocol_id=protocol.id, item_type="peptide", user_peptide_id=uid, sort_order=sort_idx))
-            sort_idx += 1
-
-    await session.commit()
-
-    return ApplyRecommendationsResponse(
-        applied=applied,
-        protocol_id=protocol_id,
+    return await apply_recommendations_to_user(
+        session=session,
+        user_id=current_user.id,
+        items=data.items,
         protocol_name=data.protocol_name,
+        started_at_value=data.started_at,
     )
 
 

@@ -1,20 +1,20 @@
 # Protocols — Refactoring Plan
 
-> **Last scan: 2026-04-10** | **Updated: 2026-04-10** | Codebase: ~37,000 lines | 102 tests passing
+> **Last scan: 2026-04-11** | **Updated: 2026-04-11** | Codebase: ~44,700 lines | 126 tests passing
 > This is a living document. Run `/refactor` to refresh.
 
 ## Health Summary
 
 | Dimension | Status | Findings |
 |-----------|--------|----------|
-| File Size & Structure | :warning: | 4 files need splitting (500+ lines), 8 in watch zone |
+| File Size & Structure | :warning: | 3 files need splitting (500+ lines), 10 in watch zone |
 | Dead Code | :white_check_mark: | ~~Broken migration~~ Fixed. Orphaned api-client (intentionally kept). ~~8 unused imports~~ Fixed. |
-| Duplication | :warning: | 4 near-identical user item routes |
-| Security | :white_check_mark: | ~~IDOR~~ Fixed. ~~No rate limiting~~ Fixed (slowapi on auth). ~~bcrypt DoS~~ Fixed (max_length). JWT default has prod guard. |
+| Duplication | :white_check_mark: | ~~4 near-identical user item routes~~ Fixed. ~~Near-duplicate medication/therapy/peptide detail screens~~ Fixed. |
+| Security | :white_check_mark: | ~~IDOR~~ Fixed. ~~No rate limiting~~ Fixed (slowapi on auth). ~~bcrypt DoS~~ Fixed (max_length). JWT default has prod guard. Revocation fallback is now durable when Redis is down. |
 | Documentation | :white_check_mark: | ~~CLAUDE.md stale~~ Updated. |
 | UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. ~~Muscle chart hex~~ Fixed. Premium glass UI system now spans the full product surface; remaining non-ambient files are shell/framework routes rather than user-facing UI debt. |
 | Robustness | :white_check_mark: | ~~IDOR~~ Fixed. ~~Non-atomic batch adherence~~ Fixed. ~~Wrong entity labels~~ Fixed. ~~Weather silent exception~~ Fixed. |
-| Pipeline & Cache | :white_check_mark: | ~~Celery result_expires~~ Fixed (1h TTL). In-memory cache unbounded (low risk). |
+| Pipeline & Cache | :white_check_mark: | ~~Celery result_expires~~ Fixed (1h TTL). ~~In-memory status cache unbounded~~ Fixed (TTL pruning + 1024-entry cap). |
 | Undefined Names | :white_check_mark: | ~~26 undefined names~~ Fixed. |
 
 ---
@@ -57,9 +57,9 @@
 
 | # | File | Issue | Dimension | Status |
 |---|------|-------|-----------|--------|
-| M-1 | `routes/user_{supplements,medications,peptides,therapies}.py` | 4 near-identical CRUD files (~420 duplicated lines) | Duplication | Open |
+| M-1 | `routes/user_{supplements,medications,peptides,therapies}.py` | ~~4 near-identical CRUD files (~420 duplicated lines)~~ | Duplication | **Fixed** |
 | M-2 | `app/(tabs)/index.tsx:118-194` | Adherence dispatch uses lookup table (not duplication) | Duplication | Non-issue |
-| M-3 | `app/peptide/[id].tsx`, `therapy/[id].tsx`, `medication/[id].tsx` | Near-duplicate detail screens | Duplication | Open |
+| M-3 | `app/peptide/[id].tsx`, `therapy/[id].tsx`, `medication/[id].tsx` | ~~Near-duplicate detail screens~~ | Duplication | **Fixed** |
 | M-4 | `constants/Colors.ts` | ~~91 hardcoded hex values across 22 files~~ | UI | **Fixed** |
 | M-5 | `NutritionPhaseCard.tsx` | ~~All 8 style values hardcoded~~ | UI | **Fixed** |
 | M-6 | `SkincareGuidanceCard.tsx` | ~~Full amber palette hardcoded (7 values)~~ | UI | **Fixed** |
@@ -81,6 +81,7 @@
 | M-22 | `exercise/stats.tsx:36-50` | ~~13 hardcoded hex colors in muscle-group chart map~~ | UI | **Fixed** |
 | M-23 | `app/recommendations.tsx`, `app/wizard.tsx`, `app/tracking.tsx` | ~~Secondary high-traffic screens still use flatter legacy cards instead of the new ambient/glass system~~ | UI | **Fixed** |
 | M-24 | `app/{medication,therapy,peptide}/[id]/schedule.tsx`, `app/{medication,nutrition}/add.tsx`, `app/protocol/[id].tsx`, `app/user-supplement/[id].tsx`, `app/supplement/[id]/schedule.tsx`, `app/supplement/refill-request.tsx` | ~~Remaining schedule/create utility routes still need the same ambient shell and glass treatment used across the main product surfaces~~ | UI | **Fixed** |
+| M-25 | `apps/api/data/manual_catalog_profiles.json`, `supplements`, `medications`, `therapies`, `peptides` | 112 non-plain catalog rows are still parked in `supplements`; mirror-first migration is started and seed-reproducible, but the broader candidate set still needs canonicalization and rollout | Data Model | Open |
 
 ---
 
@@ -88,10 +89,10 @@
 
 | # | File | Issue | Dimension | Status |
 |---|------|-------|-----------|--------|
-| L-1 | `config.py:9` | Hardcoded dev DB credentials as default | Security | Open |
+| L-1 | `config.py:9` | ~~Hardcoded dev DB credentials as default~~ | Security | **Fixed** |
 | L-2 | `schemas/auth.py:31` | ~~No password max_length (bcrypt DoS)~~ | Security | **Fixed** |
-| L-3 | `jwt.py:15,74` | In-memory token revocation is process-scoped | Security | Open |
-| L-4 | `ai_onboarding.py:23` | In-memory status cache has no active eviction | Pipeline | Open |
+| L-3 | `jwt.py:15,74` | ~~In-memory token revocation is process-scoped~~ | Security | **Fixed** |
+| L-4 | `ai_onboarding.py:23` | ~~In-memory status cache has no active eviction~~ | Pipeline | **Fixed** |
 | L-5 | `peptide/[id].tsx`, `therapy/[id].tsx` | ~~Exact copy of readString/readStringArray helpers~~ | Duplication | **Fixed** |
 | L-6 | `adherence.py:142,246,292` | `dosage_amount` is NOT NULL — float(None) impossible | Robustness | Non-issue |
 | L-7 | `guided_wizard.py:161` | ~~Silent except: pass lacks comment~~ | Dead Code | **Fixed** |
@@ -108,16 +109,19 @@
 | `scripts/seed_supplement_catalog.py` | 1386 | Data-exempt | No action |
 | `scripts/seed.py` | 1259 | Data-exempt | No action |
 | `scripts/seed_exercise_catalog.py` | 828 | Data-exempt | No action |
-| `packages/api-client/src/client.ts` | 742 | Split soon | God object (35 methods). Deprecate or split |
-| `routes/user_preferences.py` | 614 | Split soon | Extract apply_recommendations to service |
-| `app/wizard.tsx` | 483 | Split soon | Extract WizardResultCard, WizardWelcome |
-| `app/recommendations.tsx` | 476 | Split soon | Move RecommendationCard to own file |
-| `app/profile/preferences.tsx` | 464 | Watch | Extract NumberField; consolidate form state |
-| `routes/adherence.py` | 447 | Watch | Extract commit logic to service |
+| `packages/api-client/src/client.ts` | 813 | Split soon | God object (35 methods). Deprecate or split |
+| `app/workout-routine/create.tsx` | 587 | Split soon | Extract routine exercise picker and summary sections |
+| `app/(tabs)/protocols.tsx` | 560 | Split soon | Extract tab sections to reduce orchestration density |
+| `app/profile/preferences.tsx` | 472 | Watch | NumberField extracted; consolidate remaining form state later |
+| `routes/adherence.py` | 453 | Watch | Extract commit logic to service |
+| `routes/protocols.py` | 445 | Watch | Extract protocol item assembly/validation helpers |
+| `components/nutrition/NutritionPlanForm.tsx` | 445 | Watch | Remove duplicate OptionGrid; extract MacroSelector |
+| `services/guided_wizard_fallback.py` | 438 | Watch | Heuristic fallback flow is isolated now; monitor before splitting further |
 | `services/daily_plan.py` | 428 | Watch | Extract _item_to_plan_entry helper |
-| `services/ai_onboarding.py` | 425 | Watch | Deduplicate supplement/medication paths |
-| `NutritionPlanForm.tsx` | 399 | Watch | Remove duplicate OptionGrid; extract MacroSelector |
-| `(tabs)/exercise.tsx` | 389 | Watch | Extract sections on next feature add |
+| `app/exercise/stats.tsx` | 425 | Watch | Extract chart and summary card sections |
+| `services/recommendation_engine.py` | 424 | Watch | Separate catalog normalization from ranking logic |
+| `routes/user_preferences.py` | 409 | Watch | Recommendation apply workflow extracted; monitor remaining route breadth |
+| `app/recommendations.tsx` | 404 | Watch | RecommendationCard extracted; monitor remaining screen orchestration |
 
 ---
 
@@ -135,3 +139,15 @@
 | 2026-04-10 | Follow-up UI pass: recommendations, wizard, tracking, profile settings, the full exercise/workout flow, nutrition manage, and medication/therapy/peptide detail/manage screens were upgraded to the ambient glass system. M-23 closed and M-24 narrowed to the remaining schedule/create utility routes. |
 | 2026-04-10 | Final UI cleanup pass: remaining schedule/create/manage utility routes were moved onto the shared ambient shell, refill-note and medication onboarding were polished, and M-24 closed. |
 | 2026-04-10 | Refactor hygiene pass: verified `puppeteer` is still required by `docs/generate-pdf.mjs` and extracted shared AI-profile readers into `apps/mobile/lib/ai-profile.ts`, closing L-5 and marking M-17 as a non-issue. |
+| 2026-04-10 | Manual supplement catalog curation reached 305/305 local profiles. Added `CATALOG_MODALITY_AUDIT.md`, `apps/api/data/catalog_modality_mirrors.json`, and `apps/api/scripts/apply_catalog_modality_mirrors.py`; opened M-25 to track mirror-first migration of medication-, therapy-, and peptide-like rows currently living in `supplements`. Seeded the first local mirror batch into `medications`, `therapies`, and `peptides`. |
+| 2026-04-10 | Structural backend refactor: extracted `apps/api/app/services/user_item_crud.py` and collapsed the duplicated user supplement/medication/therapy/peptide route workflow onto it, closing M-1. Verified with 34 targeted backend tests. |
+| 2026-04-10 | Mobile duplication refactor: extracted `CatalogDetailScaffold`, `catalogDetailStyles`, and `useCatalogItemDetail` to remove the near-duplicate medication/therapy/peptide detail screens, closing M-3. Verified with `npx tsc -p apps/mobile/tsconfig.json --noEmit`. |
+| 2026-04-10 | Robustness/reproducibility cleanup: added active pruning and capacity limits to the in-memory AI onboarding status cache, closing L-4, and wired `scripts.seed.py` to replay repo-backed manual catalog profiles plus approved catalog mirrors during seeding. |
+| 2026-04-11 | Configuration hardening: switched the default backend database URL to the repo-local SQLite database, updated `.env.example` to describe Postgres as an explicit override instead of the default, and removed the same hardcoded development credential from `apps/api/alembic.ini`, closing L-1. |
+| 2026-04-11 | Auth hardening: added a `revoked_tokens` table and moved JWT revocation fallback from Redis-only plus process memory to Redis-primary, database-secondary, memory-tertiary behavior, closing L-3. Verified with targeted JWT/auth/config tests and a migration. |
+| 2026-04-11 | Hotspot cleanup: extracted `app/services/recommendation_application.py` from `routes/user_preferences.py`, split `apps/mobile/app/wizard.tsx` into `WizardWelcomeCard` and `WizardResultCard`, and moved the recommendation item surface into `components/recommendations/RecommendationCard.tsx`. Verified with 126 passing backend tests and `npx tsc -p apps/mobile/tsconfig.json --noEmit`. |
+| 2026-04-11 | Follow-up hotspot cleanup: extracted `components/profile/NumberField.tsx`, bringing `app/profile/preferences.tsx` back under 500 lines. The remaining split-soon list is now down to `api-client/src/client.ts`, `services/ai_onboarding.py`, and `app/(tabs)/exercise.tsx`, plus the open catalog-modality migration tracked in M-25. |
+| 2026-04-11 | Backend AI refactor: split prompt/schema/generation logic into `services/ai_profile_generation.py` and collapsed supplement/medication onboarding onto a shared runner in `services/ai_onboarding.py`, bringing `ai_onboarding.py` under 300 lines. Verified with targeted onboarding/supplement/auth/config tests. |
+| 2026-04-11 | Exercise tab refactor: split `app/(tabs)/exercise.tsx` into `components/exercise/ExerciseHero.tsx`, `ExerciseRoutinesSection.tsx`, `ExerciseRecentSessionsSection.tsx`, and `ExerciseNavLinksSection.tsx`, bringing the main tab file under 300 lines. Verified with `npx tsc -p apps/mobile/tsconfig.json --noEmit`. |
+| 2026-04-11 | Size scan refresh: after the AI onboarding and Exercise splits, the true split-soon list shifted to `client.ts`, `guided_wizard.py`, `workout-routine/create.tsx`, and `(tabs)/protocols.tsx`. The catalog modality migration in M-25 remains the main non-structural backlog item. |
+| 2026-04-11 | Guided wizard refactor: split `services/guided_wizard.py` into `guided_wizard_prompting.py`, `guided_wizard_fallback.py`, and `guided_wizard_types.py`, reducing the public orchestration file to 103 lines while preserving the existing route contract and fallback behavior. Verified with `./apps/api/.venv/bin/pytest apps/api/tests/test_wizard.py` (7 passed). |

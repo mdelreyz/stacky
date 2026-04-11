@@ -115,7 +115,8 @@ function start_api() {
   : > "$API_LOG_FILE"
   (
     cd "$API_DIR"
-    nohup "$API_VENV_PYTHON" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 >>"$API_LOG_FILE" 2>&1 &!
+    PROTOCOLS_AI_TASK_DISPATCH_MODE=background \
+      nohup "$API_VENV_PYTHON" -m uvicorn app.main:app --host 127.0.0.1 --port 8000 >>"$API_LOG_FILE" 2>&1 &!
     echo $! > "$API_PID_FILE"
   )
 

@@ -1,7 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import select
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.auth import get_current_user
@@ -11,8 +10,15 @@ from app.models.user import User
 from app.models.user_therapy import UserTherapy
 from app.schemas.common import PaginatedResponse
 from app.schemas.therapy import UserTherapyCreate, UserTherapyResponse, UserTherapyUpdate
-from app.services.daily_plan import resolve_user_date
-from app.services.pagination import paginate, paginated_response
+from app.services.user_item_crud import (
+    create_user_owned_item,
+    deactivate_user_owned_item,
+    ensure_catalog_item_exists,
+    ensure_no_active_duplicate,
+    get_user_owned_item_or_404,
+    list_user_owned_items,
+    update_user_owned_item,
+)
 from app.services.user_therapy_serialization import serialize_user_therapy
 
 router = APIRouter(prefix="/users/me/therapies", tags=["user-therapies"])
@@ -26,14 +32,14 @@ async def list_user_therapies(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    query = select(UserTherapy).where(UserTherapy.user_id == current_user.id).order_by(UserTherapy.created_at.desc())
-    if active_only:
-        query = query.where(UserTherapy.is_active.is_(True))
-
-    rows, total, has_more = await paginate(session, query, page, page_size)
-    return paginated_response(
-        items=[await serialize_user_therapy(ut) for ut in rows],
-        total=total, page=page, page_size=page_size, has_more=has_more,
+    return await list_user_owned_items(
+        session=session,
+        model=UserTherapy,
+        user_id=current_user.id,
+        page=page,
+        page_size=page_size,
+        active_only=active_only,
+        serializer=serialize_user_therapy,
     )
 
 
@@ -43,15 +49,13 @@ async def get_user_therapy(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserTherapy).where(
-            UserTherapy.id == user_therapy_id,
-            UserTherapy.user_id == current_user.id,
-        )
+    user_therapy = await get_user_owned_item_or_404(
+        session=session,
+        model=UserTherapy,
+        item_id=user_therapy_id,
+        user_id=current_user.id,
+        not_found_detail="User therapy not found",
     )
-    user_therapy = result.scalar_one_or_none()
-    if not user_therapy:
-        raise HTTPException(status_code=404, detail="User therapy not found")
     return await serialize_user_therapy(user_therapy)
 
 
@@ -61,35 +65,35 @@ async def add_user_therapy(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(select(Therapy).where(Therapy.id == data.therapy_id))
-    if result.scalar_one_or_none() is None:
-        raise HTTPException(status_code=404, detail="Therapy not found")
-
-    existing_result = await session.execute(
-        select(UserTherapy).where(
-            UserTherapy.user_id == current_user.id,
-            UserTherapy.therapy_id == data.therapy_id,
-            UserTherapy.is_active.is_(True),
-        )
+    await ensure_catalog_item_exists(
+        session=session,
+        model=Therapy,
+        item_id=data.therapy_id,
+        not_found_detail="Therapy not found",
     )
-    if existing_result.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=409, detail="Therapy already active in your protocol")
-
-    user_therapy = UserTherapy(
+    await ensure_no_active_duplicate(
+        session=session,
+        model=UserTherapy,
         user_id=current_user.id,
-        therapy_id=data.therapy_id,
-        duration_minutes=data.duration_minutes,
-        frequency=data.frequency,
-        take_window=data.take_window,
-        settings=data.settings,
-        notes=data.notes,
-        started_at=data.started_at,
+        foreign_key_field="therapy_id",
+        foreign_key_id=data.therapy_id,
+        conflict_detail="Therapy already active in your protocol",
     )
-    session.add(user_therapy)
-    await session.commit()
-    await session.refresh(user_therapy)
-
-    return await serialize_user_therapy(user_therapy)
+    return await create_user_owned_item(
+        session=session,
+        model=UserTherapy,
+        item_kwargs={
+            "user_id": current_user.id,
+            "therapy_id": data.therapy_id,
+            "duration_minutes": data.duration_minutes,
+            "frequency": data.frequency,
+            "take_window": data.take_window,
+            "settings": data.settings,
+            "notes": data.notes,
+            "started_at": data.started_at,
+        },
+        serializer=serialize_user_therapy,
+    )
 
 
 @router.patch("/{user_therapy_id}", response_model=UserTherapyResponse)
@@ -99,23 +103,19 @@ async def update_user_therapy(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserTherapy).where(
-            UserTherapy.id == user_therapy_id,
-            UserTherapy.user_id == current_user.id,
-        )
+    user_therapy = await get_user_owned_item_or_404(
+        session=session,
+        model=UserTherapy,
+        item_id=user_therapy_id,
+        user_id=current_user.id,
+        not_found_detail="User therapy not found",
     )
-    user_therapy = result.scalar_one_or_none()
-    if not user_therapy:
-        raise HTTPException(status_code=404, detail="User therapy not found")
-
-    update_data = data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(user_therapy, key, value)
-
-    await session.commit()
-    await session.refresh(user_therapy)
-    return await serialize_user_therapy(user_therapy)
+    return await update_user_owned_item(
+        session=session,
+        item=user_therapy,
+        update_data=data.model_dump(exclude_unset=True),
+        serializer=serialize_user_therapy,
+    )
 
 
 @router.delete("/{user_therapy_id}", status_code=204)
@@ -124,17 +124,15 @@ async def remove_user_therapy(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserTherapy).where(
-            UserTherapy.id == user_therapy_id,
-            UserTherapy.user_id == current_user.id,
-        )
+    user_therapy = await get_user_owned_item_or_404(
+        session=session,
+        model=UserTherapy,
+        item_id=user_therapy_id,
+        user_id=current_user.id,
+        not_found_detail="User therapy not found",
     )
-    user_therapy = result.scalar_one_or_none()
-    if not user_therapy:
-        raise HTTPException(status_code=404, detail="User therapy not found")
-
-    ended_at, _user_tz = resolve_user_date(None, current_user.timezone)
-    user_therapy.is_active = False
-    user_therapy.ended_at = user_therapy.ended_at or ended_at
-    await session.commit()
+    await deactivate_user_owned_item(
+        session=session,
+        item=user_therapy,
+        user_timezone=current_user.timezone,
+    )

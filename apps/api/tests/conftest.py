@@ -13,6 +13,7 @@ TEST_DB_PATH = TESTS_DIR / "test_protocols.db"
 os.environ.setdefault("PROTOCOLS_DATABASE_URL", f"sqlite+aiosqlite:///{TEST_DB_PATH}")
 os.environ.setdefault("PROTOCOLS_REDIS_URL", "redis://localhost:6379/15")
 os.environ.setdefault("PROTOCOLS_RATE_LIMIT_ENABLED", "false")
+os.environ.setdefault("PROTOCOLS_AI_TASK_DISPATCH_MODE", "celery")
 
 sys.path.insert(0, str(API_ROOT))
 

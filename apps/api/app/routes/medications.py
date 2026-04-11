@@ -17,6 +17,7 @@ from app.services.ai_onboarding import (
     resolve_medication_ai_status,
     run_medication_ai_onboarding_job_sync,
     set_ai_status,
+    should_dispatch_ai_tasks_with_celery,
 )
 from app.services.pagination import paginate, paginated_response
 from app.tasks.ai_onboarding import generate_medication_ai_profile
@@ -42,6 +43,10 @@ async def _serialize_medication(medication: Medication) -> MedicationResponse:
 
 
 def _dispatch_medication_ai_onboarding(medication_id: uuid.UUID, background_tasks: BackgroundTasks) -> None:
+    if not should_dispatch_ai_tasks_with_celery():
+        background_tasks.add_task(run_medication_ai_onboarding_job_sync, str(medication_id))
+        return
+
     try:
         generate_medication_ai_profile.delay(str(medication_id))
     except Exception:

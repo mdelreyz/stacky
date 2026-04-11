@@ -7,6 +7,7 @@ from app.models.medication import Medication
 from app.models.nutrition_cycle import NutritionCycle
 from app.models.peptide import Peptide
 from app.models.protocol import Protocol, ProtocolItem
+from app.models.revoked_token import RevokedToken
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
 from app.models.user import User
@@ -31,6 +32,7 @@ __all__ = [
     "UserPreferences",
     "Protocol",
     "ProtocolItem",
+    "RevokedToken",
     "NutritionCycle",
     "AdherenceLog",
     "Frequency",

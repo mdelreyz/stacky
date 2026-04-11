@@ -1,4 +1,14 @@
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:8000";
+function getDefaultApiUrl() {
+  if (typeof window !== "undefined" && window.location) {
+    const protocol = window.location.protocol === "https:" ? "https:" : "http:";
+    const host = window.location.hostname === "localhost" ? "127.0.0.1" : window.location.hostname;
+    return `${protocol}//${host}:8000`;
+  }
+
+  return "http://127.0.0.1:8000";
+}
+
+const API_URL = (process.env.EXPO_PUBLIC_API_URL || getDefaultApiUrl()).replace(/\/$/, "");
 
 let token: string | null = null;
 
@@ -108,7 +118,15 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     headers.Authorization = `Bearer ${token}`;
   }
 
-  const response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}${path}`, { ...options, headers });
+  } catch {
+    throw new APIError(
+      0,
+      `Could not reach the API at ${API_URL}. Check that the backend is running and EXPO_PUBLIC_API_URL points to the Protocols API.`
+    );
+  }
 
   if (!response.ok) {
     const error = await response

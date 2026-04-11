@@ -1,0 +1,37 @@
+[
+  {
+    "source_name": "HGH",
+    "target_catalog": "peptides",
+    "category": "therapeutic"
+  },
+  {
+    "source_name": "GR7 / Redenhair",
+    "target_catalog": "therapies",
+    "category": "haircare"
+  },
+  {
+    "source_name": "Daosin",
+    "target_catalog": "medications",
+    "category": "other"
+  },
+  {
+    "source_name": "Emoxypine Succinate (Mexidol, Mexicor, and Armadin Long)",
+    "target_catalog": "medications",
+    "category": "cognitive"
+  },
+  {
+    "source_name": "Piracetam/Aniracetam",
+    "target_catalog": "medications",
+    "category": "cognitive"
+  },
+  {
+    "source_name": "Potassium iodine",
+    "target_catalog": "medications",
+    "category": "hormonal"
+  },
+  {
+    "source_name": "Selbex/ Teprenone",
+    "target_catalog": "medications",
+    "category": "other"
+  }
+]

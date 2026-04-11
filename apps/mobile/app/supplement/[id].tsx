@@ -28,6 +28,7 @@ export default function SupplementDetailScreen() {
   const [retrying, setRetrying] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [generationDelayNotice, setGenerationDelayNotice] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -43,24 +44,16 @@ export default function SupplementDetailScreen() {
         const nextSupplement = await supplementsApi.get(id);
         if (cancelled) return;
 
-        if (
-          nextSupplement.ai_status === "generating"
-          && !nextSupplement.ai_profile
-          && Date.now() - startedAt >= MAX_GENERATION_WAIT_MS
-        ) {
-          setSupplement({
-            ...nextSupplement,
-            ai_status: "failed",
-            ai_error:
-              nextSupplement.ai_error
-              || "AI profile generation is taking longer than expected. The background worker or AI provider may be unavailable.",
-          });
-          return;
-        }
+        const isGenerating = nextSupplement.ai_status === "generating" && !nextSupplement.ai_profile;
+        setGenerationDelayNotice(
+          isGenerating && Date.now() - startedAt >= MAX_GENERATION_WAIT_MS
+            ? "AI profile generation is taking longer than expected. We're still checking automatically."
+            : null,
+        );
 
         setSupplement(nextSupplement);
 
-        if (nextSupplement.ai_status === "generating" && !nextSupplement.ai_profile) {
+        if (isGenerating) {
           timeoutId = setTimeout(() => {
             void loadSupplement(true);
           }, POLL_INTERVAL_MS);
@@ -88,6 +81,7 @@ export default function SupplementDetailScreen() {
     if (!supplement) return;
 
     setRetrying(true);
+    setGenerationDelayNotice(null);
     try {
       const result = await supplementsApi.onboard({
         name: supplement.name,
@@ -160,7 +154,7 @@ export default function SupplementDetailScreen() {
         />
 
         {ai ? (
-          <SupplementAIProfileContent ai={ai} />
+          <SupplementAIProfileContent ai={ai} supplement={supplement} />
         ) : supplement.ai_status === "failed" ? (
           <SupplementProfileFallback
             status="failed"
@@ -169,7 +163,7 @@ export default function SupplementDetailScreen() {
             retrying={retrying}
           />
         ) : (
-          <SupplementProfileFallback status="generating" error={null} />
+          <SupplementProfileFallback status="generating" error={generationDelayNotice} />
         )}
       </FadeInView>
 

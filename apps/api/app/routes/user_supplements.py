@@ -16,9 +16,15 @@ from app.schemas.supplement import (
     UserSupplementResponse,
     UserSupplementUpdate,
 )
-from app.services.daily_plan import resolve_user_date
-from app.services.pagination import paginate, paginated_response
 from app.services.supplement_visibility import get_visible_supplement
+from app.services.user_item_crud import (
+    create_user_owned_item,
+    deactivate_user_owned_item,
+    ensure_no_active_duplicate,
+    get_user_owned_item_or_404,
+    list_user_owned_items,
+    update_user_owned_item,
+)
 from app.services.user_supplement_serialization import serialize_user_supplement
 
 router = APIRouter(prefix="/users/me/supplements", tags=["user-supplements"])
@@ -50,6 +56,7 @@ def _supplement_refill_request_text(items: list[UserSupplement]) -> str:
     )
     return "\n".join(lines)
 
+
 @router.get("", response_model=PaginatedResponse[UserSupplementResponse])
 async def list_user_supplements(
     page: int = Query(1, ge=1),
@@ -58,14 +65,14 @@ async def list_user_supplements(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    query = select(UserSupplement).where(UserSupplement.user_id == current_user.id).order_by(UserSupplement.created_at.desc())
-    if active_only:
-        query = query.where(UserSupplement.is_active.is_(True))
-
-    rows, total, has_more = await paginate(session, query, page, page_size)
-    return paginated_response(
-        items=[await serialize_user_supplement(us) for us in rows],
-        total=total, page=page, page_size=page_size, has_more=has_more,
+    return await list_user_owned_items(
+        session=session,
+        model=UserSupplement,
+        user_id=current_user.id,
+        page=page,
+        page_size=page_size,
+        active_only=active_only,
+        serializer=serialize_user_supplement,
     )
 
 
@@ -107,15 +114,13 @@ async def get_user_supplement(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserSupplement).where(
-            UserSupplement.id == user_supplement_id,
-            UserSupplement.user_id == current_user.id,
-        )
+    user_supplement = await get_user_owned_item_or_404(
+        session=session,
+        model=UserSupplement,
+        item_id=user_supplement_id,
+        user_id=current_user.id,
+        not_found_detail="User supplement not found",
     )
-    user_supplement = result.scalar_one_or_none()
-    if not user_supplement:
-        raise HTTPException(status_code=404, detail="User supplement not found")
     return await serialize_user_supplement(user_supplement)
 
 
@@ -129,33 +134,31 @@ async def add_user_supplement(
     if supplement is None:
         raise HTTPException(status_code=404, detail="Supplement not found")
 
-    existing_result = await session.execute(
-        select(UserSupplement).where(
-            UserSupplement.user_id == current_user.id,
-            UserSupplement.supplement_id == data.supplement_id,
-            UserSupplement.is_active.is_(True),
-        )
-    )
-    if existing_result.scalar_one_or_none() is not None:
-        raise HTTPException(status_code=409, detail="Supplement already active in your protocol")
-
-    user_supplement = UserSupplement(
+    await ensure_no_active_duplicate(
+        session=session,
+        model=UserSupplement,
         user_id=current_user.id,
-        supplement_id=data.supplement_id,
-        dosage_amount=data.dosage_amount,
-        dosage_unit=data.dosage_unit,
-        frequency=data.frequency,
-        take_window=data.take_window,
-        with_food=data.with_food,
-        is_out_of_stock=data.is_out_of_stock,
-        notes=data.notes,
-        started_at=data.started_at,
+        foreign_key_field="supplement_id",
+        foreign_key_id=data.supplement_id,
+        conflict_detail="Supplement already active in your protocol",
     )
-    session.add(user_supplement)
-    await session.commit()
-    await session.refresh(user_supplement)
-
-    return await serialize_user_supplement(user_supplement)
+    return await create_user_owned_item(
+        session=session,
+        model=UserSupplement,
+        item_kwargs={
+            "user_id": current_user.id,
+            "supplement_id": data.supplement_id,
+            "dosage_amount": data.dosage_amount,
+            "dosage_unit": data.dosage_unit,
+            "frequency": data.frequency,
+            "take_window": data.take_window,
+            "with_food": data.with_food,
+            "is_out_of_stock": data.is_out_of_stock,
+            "notes": data.notes,
+            "started_at": data.started_at,
+        },
+        serializer=serialize_user_supplement,
+    )
 
 
 @router.patch("/{user_supplement_id}", response_model=UserSupplementResponse)
@@ -165,23 +168,19 @@ async def update_user_supplement(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserSupplement).where(
-            UserSupplement.id == user_supplement_id,
-            UserSupplement.user_id == current_user.id,
-        )
+    user_supplement = await get_user_owned_item_or_404(
+        session=session,
+        model=UserSupplement,
+        item_id=user_supplement_id,
+        user_id=current_user.id,
+        not_found_detail="User supplement not found",
     )
-    user_supplement = result.scalar_one_or_none()
-    if not user_supplement:
-        raise HTTPException(status_code=404, detail="User supplement not found")
-
-    update_data = data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(user_supplement, key, value)
-
-    await session.commit()
-    await session.refresh(user_supplement)
-    return await serialize_user_supplement(user_supplement)
+    return await update_user_owned_item(
+        session=session,
+        item=user_supplement,
+        update_data=data.model_dump(exclude_unset=True),
+        serializer=serialize_user_supplement,
+    )
 
 
 @router.delete("/{user_supplement_id}", status_code=204)
@@ -190,17 +189,15 @@ async def remove_user_supplement(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    result = await session.execute(
-        select(UserSupplement).where(
-            UserSupplement.id == user_supplement_id,
-            UserSupplement.user_id == current_user.id,
-        )
+    user_supplement = await get_user_owned_item_or_404(
+        session=session,
+        model=UserSupplement,
+        item_id=user_supplement_id,
+        user_id=current_user.id,
+        not_found_detail="User supplement not found",
     )
-    user_supplement = result.scalar_one_or_none()
-    if not user_supplement:
-        raise HTTPException(status_code=404, detail="User supplement not found")
-
-    ended_at, _user_tz = resolve_user_date(None, current_user.timezone)
-    user_supplement.is_active = False
-    user_supplement.ended_at = user_supplement.ended_at or ended_at
-    await session.commit()
+    await deactivate_user_owned_item(
+        session=session,
+        item=user_supplement,
+        user_timezone=current_user.timezone,
+    )

@@ -16,6 +16,8 @@ from app.models.medication import Medication
 from app.models.peptide import Peptide
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
+from scripts.apply_catalog_modality_mirrors import apply_mirrors
+from scripts.apply_manual_catalog_profiles import apply_entries as apply_manual_catalog_profiles
 from scripts.seed_exercise_catalog import EXERCISE_CATALOG
 from scripts.import_supplement_stack_xls import load_workbook_supplement_catalog
 from scripts.seed_supplement_catalog import SUPPLEMENT_CATALOG
@@ -1255,6 +1257,8 @@ async def seed():
             seeded_exercises += 1
 
         await session.commit()
+        await apply_manual_catalog_profiles()
+        await apply_mirrors()
         supplement_count = (await session.execute(select(func.count()).select_from(Supplement))).scalar_one()
         therapy_count = (await session.execute(select(func.count()).select_from(Therapy))).scalar_one()
         medication_count = (await session.execute(select(func.count()).select_from(Medication))).scalar_one()
@@ -1263,7 +1267,7 @@ async def seed():
         print(
             f"Seeded {seeded_supplements} new supplements, {seeded_medications} new medications, "
             f"{seeded_therapies} new therapies, {seeded_peptides} new peptides, "
-            f"and {seeded_exercises} new exercises. "
+            f"and {seeded_exercises} new exercises. Synced manual supplement profiles and approved catalog mirrors. "
             f"Database now has {supplement_count} supplements, {medication_count} medications, "
             f"{therapy_count} therapies, {peptide_count} peptides, and {exercise_count} exercises."
         )

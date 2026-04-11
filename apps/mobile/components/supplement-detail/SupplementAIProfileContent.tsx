@@ -3,15 +3,20 @@ import { StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 
 import { colors } from "@/constants/Colors";
-import type { SupplementAIProfile } from "@protocols/domain";
+import { SupplementScorePanel } from "@/components/supplement-detail/SupplementScorePanel";
+import type { Supplement, SupplementAIProfile } from "@protocols/domain";
 
 export function SupplementAIProfileContent({
   ai,
+  supplement,
 }: {
   ai: SupplementAIProfile;
+  supplement: Supplement;
 }) {
   return (
     <>
+      <SupplementScorePanel supplement={supplement} />
+
       <Section title="Mechanism of Action" icon="cogs">
         <Text style={styles.bodyText}>{ai.mechanism_of_action}</Text>
       </Section>

@@ -6,14 +6,21 @@ from hashlib import sha256
 
 import bcrypt
 from jose import jwt
+from sqlalchemy import delete
 
 from app.config import settings
+from app.database import async_session_factory
+from app.models.revoked_token import RevokedToken
 
 COOKIE_NAME = "protocols_session"
 
 # In-memory fallback for token revocation when Redis is unavailable
 _revoked_tokens: dict[str, float] = {}
 _redis_client = None
+
+
+def _utcnow_for_store() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)
 
 
 def hash_password(password: str) -> str:
@@ -64,21 +71,11 @@ async def close_redis() -> None:
         _redis_client = None
 
 
-async def revoke_token(token: str) -> None:
-    fingerprint = _token_fingerprint(token)
-    ttl = settings.jwt_access_token_expire_minutes * 60
-    r = await _get_redis()
-    if r:
-        await r.setex(f"revoked:{fingerprint}", ttl, "1")
-    else:
-        _revoked_tokens[fingerprint] = time.time() + ttl
+def _mark_revoked_in_memory(fingerprint: str, ttl: int) -> None:
+    _revoked_tokens[fingerprint] = time.time() + ttl
 
 
-async def is_token_revoked(token: str) -> bool:
-    fingerprint = _token_fingerprint(token)
-    r = await _get_redis()
-    if r:
-        return await r.exists(f"revoked:{fingerprint}") > 0
+def _is_revoked_in_memory(fingerprint: str) -> bool:
     expiry = _revoked_tokens.get(fingerprint)
     if expiry is None:
         return False
@@ -86,6 +83,68 @@ async def is_token_revoked(token: str) -> bool:
         return True
     del _revoked_tokens[fingerprint]
     return False
+
+
+def _drop_redis_client() -> None:
+    global _redis_client
+    _redis_client = None
+
+
+async def _mark_revoked_in_database(fingerprint: str, ttl: int) -> None:
+    now = _utcnow_for_store()
+    expires_at = now + timedelta(seconds=ttl)
+    async with async_session_factory() as session:
+        await session.execute(delete(RevokedToken).where(RevokedToken.expires_at <= now))
+        revoked_token = await session.get(RevokedToken, fingerprint)
+        if revoked_token is None:
+            session.add(RevokedToken(fingerprint=fingerprint, expires_at=expires_at))
+        else:
+            revoked_token.expires_at = expires_at
+        await session.commit()
+
+
+async def _is_revoked_in_database(fingerprint: str) -> bool:
+    now = _utcnow_for_store()
+    async with async_session_factory() as session:
+        revoked_token = await session.get(RevokedToken, fingerprint)
+        if revoked_token is None:
+            return False
+        if revoked_token.expires_at <= now:
+            await session.delete(revoked_token)
+            await session.commit()
+            return False
+        return True
+
+
+async def revoke_token(token: str) -> None:
+    fingerprint = _token_fingerprint(token)
+    ttl = settings.jwt_access_token_expire_minutes * 60
+    r = await _get_redis()
+    if r:
+        try:
+            await r.setex(f"revoked:{fingerprint}", ttl, "1")
+            return
+        except Exception:
+            _drop_redis_client()
+    try:
+        await _mark_revoked_in_database(fingerprint, ttl)
+        return
+    except Exception:
+        _mark_revoked_in_memory(fingerprint, ttl)
+
+
+async def is_token_revoked(token: str) -> bool:
+    fingerprint = _token_fingerprint(token)
+    r = await _get_redis()
+    if r:
+        try:
+            return await r.exists(f"revoked:{fingerprint}") > 0
+        except Exception:
+            _drop_redis_client()
+    try:
+        return await _is_revoked_in_database(fingerprint)
+    except Exception:
+        return _is_revoked_in_memory(fingerprint)
 
 
 def set_auth_cookie(response, token: str) -> None:
