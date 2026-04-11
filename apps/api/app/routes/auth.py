@@ -10,6 +10,8 @@ from app.rate_limit import limiter
 from app.models.user import User
 from app.schemas.auth import (
     AuthUserResponse,
+    ChangePasswordRequest,
+    DeleteAccountRequest,
     LoginRequest,
     LoginResponse,
     MeResponse,
@@ -81,6 +83,43 @@ async def login(
 @router.get("/me", response_model=MeResponse)
 async def get_me(current_user: User = Depends(get_current_user)) -> MeResponse:
     return MeResponse.model_validate(current_user)
+
+
+@router.post("/change-password", status_code=200)
+async def change_password(
+    data: ChangePasswordRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    if not verify_password(data.current_password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Current password is incorrect")
+
+    current_user.password_hash = hash_password(data.new_password)
+    try:
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    return {"message": "Password changed successfully"}
+
+
+@router.delete("/me", status_code=200)
+async def delete_account(
+    data: DeleteAccountRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    if not verify_password(data.password, current_user.password_hash):
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Password is incorrect")
+
+    from datetime import datetime, timezone
+    current_user.deleted_at = datetime.now(timezone.utc)
+    try:
+        await session.commit()
+    except Exception:
+        await session.rollback()
+        raise
+    return {"message": "Account deleted successfully"}
 
 
 @router.patch("/me", response_model=MeResponse)

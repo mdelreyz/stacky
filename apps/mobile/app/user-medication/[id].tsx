@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
@@ -81,6 +81,17 @@ export default function ManageUserMedicationScreen() {
     }
   };
 
+  const confirmRemove = () => {
+    Alert.alert(
+      "Stop Medication",
+      `Are you sure you want to stop ${userMedication?.medication.name ?? "this medication"}? This will remove it from your daily plan.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Stop Medication", style: "destructive", onPress: handleRemove },
+      ],
+    );
+  };
+
   const handleRemove = async () => {
     if (!userMedication) return;
 
@@ -123,7 +134,7 @@ export default function ManageUserMedicationScreen() {
           primaryLabel="Save Changes"
           onSubmit={handleSave}
           secondaryLabel="Stop Medication"
-          onSecondaryAction={handleRemove}
+          onSecondaryAction={confirmRemove}
         />
       </FadeInView>
 

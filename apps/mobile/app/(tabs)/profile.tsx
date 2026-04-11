@@ -173,10 +173,44 @@ export default function ProfileScreen() {
           </View>
           <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
         </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+          style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+          onPress={() => router.push("/profile/data-management")}
+          accessibilityRole="button"
+          accessibilityLabel="Data Management"
+        >
+          <FontAwesome name="download" size={18} color={colors.textSecondary} />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Data Management</Text>
+            <Text style={styles.menuHint}>
+              Export your stack, adherence, and journal data as CSV
+            </Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
+        </Pressable>
         </View>
 
         <View style={styles.card}>
           <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+            onPress={() => router.push("/profile/change-password")}
+            accessibilityRole="button"
+            accessibilityLabel="Change Password"
+          >
+          <FontAwesome name="lock" size={18} color={colors.textSecondary} />
+          <View style={styles.menuCopy}>
+            <Text style={styles.menuText}>Change Password</Text>
+            <Text style={styles.menuHint}>Update your account password</Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
             style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
             onPress={handleLogout}
             accessibilityRole="button"
@@ -184,6 +218,22 @@ export default function ProfileScreen() {
           >
           <FontAwesome name="sign-out" size={18} color={colors.danger} />
           <Text style={[styles.menuText, { color: colors.danger }]}>Log Out</Text>
+        </Pressable>
+
+        <View style={styles.separator} />
+
+        <Pressable
+            style={({ pressed }) => [styles.menuItem, pressed && styles.pressed]}
+            onPress={() => router.push("/profile/delete-account")}
+            accessibilityRole="button"
+            accessibilityLabel="Delete Account"
+          >
+          <FontAwesome name="trash" size={18} color={colors.danger} />
+          <View style={styles.menuCopy}>
+            <Text style={[styles.menuText, { color: colors.danger }]}>Delete Account</Text>
+            <Text style={styles.menuHint}>Permanently remove your account and data</Text>
+          </View>
+          <FontAwesome name="chevron-right" size={14} color={colors.textPlaceholder} />
         </Pressable>
         </View>
       </FadeInView>

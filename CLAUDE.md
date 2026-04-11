@@ -28,7 +28,7 @@ apps/
       schemas/          Pydantic v2 request/response schemas
       services/         Business logic (19 service modules)
     scripts/            Seed data, catalog definitions
-    tests/              102 integration tests
+    tests/              191 integration tests
   worker/               Celery task definitions
   mobile/               Expo app (iOS + Android + Web)
     app/
@@ -46,7 +46,7 @@ apps/
       workout-session/  Active session (log sets), start
       gym-location/     GPS location manager
       protocol/         Protocol detail, add
-      profile/          Edit, preferences, safety check, location/UV
+      profile/          Edit, preferences, safety check, location/UV, change password, delete account, data export
     components/
       today/            Daily plan cards (window, exercise, nutrition, skincare, interactions, skip modal)
       protocols/        Stack score, catalog, schedule, selection
@@ -202,7 +202,7 @@ docker compose up
 - **Tests:** Integration tests with real SQLite DB, `reset_db` fixture drops/recreates all tables per test
 - **Design tokens:** All colors in `Colors.ts`, referenced via `colors.tokenName`. Never hardcode hex values.
 - **Accessibility:** Every `Pressable` gets `accessibilityRole` (button/checkbox/radio/switch) + `accessibilityLabel` + `accessibilityState` where applicable
-- **Security:** Rate limiting on auth (slowapi), bcrypt max_length guard, IDOR-safe ownership checks on all user resources, sessionStorage on web (not localStorage)
+- **Security:** Rate limiting on auth (slowapi), bcrypt max_length guard, IDOR-safe ownership checks on all user resources, sessionStorage on web (not localStorage), soft-delete for account deletion (`deleted_at` timestamp), Alert.alert confirmation on all destructive actions (remove item, stop protocol, delete account)
 - **Docs:** `docs/instructions.html` and `docs/instructions.pdf` must be kept in sync with feature changes. After editing the HTML, regenerate the PDF with `node docs/generate-pdf.mjs`. Update both when adding new pillars, tabs, screens, AI features, or significant UX changes.
 - **Backend patterns match Pempta** (`../vitalsync`): same auth, database, route, and service conventions
 
@@ -212,7 +212,7 @@ docker compose up
 
 | Endpoint Group | Routes |
 |---------------|--------|
-| Auth | `POST /auth/signup`, `POST /auth/login`, `GET /auth/me`, `PATCH /auth/me` |
+| Auth | `POST /auth/signup`, `POST /auth/login`, `GET /auth/me`, `PATCH /auth/me`, `POST /auth/change-password`, `DELETE /auth/me` |
 | Supplements catalog | `GET /supplements`, `GET /supplements/{id}`, `POST /supplements/onboard` |
 | Medications catalog | `GET /medications`, `GET /medications/{id}`, `POST /medications/onboard` |
 | Therapies catalog | `GET /therapies`, `GET /therapies/{id}` |
@@ -237,6 +237,7 @@ docker compose up
 | Workout sessions | `GET/POST /users/me/sessions`, `GET/PATCH/DELETE .../{id}`, sets CRUD |
 | Exercise stats | `GET /users/me/exercise-stats/overview`, `.../exercise/{id}`, `.../muscle-groups` |
 | Gym locations | `GET/POST /users/me/gym-locations`, `PATCH/DELETE .../{id}`, `POST .../match` |
+| Data export | `GET /users/me/export/stack`, `GET .../adherence`, `GET .../journal` |
 
 ---
 
@@ -258,6 +259,7 @@ docker compose up
 | Protocol Schedule | `protocol_schedule.py` | Schedule gate logic (date range, week-of-month, manual) |
 | Regimen Schedule | `regimen_schedule.py` | Supplement cycling/regimen schedule |
 | Pagination | `pagination.py` | Shared paginated response helper |
+| Data Export | `data_export.py` | CSV streaming export for stack, adherence, and journal data |
 | Serialization | `user_*_serialization.py` | Nested response builders (4 files, one per user item type) |
 
 ---

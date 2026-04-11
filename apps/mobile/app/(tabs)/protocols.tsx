@@ -282,9 +282,11 @@ export default function ProtocolsScreen() {
 
         <ActiveProtocolItemsSection
           title="Active Modalities"
+          actionHref="/therapy/add"
+          actionLabel="Add"
           emptyIcon="heartbeat"
           emptyTitle="No modalities added yet"
-          emptyHint="Browse the protocol catalog below to schedule therapies, meditation, recovery, training, or device sessions."
+          emptyHint='Tap "Add" to browse and schedule therapies, recovery protocols, or device sessions.'
           items={myTherapies.map((item) => {
             const settings = readTherapySettings(item.settings);
             const lastCompletedAt = formatLastCompletedAt(settings.lastCompletedAt);
@@ -302,9 +304,11 @@ export default function ProtocolsScreen() {
 
         <ActiveProtocolItemsSection
           title="Active Peptides"
+          actionHref="/peptide/add"
+          actionLabel="Add"
           emptyIcon="eyedropper"
           emptyTitle="No peptides added yet"
-          emptyHint="Browse the peptide catalog below to add research peptides, therapeutic peptides, or performance compounds."
+          emptyHint='Tap "Add" to browse research peptides, therapeutic peptides, or performance compounds.'
           items={myPeptides.map((item) => ({
             id: item.id,
             name: item.peptide.name,

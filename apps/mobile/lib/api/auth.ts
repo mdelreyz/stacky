@@ -31,4 +31,16 @@ export const auth = {
       method: "PATCH",
       body: JSON.stringify(data),
     }),
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<{ message: string }>("/api/v1/auth/change-password", {
+      method: "POST",
+      body: JSON.stringify({ current_password: currentPassword, new_password: newPassword }),
+    }),
+
+  deleteAccount: (password: string) =>
+    request<{ message: string }>("/api/v1/auth/me", {
+      method: "DELETE",
+      body: JSON.stringify({ password }),
+    }),
 };

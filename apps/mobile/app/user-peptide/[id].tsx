@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
@@ -84,6 +84,17 @@ export default function ManageUserPeptideScreen() {
     }
   };
 
+  const confirmRemove = () => {
+    Alert.alert(
+      "Stop Taking",
+      `Are you sure you want to stop taking ${userPeptide?.peptide.name ?? "this peptide"}? This will remove it from your daily plan.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Stop Taking", style: "destructive", onPress: handleRemove },
+      ],
+    );
+  };
+
   const handleRemove = async () => {
     if (!userPeptide) return;
     setSaving(true);
@@ -128,7 +139,7 @@ export default function ManageUserPeptideScreen() {
           primaryLabel="Save Changes"
           onSubmit={handleSave}
           secondaryLabel="Stop Taking"
-          onSecondaryAction={handleRemove}
+          onSecondaryAction={confirmRemove}
         />
       </FadeInView>
 

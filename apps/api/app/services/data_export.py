@@ -177,3 +177,53 @@ async def export_stack_csv(
         ])
 
     return output.getvalue()
+
+
+async def export_journal_csv(
+    session: AsyncSession,
+    user_id,
+    start_date: date | None = None,
+    end_date: date | None = None,
+) -> str:
+    """Export health journal entries as CSV string."""
+    from app.models.health_journal import HealthJournalEntry
+
+    query = (
+        select(HealthJournalEntry)
+        .where(HealthJournalEntry.user_id == user_id)
+        .order_by(HealthJournalEntry.entry_date.desc())
+    )
+
+    if start_date:
+        query = query.where(HealthJournalEntry.entry_date >= start_date)
+    if end_date:
+        query = query.where(HealthJournalEntry.entry_date <= end_date)
+
+    result = await session.execute(query)
+    entries = result.scalars().all()
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "date",
+        "energy",
+        "mood",
+        "sleep",
+        "stress",
+        "symptoms",
+        "notes",
+    ])
+
+    for entry in entries:
+        symptoms_str = ", ".join(entry.symptoms) if entry.symptoms else ""
+        writer.writerow([
+            str(entry.entry_date),
+            entry.energy_level if entry.energy_level is not None else "",
+            entry.mood_level if entry.mood_level is not None else "",
+            entry.sleep_quality if entry.sleep_quality is not None else "",
+            entry.stress_level if entry.stress_level is not None else "",
+            symptoms_str,
+            entry.notes or "",
+        ])
+
+    return output.getvalue()

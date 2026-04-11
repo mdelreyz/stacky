@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 
 import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
@@ -106,6 +106,17 @@ export default function ManageUserTherapyScreen() {
     }
   };
 
+  const confirmRemove = () => {
+    Alert.alert(
+      "Stop Protocol",
+      `Are you sure you want to stop ${userTherapy?.therapy.name ?? "this modality"}? This will remove it from your daily plan.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Stop Protocol", style: "destructive", onPress: handleRemove },
+      ],
+    );
+  };
+
   const handleRemove = async () => {
     if (!userTherapy) return;
 
@@ -148,7 +159,7 @@ export default function ManageUserTherapyScreen() {
           primaryLabel="Save Changes"
           onSubmit={handleSave}
           secondaryLabel="Stop Protocol"
-          onSecondaryAction={handleRemove}
+          onSecondaryAction={confirmRemove}
         />
       </FadeInView>
 

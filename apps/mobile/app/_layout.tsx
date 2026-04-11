@@ -232,6 +232,50 @@ function RootLayoutNav() {
               name="gym-location/manage"
               options={{ headerShown: false, presentation: "modal" }}
             />
+            <Stack.Screen
+              name="onboarding"
+              options={{ headerShown: false, gestureEnabled: false }}
+            />
+            <Stack.Screen
+              name="therapy/add"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="peptide/add"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="profile/data-management"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="profile/change-password"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="profile/delete-account"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="profile/notifications"
+              options={{ headerShown: false, presentation: "modal" }}
+            />
+            <Stack.Screen
+              name="weekly-digest"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="health-journal"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="goal-progress"
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen
+              name="protocol-templates"
+              options={{ headerShown: false }}
+            />
           </>
         )}
       </Stack>

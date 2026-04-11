@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -93,6 +94,17 @@ export default function ManageUserSupplementScreen() {
     }
   };
 
+  const confirmRemove = () => {
+    Alert.alert(
+      "Stop Taking",
+      `Are you sure you want to stop taking ${userSupplement?.supplement.name ?? "this supplement"}? This will remove it from your daily plan.`,
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Stop Taking", style: "destructive", onPress: handleRemove },
+      ],
+    );
+  };
+
   const handleRemove = async () => {
     if (!userSupplement) return;
     setSaving(true);
@@ -137,7 +149,7 @@ export default function ManageUserSupplementScreen() {
           primaryLabel="Save Changes"
           onSubmit={handleSave}
           secondaryLabel="Stop Taking"
-          onSecondaryAction={handleRemove}
+          onSecondaryAction={confirmRemove}
         />
 
         <View style={styles.stockCard}>

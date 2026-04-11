@@ -40,7 +40,7 @@ export default function SignupScreen() {
         email: email.trim(),
         password,
       });
-      router.replace("/");
+      router.replace("/onboarding");
     } catch (e: any) {
       setError(e.message || "Signup failed");
     } finally {

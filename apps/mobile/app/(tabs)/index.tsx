@@ -13,13 +13,16 @@ import { cached, enqueueWrite, invalidateCache } from "@/lib/cache";
 import { dailyPlan as dailyPlanApi } from "@/lib/api";
 import { CycleAlertsCard } from "@/components/today/CycleAlertsCard";
 import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
+import { EmptyDayCard } from "@/components/today/EmptyDayCard";
 import { InteractionWarningsCard } from "@/components/today/InteractionWarningsCard";
 import { JournalPromptCard } from "@/components/today/JournalPromptCard";
 import { NutritionPhaseCard } from "@/components/today/NutritionPhaseCard";
 import { SkincareGuidanceCard } from "@/components/today/SkincareGuidanceCard";
 import { SkipReasonModal } from "@/components/today/SkipReasonModal";
 import { TodayExerciseCard } from "@/components/today/TodayExerciseCard";
+import { GoalProgressCard } from "@/components/today/GoalProgressCard";
 import { TrackingSummaryCard } from "@/components/today/TrackingSummaryCard";
+import { WeeklyDigestCard } from "@/components/today/WeeklyDigestCard";
 import { TodayDateHeader } from "@/components/today/TodayDateHeader";
 import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
 import { FadeInView } from "@/components/ui/FadeInView";
@@ -109,12 +112,16 @@ export default function TodayScreen() {
         />
 
         <TrackingSummaryCard overview={trackingOverview} endDate={selectedDate} />
+        <WeeklyDigestCard />
+        <GoalProgressCard />
         <JournalPromptCard date={selectedDate} />
         <TodayExerciseCard items={plan?.exercise_plan ?? []} />
         <NutritionPhaseCard phase={nutritionPhase} />
         <SkincareGuidanceCard guidance={skincareGuidance} />
         <CycleAlertsCard alerts={cycleAlerts} />
         <InteractionWarningsCard warnings={interactionWarnings} />
+
+        {windows.length === 0 && <EmptyDayCard />}
 
         {windows.map((windowPlan) => (
           <DailyPlanWindowCard
