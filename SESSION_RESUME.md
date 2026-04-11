@@ -1,27 +1,24 @@
 # Session Resume
 
 ## What was worked on
-Finished the broad frontend polish and follow-up refactor pass across the Expo app. The session focused on completing the premium ambient/glass UI rollout on the remaining secondary screens, utility schedule/manage routes, and exercise/care detail flows, then tightening the refactor plan so it reflects actual remaining debt.
+Recalibrated supplement detail scoring so `Essential` means broad, universal usefulness instead of generic supplement quality. The work was limited to the mobile score model, the shared supplement evidence-tier type, and session documentation.
 
 ## Current state
 
 ### Done
-- Premium ambient/glass UI treatment now covers the user-facing mobile/web product surface, including recommendations, wizard, tracking, profile settings, supplement detail/schedule/refill flows, medication/therapy/peptide detail and schedule flows, nutrition add/manage, protocol manage, and the full workout/exercise stack
-- `REFACTORING_PLAN.md` now marks UI & Design healthy; M-23 and M-24 are closed
-- Shared AI-profile parsing helpers were extracted to `apps/mobile/lib/ai-profile.ts`
-- The stale refactor-plan warning about unused `puppeteer` was corrected because `docs/generate-pdf.mjs` still uses it
-- Mobile typecheck is green: `npx tsc -p apps/mobile/tsconfig.json --noEmit`
-- Local `main` is clean and the existing work commit was pushed to `origin/main`
+- `apps/mobile/lib/supplement-score.ts` now uses a sparse essential-scoring model based on normalized core-system coverage, nutrient-repletion signals, and niche penalties
+- The shared supplement type now accepts `traditional` and `speculative` evidence tiers in `packages/domain/src/supplement.ts`
+- The current local catalog distribution is roughly 12 supplements above 90, 33 between 50 and 90, and 260 below 50 for `Essential`
+- Validation completed with `pnpm typecheck` and `pnpm --dir apps/mobile exec tsc --noEmit`
 
 ### Still in progress
-- Structural cleanup is still open: duplicated backend user-item routes, a few oversized files, and general maintainability work now matter more than surface polish
-- Visual QA was not re-run in a live browser/device session after every route-level polish change, so there may still be tuning opportunities in spacing or motion
+- Unrelated API-model and test changes were already present in the working tree and were intentionally left untouched
 
 ## Immediate next steps
-1. Start on structural refactors in `REFACTORING_PLAN.md`, especially M-1 for duplicated backend user-item routes
-2. Split or extract the largest watch-zone frontend files like `app/wizard.tsx`, `app/recommendations.tsx`, and `app/profile/preferences.tsx`
-3. Do a visual pass in Expo web/device to tune any remaining spacing, glow intensity, or motion timing issues now that the full design system is rolled out
+1. Open the supplement detail UI and sanity-check whether the 90+ names match product expectations
+2. If needed, tune the near-threshold bonuses again to move the top tier slightly up or down without affecting the lower bands
+3. Decide whether the backend/manual profile schema should formally widen its evidence enum to match the existing local catalog values
 
 ## Open questions or blockers
-- No functional blocker is open from this session
-- The next work should be chosen by code-health leverage, not by missing premium UI coverage
+- Some 90+ results are still judgment calls, so the next useful pass is product review rather than more blind formula tweaking
+- The backend Python schema still advertises only `strong|moderate|limited|emerging`, even though the local catalog and TS client now carry `traditional` and `speculative`
