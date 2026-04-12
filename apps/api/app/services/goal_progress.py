@@ -8,12 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.adherence import AdherenceLog
 from app.models.health_journal import HealthJournalEntry
-from app.models.supplement import Supplement
 from app.models.user_medication import UserMedication
 from app.models.user_peptide import UserPeptide
 from app.models.user_preferences import UserPreferences
 from app.models.user_supplement import UserSupplement
-from app.models.user_therapy import UserTherapy
 from app.services.stack_score import GOAL_CATEGORY_MAP
 
 # Goal → journal metric mapping
@@ -93,6 +91,15 @@ async def compute_goal_progress(
     )
     user_medications = list(meds_result.scalars().all())
 
+    # Load active user peptides
+    peptides_result = await session.execute(
+        select(UserPeptide).where(
+            UserPeptide.user_id == user_id,
+            UserPeptide.is_active.is_(True),
+        )
+    )
+    user_peptides = list(peptides_result.scalars().all())
+
     # Load adherence for the period
     end_date = date.today()
     start_date = end_date - timedelta(days=days - 1)
@@ -165,6 +172,22 @@ async def compute_goal_progress(
                     "taken_count": item_adherence["taken"],
                     "total_count": item_adherence["total"],
                 })
+
+        for up in user_peptides:
+            peptide = up.peptide
+            if not peptide.goals or goal not in peptide.goals:
+                continue
+
+            item_adherence = adherence_by_item.get(str(up.id), {"taken": 0, "total": 0})
+            rate = item_adherence["taken"] / item_adherence["total"] if item_adherence["total"] > 0 else None
+            supporting_items.append({
+                "id": str(up.id),
+                "name": peptide.name,
+                "type": "peptide",
+                "adherence_rate": round(rate, 2) if rate is not None else None,
+                "taken_count": item_adherence["taken"],
+                "total_count": item_adherence["total"],
+            })
 
         # Goal-level adherence (average across supporting items)
         items_with_data = [i for i in supporting_items if i["adherence_rate"] is not None]

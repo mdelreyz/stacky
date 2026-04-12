@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from app.config import settings
 
@@ -15,7 +16,7 @@ celery_app = Celery(
     "protocols-worker",
     broker=settings.redis_url,
     backend=_default_result_backend(),
-    include=["app.tasks.ai_onboarding"],
+    include=["app.tasks.ai_onboarding", "app.tasks.notifications"],
 )
 
 celery_app.conf.update(
@@ -25,4 +26,11 @@ celery_app.conf.update(
     timezone="UTC",
     enable_utc=True,
     result_expires=3600,  # expire task results after 1 hour
+    beat_schedule={
+        "dispatch-due-reminders-every-minute": {
+            "task": "notifications.dispatch_due_reminders",
+            "schedule": crontab(),
+            "args": (),
+        }
+    },
 )

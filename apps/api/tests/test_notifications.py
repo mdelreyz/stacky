@@ -1,5 +1,10 @@
 """Integration tests for notification preferences and push tokens."""
 
+import asyncio
+from datetime import datetime, timezone
+
+from app.services import notifications as notifications_service
+
 
 def signup(client) -> dict[str, str]:
     response = client.post(
@@ -13,7 +18,6 @@ def signup(client) -> dict[str, str]:
     )
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
-
 
 def test_get_notification_preferences_creates_defaults(client):
     headers = signup(client)
@@ -245,3 +249,260 @@ def test_get_reminder_schedule_disabled(client):
     assert response.status_code == 200
     body = response.json()
     assert body["reminders"] == []
+
+
+def test_send_test_push_skips_without_registered_device(client):
+    headers = signup(client)
+
+    response = client.post(
+        "/api/v1/users/me/notifications/test-push?target_date=2026-04-11",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "skipped"
+    assert body["message"] == "Register a push-enabled device first."
+    assert body["sent_count"] == 0
+
+
+def test_send_test_push_dispatches_schedule_preview(client, monkeypatch):
+    headers = signup(client)
+    register_response = client.post(
+        "/api/v1/users/me/notifications/push-tokens",
+        headers=headers,
+        json={"token": "ExponentPushToken[test-preview]", "platform": "ios"},
+    )
+    assert register_response.status_code == 201
+
+    captured_messages = []
+
+    async def fake_compute_reminder_schedule(session, user, target_date):
+        return {
+            "date": target_date.isoformat(),
+            "reminders": [
+                {
+                    "window": "evening",
+                    "scheduled_time": "18:30",
+                    "items_count": 1,
+                    "item_names": ["Magnesium Glycinate"],
+                }
+            ],
+            "quiet_start": None,
+            "quiet_end": None,
+        }
+
+    async def fake_send_expo_push_messages(messages, *, client=None):
+        captured_messages.extend(messages)
+        return [{"status": "ok", "id": "ticket-1"}]
+
+    monkeypatch.setattr(notifications_service, "compute_reminder_schedule", fake_compute_reminder_schedule)
+    monkeypatch.setattr(notifications_service, "send_expo_push_messages", fake_send_expo_push_messages)
+
+    response = client.post(
+        "/api/v1/users/me/notifications/test-push?target_date=2026-04-11",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "sent"
+    assert body["reminder_count"] == 1
+    assert body["sent_count"] == 1
+    assert body["title"] == "Protocol reminder test"
+    assert "Magnesium Glycinate" in body["body"]
+
+    assert len(captured_messages) == 1
+    assert captured_messages[0]["to"] == "ExponentPushToken[test-preview]"
+    assert captured_messages[0]["channelId"] == "default"
+    assert captured_messages[0]["data"]["target_date"] == "2026-04-11"
+    assert captured_messages[0]["data"]["reminders"][0]["window"] == "evening"
+
+
+def test_send_test_push_deactivates_invalid_device_tokens(client, monkeypatch):
+    headers = signup(client)
+
+    register_response = client.post(
+        "/api/v1/users/me/notifications/push-tokens",
+        headers=headers,
+        json={"token": "ExponentPushToken[stale-device]", "platform": "ios"},
+    )
+    assert register_response.status_code == 201
+
+    async def fake_send_expo_push_messages(messages, *, client=None):
+        return [{"status": "error", "details": {"error": "DeviceNotRegistered"}}]
+
+    monkeypatch.setattr(notifications_service, "send_expo_push_messages", fake_send_expo_push_messages)
+
+    response = client.post(
+        "/api/v1/users/me/notifications/test-push?target_date=2026-04-11",
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "skipped"
+    assert body["sent_count"] == 0
+
+    tokens_response = client.get("/api/v1/users/me/notifications/push-tokens", headers=headers)
+    assert tokens_response.status_code == 200
+    assert tokens_response.json() == []
+
+
+def test_dispatch_due_reminders_batch_sends_once_per_window(client, monkeypatch):
+    headers = signup(client)
+
+    register_response = client.post(
+        "/api/v1/users/me/notifications/push-tokens",
+        headers=headers,
+        json={"token": "ExponentPushToken[scheduled-1]", "platform": "ios"},
+    )
+    assert register_response.status_code == 201
+
+    captured_messages = []
+
+    async def fake_compute_reminder_schedule(session, user, target_date):
+        return {
+            "date": target_date.isoformat(),
+            "reminders": [
+                {
+                    "window": "evening",
+                    "scheduled_time": "18:30",
+                    "items_count": 2,
+                    "item_names": ["Magnesium", "Creatine"],
+                }
+            ],
+            "quiet_start": None,
+            "quiet_end": None,
+        }
+
+    async def fake_send_expo_push_messages(messages, *, client=None):
+        captured_messages.extend(messages)
+        return [{"status": "ok", "id": "ticket-1"}]
+
+    monkeypatch.setattr(notifications_service, "compute_reminder_schedule", fake_compute_reminder_schedule)
+    monkeypatch.setattr(notifications_service, "send_expo_push_messages", fake_send_expo_push_messages)
+
+    dispatch_at = datetime(2026, 4, 11, 18, 25, tzinfo=timezone.utc)
+    first = asyncio.run(
+        notifications_service.dispatch_due_reminders_batch(dispatch_at=dispatch_at, lookback_minutes=5)
+    )
+    second = asyncio.run(
+        notifications_service.dispatch_due_reminders_batch(dispatch_at=dispatch_at, lookback_minutes=5)
+    )
+
+    assert first["users_notified"] == 1
+    assert first["windows_delivered"] == 1
+    assert first["device_notifications_sent"] == 1
+    assert second["users_notified"] == 0
+    assert second["windows_delivered"] == 0
+    assert len(captured_messages) == 1
+    assert captured_messages[0]["title"] == "Evening protocol reminder"
+
+
+def test_dispatch_due_reminders_batch_uses_user_timezone(client, monkeypatch):
+    headers = signup(client)
+    update_response = client.patch(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"timezone": "America/New_York"},
+    )
+    assert update_response.status_code == 200
+
+    register_response = client.post(
+        "/api/v1/users/me/notifications/push-tokens",
+        headers=headers,
+        json={"token": "ExponentPushToken[scheduled-nyc]", "platform": "ios"},
+    )
+    assert register_response.status_code == 201
+
+    captured_messages = []
+
+    async def fake_compute_reminder_schedule(session, user, target_date):
+        assert user.timezone == "America/New_York"
+        return {
+            "date": target_date.isoformat(),
+            "reminders": [
+                {
+                    "window": "morning_with_food",
+                    "scheduled_time": "07:30",
+                    "items_count": 1,
+                    "item_names": ["Vitamin D3"],
+                }
+            ],
+            "quiet_start": None,
+            "quiet_end": None,
+        }
+
+    async def fake_send_expo_push_messages(messages, *, client=None):
+        captured_messages.extend(messages)
+        return [{"status": "ok", "id": "ticket-nyc"}]
+
+    monkeypatch.setattr(notifications_service, "compute_reminder_schedule", fake_compute_reminder_schedule)
+    monkeypatch.setattr(notifications_service, "send_expo_push_messages", fake_send_expo_push_messages)
+
+    dispatch_at = datetime(2026, 4, 11, 11, 25, tzinfo=timezone.utc)
+    summary = asyncio.run(
+        notifications_service.dispatch_due_reminders_batch(dispatch_at=dispatch_at, lookback_minutes=5)
+    )
+
+    assert summary["users_notified"] == 1
+    assert len(captured_messages) == 1
+    assert captured_messages[0]["data"]["windows"] == ["morning_with_food"]
+
+
+def test_dispatch_due_reminders_batch_skips_quiet_hours(client, monkeypatch):
+    headers = signup(client)
+    update_me_response = client.patch(
+        "/api/v1/auth/me",
+        headers=headers,
+        json={"timezone": "America/New_York"},
+    )
+    assert update_me_response.status_code == 200
+
+    prefs_response = client.put(
+        "/api/v1/users/me/notifications/preferences",
+        headers=headers,
+        json={"quiet_start": "22:00", "quiet_end": "08:00"},
+    )
+    assert prefs_response.status_code == 200
+
+    register_response = client.post(
+        "/api/v1/users/me/notifications/push-tokens",
+        headers=headers,
+        json={"token": "ExponentPushToken[quiet-hours]", "platform": "ios"},
+    )
+    assert register_response.status_code == 201
+
+    captured_messages = []
+
+    async def fake_compute_reminder_schedule(session, user, target_date):
+        return {
+            "date": target_date.isoformat(),
+            "reminders": [
+                {
+                    "window": "morning_with_food",
+                    "scheduled_time": "07:30",
+                    "items_count": 1,
+                    "item_names": ["Fish Oil"],
+                }
+            ],
+            "quiet_start": "22:00",
+            "quiet_end": "08:00",
+        }
+
+    async def fake_send_expo_push_messages(messages, *, client=None):
+        captured_messages.extend(messages)
+        return [{"status": "ok", "id": "ticket-quiet"}]
+
+    monkeypatch.setattr(notifications_service, "compute_reminder_schedule", fake_compute_reminder_schedule)
+    monkeypatch.setattr(notifications_service, "send_expo_push_messages", fake_send_expo_push_messages)
+
+    dispatch_at = datetime(2026, 4, 11, 11, 25, tzinfo=timezone.utc)
+    summary = asyncio.run(
+        notifications_service.dispatch_due_reminders_batch(dispatch_at=dispatch_at, lookback_minutes=5)
+    )
+
+    assert summary["users_notified"] == 0
+    assert summary["windows_delivered"] == 0
+    assert captured_messages == []

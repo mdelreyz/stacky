@@ -4,7 +4,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-
 InteractionModeType = Literal["expert", "advanced", "automated", "guided"]
 HealthGoalType = Literal[
     "longevity", "cognitive", "sleep", "stress", "energy", "immunity",
@@ -134,6 +133,15 @@ class InteractionCheckResponse(BaseModel):
     has_critical: bool
     has_major: bool
     total_warnings: int
+
+
+class InteractionPreviewItem(BaseModel):
+    catalog_id: uuid.UUID
+    item_type: Literal["supplement", "medication", "therapy", "peptide"]
+
+
+class InteractionPreviewRequest(BaseModel):
+    items: list[InteractionPreviewItem] = Field(..., min_length=1, max_length=10)
 
 
 # ── Stack Score ─────────────────────────────────────────────────────

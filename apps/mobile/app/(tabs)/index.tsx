@@ -10,7 +10,7 @@ import { useFocusEffect } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { cached, enqueueWrite, invalidateCache } from "@/lib/cache";
-import { dailyPlan as dailyPlanApi } from "@/lib/api";
+import { APIError, dailyPlan as dailyPlanApi } from "@/lib/api";
 import { CycleAlertsCard } from "@/components/today/CycleAlertsCard";
 import { DailyPlanWindowCard } from "@/components/today/DailyPlanWindowCard";
 import { EmptyDayCard } from "@/components/today/EmptyDayCard";
@@ -67,7 +67,9 @@ export default function TodayScreen() {
         }
       }
     } catch (error) {
-      showError("Failed to load daily plan");
+      if (!(error instanceof APIError && (error.status === 401 || error.status === 403))) {
+        showError("Failed to load daily plan");
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);

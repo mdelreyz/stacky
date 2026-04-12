@@ -37,6 +37,34 @@ class DigestExercise(BaseModel):
     total_volume: float
 
 
+class DigestMetricDelta(BaseModel):
+    current: int | float | None = None
+    previous: int | float | None = None
+    delta: int | float | None = None
+
+
+class WeeklyDigestComparison(BaseModel):
+    previous_week_start: date
+    previous_week_end: date
+    adherence_completion_rate: DigestMetricDelta
+    journal_entry_count: DigestMetricDelta
+    journal_avg_energy: DigestMetricDelta
+    exercise_session_count: DigestMetricDelta
+    exercise_total_volume: DigestMetricDelta
+
+
+class MonthlyDigestComparison(BaseModel):
+    current_month_start: date
+    current_month_end: date
+    previous_month_start: date
+    previous_month_end: date
+    adherence_completion_rate: DigestMetricDelta
+    journal_entry_count: DigestMetricDelta
+    journal_avg_energy: DigestMetricDelta
+    exercise_session_count: DigestMetricDelta
+    exercise_total_volume: DigestMetricDelta
+
+
 class WeeklyDigestResponse(BaseModel):
     week_start: date
     week_end: date
@@ -44,3 +72,5 @@ class WeeklyDigestResponse(BaseModel):
     journal: DigestJournal
     exercise: DigestExercise
     highlights: list[str]
+    comparison: WeeklyDigestComparison
+    monthly_comparison: MonthlyDigestComparison

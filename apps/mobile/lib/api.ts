@@ -1,6 +1,6 @@
 export { auth } from "./api/auth";
 export { dailyPlan } from "./api/daily-plan";
-export { APIError, getToken, setToken } from "./api/core";
+export { APIError, getToken, setToken, setUnauthorizedHandler } from "./api/core";
 export { medications } from "./api/medications";
 export { nutrition } from "./api/nutrition";
 export { protocols } from "./api/protocols";
@@ -33,6 +33,7 @@ export type {
   DailyPlanItem,
   Frequency,
   InteractionCheckResponse,
+  InteractionPreviewItem,
   InteractionWarning,
   MacroLevel,
   MedicationAIProfile,
@@ -44,6 +45,7 @@ export type {
   InteractionMode,
   StackScoreResponse,
   RecommendationResponse,
+  RecommendationItemType,
   RecommendedItem,
   UserPreferences,
   UserPreferencesUpdate,

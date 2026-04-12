@@ -30,6 +30,34 @@ export interface DigestExercise {
   total_volume: number;
 }
 
+export interface DigestMetricDelta {
+  current: number | null;
+  previous: number | null;
+  delta: number | null;
+}
+
+export interface WeeklyDigestComparison {
+  previous_week_start: string;
+  previous_week_end: string;
+  adherence_completion_rate: DigestMetricDelta;
+  journal_entry_count: DigestMetricDelta;
+  journal_avg_energy: DigestMetricDelta;
+  exercise_session_count: DigestMetricDelta;
+  exercise_total_volume: DigestMetricDelta;
+}
+
+export interface MonthlyDigestComparison {
+  current_month_start: string;
+  current_month_end: string;
+  previous_month_start: string;
+  previous_month_end: string;
+  adherence_completion_rate: DigestMetricDelta;
+  journal_entry_count: DigestMetricDelta;
+  journal_avg_energy: DigestMetricDelta;
+  exercise_session_count: DigestMetricDelta;
+  exercise_total_volume: DigestMetricDelta;
+}
+
 export interface WeeklyDigest {
   week_start: string;
   week_end: string;
@@ -37,4 +65,6 @@ export interface WeeklyDigest {
   journal: DigestJournal;
   exercise: DigestExercise;
   highlights: string[];
+  comparison: WeeklyDigestComparison;
+  monthly_comparison: MonthlyDigestComparison;
 }

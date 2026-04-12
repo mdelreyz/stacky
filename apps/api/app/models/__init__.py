@@ -1,15 +1,16 @@
 from app.models.adherence import AdherenceLog
-from app.models.health_journal import HealthJournalEntry
 from app.models.enums import Frequency, TakeWindow
 from app.models.exercise import Exercise
-from app.models.notification_preferences import NotificationPreferences, PushToken
-from app.models.protocol_template import ProtocolTemplate
 from app.models.exercise_regime import ExerciseRegime, ExerciseRegimeEntry
 from app.models.gym_location import GymLocation
+from app.models.health_journal import HealthJournalEntry
 from app.models.medication import Medication
+from app.models.notification_delivery import NotificationDelivery
+from app.models.notification_preferences import NotificationPreferences, PushToken
 from app.models.nutrition_cycle import NutritionCycle
 from app.models.peptide import Peptide
 from app.models.protocol import Protocol, ProtocolItem
+from app.models.protocol_template import ProtocolTemplate
 from app.models.revoked_token import RevokedToken
 from app.models.supplement import Supplement
 from app.models.therapy import Therapy
@@ -49,6 +50,7 @@ __all__ = [
     "WorkoutSessionExercise",
     "WorkoutSet",
     "GymLocation",
+    "NotificationDelivery",
     "NotificationPreferences",
     "PushToken",
     "ProtocolTemplate",

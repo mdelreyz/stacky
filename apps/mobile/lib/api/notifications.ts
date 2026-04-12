@@ -1,4 +1,5 @@
 import type {
+  NotificationDelivery,
   NotificationPreferences,
   NotificationPreferencesUpdate,
   PushToken,
@@ -35,5 +36,12 @@ export const notifications = {
   getReminderSchedule: (date?: string) => {
     const params = date ? `?target_date=${date}` : "";
     return request<ReminderSchedule>(`/api/v1/users/me/notifications/reminders${params}`);
+  },
+
+  sendTestPush: (date?: string) => {
+    const params = date ? `?target_date=${date}` : "";
+    return request<NotificationDelivery>(`/api/v1/users/me/notifications/test-push${params}`, {
+      method: "POST",
+    });
   },
 };

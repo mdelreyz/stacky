@@ -1,18 +1,18 @@
 # Protocols — Refactoring Plan
 
-> **Last scan: 2026-04-11** | **Updated: 2026-04-11** | Codebase: ~44,700 lines | 126 tests passing
+> **Last scan: 2026-04-12** | **Updated: 2026-04-12** | Codebase: ~195,700 lines | Verification: targeted backend pytest + mobile typecheck green
 > This is a living document. Run `/refactor` to refresh.
 
 ## Health Summary
 
 | Dimension | Status | Findings |
 |-----------|--------|----------|
-| File Size & Structure | :warning: | 3 files need splitting (500+ lines), 10 in watch zone |
+| File Size & Structure | :warning: | No oversized mobile routes remain. Remaining split-soon files are `packages/api-client/src/client.ts` and `apps/api/app/services/notifications.py`; several 445-517 line backend/mobile files remain in watch zone. |
 | Dead Code | :white_check_mark: | ~~Broken migration~~ Fixed. Orphaned api-client (intentionally kept). ~~8 unused imports~~ Fixed. |
 | Duplication | :white_check_mark: | ~~4 near-identical user item routes~~ Fixed. ~~Near-duplicate medication/therapy/peptide detail screens~~ Fixed. |
 | Security | :white_check_mark: | ~~IDOR~~ Fixed. ~~No rate limiting~~ Fixed (slowapi on auth). ~~bcrypt DoS~~ Fixed (max_length). JWT default has prod guard. Revocation fallback is now durable when Redis is down. |
 | Documentation | :white_check_mark: | ~~CLAUDE.md stale~~ Updated. |
-| UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. ~~Muscle chart hex~~ Fixed. Premium glass UI system now spans the full product surface; remaining non-ambient files are shell/framework routes rather than user-facing UI debt. |
+| UI & Design | :white_check_mark: | ~~91 hardcoded hex colors~~ Fixed. ~~302 unlabeled Pressables~~ Fixed. ~~Muscle chart hex~~ Fixed. Premium glass UI system now spans the full product surface, and all mobile routes are back under the 500-line split threshold. |
 | Robustness | :white_check_mark: | ~~IDOR~~ Fixed. ~~Non-atomic batch adherence~~ Fixed. ~~Wrong entity labels~~ Fixed. ~~Weather silent exception~~ Fixed. |
 | Pipeline & Cache | :white_check_mark: | ~~Celery result_expires~~ Fixed (1h TTL). ~~In-memory status cache unbounded~~ Fixed (TTL pruning + 1024-entry cap). |
 | Undefined Names | :white_check_mark: | ~~26 undefined names~~ Fixed. |
@@ -110,17 +110,20 @@
 | `scripts/seed.py` | 1259 | Data-exempt | No action |
 | `scripts/seed_exercise_catalog.py` | 828 | Data-exempt | No action |
 | `packages/api-client/src/client.ts` | 813 | Split soon | God object (35 methods). Deprecate or split |
-| `app/workout-routine/create.tsx` | 587 | Split soon | Extract routine exercise picker and summary sections |
-| `app/(tabs)/protocols.tsx` | 560 | Split soon | Extract tab sections to reduce orchestration density |
+| `apps/api/app/services/notifications.py` | 609 | Split soon | Extract delivery orchestration and provider/recording helpers |
+| `apps/api/app/routes/user_preferences.py` | 517 | Watch | Recommendation apply workflow is extracted; monitor remaining route breadth |
 | `app/profile/preferences.tsx` | 472 | Watch | NumberField extracted; consolidate remaining form state later |
+| `app/tracking.tsx` | 470 | Watch | Split summary and history sections if the feature surface grows again |
+| `app/peptide/add.tsx` | 467 | Watch | Mirror the smaller create-flow extraction pattern used elsewhere if it expands |
+| `apps/api/app/services/guided_wizard_fallback.py` | 463 | Watch | Heuristic fallback flow is isolated now; monitor before splitting further |
 | `routes/adherence.py` | 453 | Watch | Extract commit logic to service |
-| `routes/protocols.py` | 445 | Watch | Extract protocol item assembly/validation helpers |
+| `app/therapy/add.tsx` | 450 | Watch | Create-flow is under threshold but still worth monitoring for new duplication |
+| `app/protocol-templates.tsx` | 447 | Watch | Extract filter/result sections if more template actions land |
 | `components/nutrition/NutritionPlanForm.tsx` | 445 | Watch | Remove duplicate OptionGrid; extract MacroSelector |
-| `services/guided_wizard_fallback.py` | 438 | Watch | Heuristic fallback flow is isolated now; monitor before splitting further |
+| `apps/api/app/routes/protocols.py` | 445 | Watch | Extract protocol item assembly/validation helpers |
 | `services/daily_plan.py` | 428 | Watch | Extract _item_to_plan_entry helper |
 | `app/exercise/stats.tsx` | 425 | Watch | Extract chart and summary card sections |
 | `services/recommendation_engine.py` | 424 | Watch | Separate catalog normalization from ranking logic |
-| `routes/user_preferences.py` | 409 | Watch | Recommendation apply workflow extracted; monitor remaining route breadth |
 | `app/recommendations.tsx` | 404 | Watch | RecommendationCard extracted; monitor remaining screen orchestration |
 
 ---
@@ -151,3 +154,5 @@
 | 2026-04-11 | Exercise tab refactor: split `app/(tabs)/exercise.tsx` into `components/exercise/ExerciseHero.tsx`, `ExerciseRoutinesSection.tsx`, `ExerciseRecentSessionsSection.tsx`, and `ExerciseNavLinksSection.tsx`, bringing the main tab file under 300 lines. Verified with `npx tsc -p apps/mobile/tsconfig.json --noEmit`. |
 | 2026-04-11 | Size scan refresh: after the AI onboarding and Exercise splits, the true split-soon list shifted to `client.ts`, `guided_wizard.py`, `workout-routine/create.tsx`, and `(tabs)/protocols.tsx`. The catalog modality migration in M-25 remains the main non-structural backlog item. |
 | 2026-04-11 | Guided wizard refactor: split `services/guided_wizard.py` into `guided_wizard_prompting.py`, `guided_wizard_fallback.py`, and `guided_wizard_types.py`, reducing the public orchestration file to 103 lines while preserving the existing route contract and fallback behavior. Verified with `./apps/api/.venv/bin/pytest apps/api/tests/test_wizard.py` (7 passed). |
+| 2026-04-12 | Protocol completion + refactor pass: added cross-pillar Protocols search, month-to-date digest comparison, and global unauthorized-session handling for expired mobile auth. Verified with `pytest tests/test_tracking.py tests/test_weekly_digest.py` (16 passed) and `npx tsc --noEmit -p apps/mobile/tsconfig.json`. |
+| 2026-04-12 | Mobile hotspot cleanup: split `app/(tabs)/protocols.tsx`, `app/onboarding.tsx`, `app/supplement/add.tsx`, `app/weekly-digest.tsx`, `app/profile/notifications.tsx`, `app/health-journal.tsx`, and `app/workout-routine/create.tsx` into focused hooks, styles, and section components. Largest mobile route is now `app/profile/preferences.tsx` at 472 lines; no 500+ mobile routes remain. |

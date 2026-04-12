@@ -6,6 +6,7 @@ import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
+import { InteractionPreviewCard } from "@/components/InteractionPreviewCard";
 import { PeptideScheduleForm, type PeptideScheduleState } from "@/components/PeptideScheduleForm";
 import { peptides as peptidesApi, userPeptides as userPeptidesApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
@@ -122,6 +123,7 @@ export default function SchedulePeptideScreen() {
       <AmbientBackdrop canvasStyle={styles.backdrop} />
       <FadeInView>
         <FlowScreenHeader title="Start Taking" subtitle={peptide.name} />
+        <InteractionPreviewCard catalogId={peptide.id} itemType="peptide" />
 
         <PeptideScheduleForm
           state={formState}

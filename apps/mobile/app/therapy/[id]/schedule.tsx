@@ -6,6 +6,7 @@ import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
+import { InteractionPreviewCard } from "@/components/InteractionPreviewCard";
 import { TherapyScheduleForm, type TherapyScheduleState } from "@/components/TherapyScheduleForm";
 import { therapies as therapiesApi, userTherapies as userTherapiesApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
@@ -137,6 +138,7 @@ export default function ScheduleTherapyScreen() {
       <AmbientBackdrop canvasStyle={styles.backdrop} />
       <FadeInView>
         <FlowScreenHeader title="Start Protocol" subtitle={therapy.name} />
+        <InteractionPreviewCard catalogId={therapy.id} itemType="therapy" />
 
         <TherapyScheduleForm
           state={formState}

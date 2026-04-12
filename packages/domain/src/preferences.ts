@@ -101,6 +101,11 @@ export interface InteractionCheckResponse {
   total_warnings: number;
 }
 
+export interface InteractionPreviewItem {
+  catalog_id: string;
+  item_type: RecommendationItemType;
+}
+
 // ── Stack Score ─────────────────────────────────────────────────────
 
 export interface ScoreDimension {

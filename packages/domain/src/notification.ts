@@ -55,3 +55,14 @@ export interface ReminderSchedule {
   quiet_start: string | null;
   quiet_end: string | null;
 }
+
+export interface NotificationDelivery {
+  status: "sent" | "skipped";
+  target_date: string;
+  reminder_count: number;
+  active_tokens: number;
+  sent_count: number;
+  title: string | null;
+  body: string | null;
+  message: string;
+}

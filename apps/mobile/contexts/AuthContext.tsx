@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { auth as authApi, setToken } from "@/lib/api";
+import { auth as authApi, setToken, setUnauthorizedHandler } from "@/lib/api";
 import { clearAllCache, clearWriteQueue } from "@/lib/cache";
 import { registerPushToken, deregisterPushToken } from "@/lib/push-notifications";
 import { loadToken, saveToken, clearToken } from "@/lib/token-store";
@@ -34,6 +34,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const clearSessionState = useCallback(async () => {
+    setToken(null);
+    setUser(null);
+    await clearToken();
+    await clearAllCache();
+    await clearWriteQueue();
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => clearSessionState());
+    return () => {
+      setUnauthorizedHandler(null);
+    };
+  }, [clearSessionState]);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -49,8 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
         } catch {
           // Token expired or invalid — clear it
-          setToken(null);
-          await clearToken();
+          await clearSessionState();
         }
       })
       .finally(() => {
@@ -88,12 +102,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = useCallback(async () => {
     await deregisterPushToken().catch(() => {});
-    setToken(null);
-    setUser(null);
-    await clearToken();
-    await clearAllCache();
-    await clearWriteQueue();
-  }, []);
+    await clearSessionState();
+  }, [clearSessionState]);
 
   const refreshProfile = useCallback(async () => {
     const nextUser = await authApi.me();

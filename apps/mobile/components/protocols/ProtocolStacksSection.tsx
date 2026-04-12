@@ -1,36 +1,57 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { Link } from "expo-router";
+import { Link, type Href } from "expo-router";
 
 import { colors } from "@/constants/Colors";
 import { ProtocolsSectionHeader } from "./ProtocolsSectionHeader";
 import type { Protocol } from "@/lib/api";
 
-export function ProtocolStacksSection({ stacks }: { stacks: Protocol[] }) {
+function getProtocolItemNames(stack: Protocol) {
+  return stack.items
+    .map(
+      (item) =>
+        item.user_supplement?.supplement.name ??
+        item.user_medication?.medication.name ??
+        item.user_therapy?.therapy.name ??
+        item.user_peptide?.peptide.name
+    )
+    .filter((name): name is string => Boolean(name));
+}
+
+export function ProtocolStacksSection({
+  stacks,
+  title,
+  actionHref,
+  actionLabel,
+  emptyTitle = "No stacks yet",
+  emptyHint = "Bundle active supplements and modalities into named routines like Morning Stack or Recovery Block.",
+}: {
+  stacks: Protocol[];
+  title?: string;
+  actionHref?: Href;
+  actionLabel?: string;
+  emptyTitle?: string;
+  emptyHint?: string;
+}) {
   return (
     <>
-      <ProtocolsSectionHeader title={`Stacks (${stacks.length})`} actionHref="/protocol/add" actionLabel="New Stack" />
+      <ProtocolsSectionHeader
+        title={title ?? `Stacks (${stacks.length})`}
+        actionHref={actionHref}
+        actionLabel={actionLabel}
+      />
 
       {stacks.length === 0 ? (
         <View style={styles.emptyCard}>
           <View style={styles.emptyIconWrap}>
             <FontAwesome name="cubes" size={24} color={colors.primaryDark} />
           </View>
-          <Text style={styles.emptyText}>No stacks yet</Text>
-          <Text style={styles.emptyHint}>
-            Bundle active supplements and modalities into named routines like Morning Stack or Recovery Block.
-          </Text>
+          <Text style={styles.emptyText}>{emptyTitle}</Text>
+          <Text style={styles.emptyHint}>{emptyHint}</Text>
         </View>
       ) : (
         stacks.map((stack) => {
-          const names = stack.items
-            .map(
-              (item) =>
-                item.user_supplement?.supplement.name ??
-                item.user_medication?.medication.name ??
-                item.user_therapy?.therapy.name
-            )
-            .filter((name): name is string => Boolean(name));
+          const names = getProtocolItemNames(stack);
 
           return (
             <Link key={stack.id} href={`/protocol/${stack.id}`} asChild>

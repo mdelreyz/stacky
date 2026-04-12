@@ -2,6 +2,7 @@ import type {
   RecommendationResponse,
   ApplyRecommendationsResponse,
   InteractionCheckResponse,
+  InteractionPreviewItem,
   StackScoreResponse,
   UserPreferences,
   UserPreferencesUpdate,
@@ -54,6 +55,12 @@ export const preferences = {
 
   checkInteractions: () =>
     request<InteractionCheckResponse>("/api/v1/users/me/preferences/interactions"),
+
+  previewInteractions: (items: InteractionPreviewItem[]) =>
+    request<InteractionCheckResponse>("/api/v1/users/me/preferences/interactions/preview", {
+      method: "POST",
+      body: JSON.stringify({ items }),
+    }),
 
   getStackScore: () =>
     request<StackScoreResponse>("/api/v1/users/me/preferences/stack-score"),

@@ -46,6 +46,12 @@ class Settings(BaseSettings):
     weather_api_base_url: str = "https://api.open-meteo.com/v1/forecast"
     weather_request_timeout_seconds: float = 5.0
 
+    # Expo push notifications
+    expo_push_api_url: str = "https://exp.host/--/api/v2/push/send"
+    expo_push_access_token: str = ""
+    expo_push_timeout_seconds: float = 5.0
+    notification_dispatch_lookback_minutes: int = 5
+
     # Server
     host: str = "0.0.0.0"
     port: int = 8000

@@ -1,5 +1,6 @@
 from datetime import date
 
+import httpx
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -9,6 +10,7 @@ from app.database import get_session
 from app.models.notification_preferences import PushToken
 from app.models.user import User
 from app.schemas.notification import (
+    NotificationDeliveryResponse,
     NotificationPreferencesResponse,
     NotificationPreferencesUpdate,
     PushTokenCreate,
@@ -20,6 +22,7 @@ from app.services.notifications import (
     deactivate_push_token,
     get_or_create_notification_preferences,
     register_push_token,
+    send_test_push_notification,
     update_notification_preferences,
 )
 
@@ -106,3 +109,20 @@ async def get_reminder_schedule(
         target_date = date.today()
     schedule = await compute_reminder_schedule(session, current_user, target_date)
     return ReminderScheduleResponse(**schedule)
+
+
+@router.post("/test-push", response_model=NotificationDeliveryResponse)
+async def send_notification_test_push(
+    target_date: date | None = None,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(get_current_user),
+):
+    if target_date is None:
+        target_date = date.today()
+
+    try:
+        result = await send_test_push_notification(session, current_user, target_date)
+    except (httpx.HTTPError, RuntimeError) as exc:
+        raise HTTPException(status_code=502, detail="Failed to send push notification via Expo") from exc
+
+    return NotificationDeliveryResponse(**result)

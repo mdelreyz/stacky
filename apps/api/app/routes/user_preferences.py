@@ -18,10 +18,10 @@ from app.models.user_preferences import UserPreferences
 from app.models.user_supplement import UserSupplement
 from app.models.user_therapy import UserTherapy
 from app.schemas.user_preferences import (
-    AppliedItem,
     ApplyRecommendationsRequest,
     ApplyRecommendationsResponse,
     InteractionCheckResponse,
+    InteractionPreviewRequest,
     InteractionWarning,
     RecommendationRequest,
     RecommendationResponse,
@@ -37,21 +37,21 @@ from app.schemas.user_preferences import (
     WizardResponse,
     WizardTurnSchema,
 )
+from app.services.guided_wizard import WizardTurn, run_wizard_turn
 from app.services.interaction_checker import (
     build_item_dicts_for_checking,
     check_interactions,
 )
-from app.services.guided_wizard import WizardTurn, run_wizard_turn
 from app.services.recommendation_application import apply_recommendations_to_user
-from app.services.stack_score import compute_stack_score
 from app.services.recommendation_engine import (
     CatalogSnapshot,
-    generate_recommendations,
-    _supplement_to_dict,
     _medication_to_dict,
-    _therapy_to_dict,
     _peptide_to_dict,
+    _supplement_to_dict,
+    _therapy_to_dict,
+    generate_recommendations,
 )
+from app.services.stack_score import compute_stack_score
 
 router = APIRouter(prefix="/users/me/preferences", tags=["preferences"])
 
@@ -191,6 +191,92 @@ async def _current_user_item_names_and_ids(
     return names, ids
 
 
+async def _load_active_interaction_items(
+    session: AsyncSession,
+    user_id: uuid.UUID,
+    *,
+    include_therapies: bool = False,
+) -> tuple[list[UserSupplement], list[UserMedication], list[UserTherapy], list[UserPeptide]]:
+    supplements_result = await session.execute(
+        select(UserSupplement)
+        .options(selectinload(UserSupplement.supplement))
+        .where(UserSupplement.user_id == user_id, UserSupplement.is_active.is_(True))
+    )
+    medications_result = await session.execute(
+        select(UserMedication)
+        .options(selectinload(UserMedication.medication))
+        .where(UserMedication.user_id == user_id, UserMedication.is_active.is_(True))
+    )
+    therapies_result = await session.execute(
+        select(UserTherapy)
+        .options(selectinload(UserTherapy.therapy))
+        .where(UserTherapy.user_id == user_id, UserTherapy.is_active.is_(True))
+    ) if include_therapies else None
+    peptides_result = await session.execute(
+        select(UserPeptide)
+        .options(selectinload(UserPeptide.peptide))
+        .where(UserPeptide.user_id == user_id, UserPeptide.is_active.is_(True))
+    )
+
+    return (
+        list(supplements_result.scalars().all()),
+        list(medications_result.scalars().all()),
+        list(therapies_result.scalars().all()) if therapies_result is not None else [],
+        list(peptides_result.scalars().all()),
+    )
+
+
+async def _load_preview_catalog_items_or_404(
+    session: AsyncSession,
+    items: list,
+) -> tuple[list[Supplement], list[Medication], list[Therapy], list[Peptide]]:
+    preview_supplements: list[Supplement] = []
+    preview_medications: list[Medication] = []
+    preview_therapies: list[Therapy] = []
+    preview_peptides: list[Peptide] = []
+
+    model_by_type = {
+        "supplement": Supplement,
+        "medication": Medication,
+        "therapy": Therapy,
+        "peptide": Peptide,
+    }
+    bucket_by_type = {
+        "supplement": preview_supplements,
+        "medication": preview_medications,
+        "therapy": preview_therapies,
+        "peptide": preview_peptides,
+    }
+
+    for item in items:
+        model = model_by_type[item.item_type]
+        result = await session.execute(select(model).where(model.id == item.catalog_id))
+        catalog_item = result.scalar_one_or_none()
+        if catalog_item is None:
+            raise HTTPException(status_code=404, detail=f"{item.item_type.title()} not found")
+        bucket_by_type[item.item_type].append(catalog_item)
+
+    return preview_supplements, preview_medications, preview_therapies, preview_peptides
+
+
+def _interaction_response(interactions: list) -> InteractionCheckResponse:
+    return InteractionCheckResponse(
+        warnings=[
+            InteractionWarning(
+                item_a=i.item_a,
+                item_b=i.item_b,
+                interaction_type=i.interaction_type,
+                severity=i.severity,
+                description=i.description,
+            )
+            for i in interactions
+        ],
+        has_critical=any(i.severity == "critical" for i in interactions),
+        has_major=any(i.severity == "major" for i in interactions),
+        total_warnings=len(interactions),
+    )
+
+
 @router.post("/recommendations", response_model=RecommendationResponse)
 async def get_recommendations(
     data: RecommendationRequest,
@@ -258,50 +344,57 @@ async def check_user_interactions(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_session),
 ):
-    supplements_result = await session.execute(
-        select(UserSupplement)
-        .options(selectinload(UserSupplement.supplement))
-        .where(UserSupplement.user_id == current_user.id, UserSupplement.is_active.is_(True))
+    user_supplements, user_medications, user_therapies, user_peptides = await _load_active_interaction_items(
+        session,
+        current_user.id,
+        include_therapies=True,
     )
-    user_supplements = list(supplements_result.scalars().all())
-
-    medications_result = await session.execute(
-        select(UserMedication)
-        .options(selectinload(UserMedication.medication))
-        .where(UserMedication.user_id == current_user.id, UserMedication.is_active.is_(True))
-    )
-    user_medications = list(medications_result.scalars().all())
-
-    peptides_result = await session.execute(
-        select(UserPeptide)
-        .options(selectinload(UserPeptide.peptide))
-        .where(UserPeptide.user_id == current_user.id, UserPeptide.is_active.is_(True))
-    )
-    user_peptides = list(peptides_result.scalars().all())
 
     item_dicts = build_item_dicts_for_checking(
         supplements=user_supplements,
         medications=user_medications,
+        therapies=user_therapies,
         peptides=user_peptides,
     )
 
     interactions = check_interactions(item_dicts)
+    return _interaction_response(interactions)
 
-    return InteractionCheckResponse(
-        warnings=[
-            InteractionWarning(
-                item_a=i.item_a,
-                item_b=i.item_b,
-                interaction_type=i.interaction_type,
-                severity=i.severity,
-                description=i.description,
-            )
-            for i in interactions
-        ],
-        has_critical=any(i.severity == "critical" for i in interactions),
-        has_major=any(i.severity == "major" for i in interactions),
-        total_warnings=len(interactions),
+
+@router.post("/interactions/preview", response_model=InteractionCheckResponse)
+async def preview_item_interactions(
+    data: InteractionPreviewRequest,
+    current_user: User = Depends(get_current_user),
+    session: AsyncSession = Depends(get_session),
+):
+    user_supplements, user_medications, user_therapies, user_peptides = await _load_active_interaction_items(
+        session,
+        current_user.id,
+        include_therapies=True,
     )
+    preview_supplements, preview_medications, preview_therapies, preview_peptides = await _load_preview_catalog_items_or_404(
+        session,
+        data.items,
+    )
+
+    preview_names = {
+        item.name
+        for item in [*preview_supplements, *preview_medications, *preview_therapies, *preview_peptides]
+    }
+
+    item_dicts = build_item_dicts_for_checking(
+        supplements=[*user_supplements, *preview_supplements],
+        medications=[*user_medications, *preview_medications],
+        therapies=[*user_therapies, *preview_therapies],
+        peptides=[*user_peptides, *preview_peptides],
+    )
+
+    interactions = [
+        interaction
+        for interaction in check_interactions(item_dicts)
+        if interaction.item_a in preview_names or interaction.item_b in preview_names
+    ]
+    return _interaction_response(interactions)
 
 
 @router.get("/stack-score", response_model=StackScoreResponse)

@@ -98,6 +98,7 @@ def build_item_dicts_for_checking(
     *,
     supplements: list | None = None,
     medications: list | None = None,
+    therapies: list | None = None,
     peptides: list | None = None,
 ) -> list[dict]:
     """Convert ORM objects into dicts suitable for check_interactions()."""
@@ -119,6 +120,20 @@ def build_item_dicts_for_checking(
 
     for m in (medications or []):
         catalog = m.medication if hasattr(m, "medication") else m
+        profile = getattr(catalog, "ai_profile", None)
+        common_names = []
+        if profile and isinstance(profile, dict):
+            common_names = profile.get("common_names", [])
+        items.append({
+            "name": catalog.name,
+            "ai_profile": profile,
+            "common_names": common_names,
+            "category": getattr(catalog, "category", None),
+            "goals": getattr(catalog, "goals", None) or [],
+        })
+
+    for t in (therapies or []):
+        catalog = t.therapy if hasattr(t, "therapy") else t
         profile = getattr(catalog, "ai_profile", None)
         common_names = []
         if profile and isinstance(profile, dict):

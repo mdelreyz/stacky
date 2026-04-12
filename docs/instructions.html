@@ -397,7 +397,7 @@
     </div>
     <h1>Protocols</h1>
     <p class="tagline">Your personal health protocol management system</p>
-    <span class="version">User Guide &middot; v2.1</span>
+    <span class="version">User Guide &middot; v2.6</span>
   </div>
 </div>
 
@@ -408,7 +408,7 @@
   <p class="section-intro">Protocols helps you organize, schedule, and track your entire health stack &mdash; supplements, medications, therapies, peptides, nutrition, and exercise &mdash; in one place.</p>
 
   <div class="glass">
-    <h3>Create Your Account</h3>
+    <h3>Create Your Account &amp; Onboard</h3>
     <div class="flow">
       <div class="flow-step">
         <div class="flow-step-num">1</div>
@@ -418,14 +418,20 @@
       <div class="flow-arrow">&rarr;</div>
       <div class="flow-step">
         <div class="flow-step-num">2</div>
-        <h4>Set Location</h4>
-        <p>Add your city for UV-based sunscreen guidance.</p>
+        <h4>Welcome</h4>
+        <p>Get a quick overview of the app and decide whether to continue or skip for now.</p>
       </div>
       <div class="flow-arrow">&rarr;</div>
       <div class="flow-step">
         <div class="flow-step-num">3</div>
-        <h4>Build Stack</h4>
-        <p>Browse the catalog, use AI recommendations, or run the guided wizard.</p>
+        <h4>Goals &amp; Constraints</h4>
+        <p>Select up to 5 health goals, choose an interaction mode, and set quick preferences like supplement limits.</p>
+      </div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-step">
+        <div class="flow-step-num">4</div>
+        <h4>Choose Your Path</h4>
+        <p>Jump into the AI Wizard, browse the catalog, start from the Protocol Library, or go straight to the home screen.</p>
       </div>
     </div>
   </div>
@@ -459,7 +465,7 @@
       <div class="feature-card">
         <div class="feature-icon orange">&#128100;</div>
         <h4>Profile</h4>
-        <p>Your account, preferences, AI settings, and gym locations.</p>
+        <p>Your account, preferences, notifications, exports, and security controls.</p>
       </div>
     </div>
   </div>
@@ -541,14 +547,14 @@
     <h3>Smart Cards on Today</h3>
     <div class="feature-row">
       <div class="feature-card">
-        <div class="feature-icon teal">&#9888;&#65039;</div>
-        <h4>Interaction Warnings</h4>
-        <p>Flags supplement and medication interactions based on AI profiles with severity levels.</p>
+        <div class="feature-icon info">&#128197;</div>
+        <h4>Weekly Digest</h4>
+        <p>Your current week's adherence trend, workouts, mood averages, top highlight, comparison against the previous week, and a month-to-date view versus the previous month.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon pink">&#9728;&#65039;</div>
-        <h4>Skincare Guidance</h4>
-        <p>UV index and sunscreen reminders based on your saved location.</p>
+        <div class="feature-icon orange">&#127919;</div>
+        <h4>Goal Progress</h4>
+        <p>7-day adherence by goal so you can see which objectives your current stack is supporting.</p>
       </div>
     </div>
     <div class="feature-row">
@@ -558,35 +564,52 @@
         <p>14-day adherence trend showing your consistency over time.</p>
       </div>
       <div class="feature-card">
+        <div class="feature-icon purple">&#128214;</div>
+        <h4>Journal</h4>
+        <p>Daily check-in prompt for energy, mood, sleep, stress, symptoms, and notes.</p>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-card">
         <div class="feature-icon blue">&#128170;</div>
         <h4>Today's Workout</h4>
         <p>Your exercise regime's scheduled routine for the day with a quick-start button.</p>
       </div>
-    </div>
-    <div class="feature-row">
       <div class="feature-card">
-        <div class="feature-icon purple">&#128272;</div>
-        <h4>Safety Check</h4>
-        <p>AI-powered supplement safety analysis with evidence-based severity ratings.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon orange">&#127942;</div>
-        <h4>Stack Score</h4>
-        <p>A 0&ndash;100 score evaluating your overall protocol quality, synergies, and gaps.</p>
+        <div class="feature-icon green">&#127860;</div>
+        <h4>Nutrition Phase</h4>
+        <p>Your current cycle phase, days remaining, and macro target summary.</p>
       </div>
     </div>
     <div class="feature-row">
       <div class="feature-card">
-        <div class="feature-icon info">&#128260;</div>
-        <h4>Skip with Reason</h4>
-        <p>Log why you skipped an item &mdash; ran out, forgot, felt unwell, traveling, or add your own reason.</p>
+        <div class="feature-icon teal">&#128276;</div>
+        <h4>Cycle Alerts</h4>
+        <p>Heads-up when a nutrition phase or protocol cycle is about to change or end.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon green">&#9989;</div>
-        <h4>Batch Mark All</h4>
-        <p>One tap marks every pending item in a time window as taken. Speed through busy mornings.</p>
+        <div class="feature-icon pink">&#9728;&#65039;</div>
+        <h4>Skincare Guidance</h4>
+        <p>UV index and sunscreen reminders based on your saved location.</p>
       </div>
     </div>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon teal">&#9888;&#65039;</div>
+        <h4>Interaction Warnings</h4>
+        <p>Flags due-item interaction pairs with severity labels. Tap the card to open the full Safety Check screen.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon info">&#129517;</div>
+        <h4>Empty Day State</h4>
+        <p>If nothing is scheduled yet, Today gives you shortcuts to AI Wizard, Browse Catalog, Protocol Library, or Add Supplement.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout info">
+    <span class="callout-icon">&#9989;</span>
+    <span class="callout-text">Inside each time window, you can mark items done one by one, skip with a reason, or use <strong>Mark All</strong> to complete the whole window at once.</span>
   </div>
 </div>
 
@@ -595,6 +618,7 @@
   <div class="section-number">Section 03</div>
   <h2>Protocols &mdash; Your Health Stack</h2>
   <p class="section-intro">The Protocols tab is your command center for managing supplements, medications, therapies, peptides, and protocol stacks.</p>
+  <p style="font-size: 14px; color: var(--text-secondary); margin-bottom: 18px;">Use the global search box to search stacks, active items, catalogs, exercises, nutrition plans, workout routines, regimes, and the Protocol Library from one place.</p>
 
   <div class="glass">
     <h3>Six Pillars</h3>
@@ -662,7 +686,7 @@
       <div class="flow-step">
         <div class="flow-step-num">1</div>
         <h4>Browse</h4>
-        <p>Search the catalog or scroll categories on the Protocols tab.</p>
+        <p>Use the global search box or scroll the sections on the Protocols tab.</p>
       </div>
       <div class="flow-arrow">&rarr;</div>
       <div class="flow-step">
@@ -674,7 +698,7 @@
       <div class="flow-step">
         <div class="flow-step-num">3</div>
         <h4>Add &amp; Schedule</h4>
-        <p>Tap "Add to My Stack" and configure your personal dosage, frequency, and time window.</p>
+        <p>Tap "Add to My Stack" and configure your personal dosage, frequency, and time window. The schedule screen checks your current stack for known interaction conflicts before you save.</p>
       </div>
     </div>
   </div>
@@ -1038,25 +1062,42 @@
 <div class="page page-break">
   <div class="section-number">Section 10</div>
   <h2>Profile &amp; Settings</h2>
-  <p class="section-intro">Manage your account details, preferences, AI interaction mode, and gym locations.</p>
+  <p class="section-intro">Manage your account details, protocol preferences, reminders, exports, and security controls.</p>
 
   <div class="glass">
-    <h3>Your Profile</h3>
+    <h3>Your Profile Hub</h3>
     <div class="feature-row">
       <div class="feature-card">
-        <div class="feature-icon blue">&#128205;</div>
-        <h4>Location &amp; UV</h4>
-        <p>Save your location to receive UV index-based sunscreen guidance on the Today screen.</p>
+        <div class="feature-icon info">&#127919;</div>
+        <h4>Goals &amp; Preferences</h4>
+        <p>Set health goals, interaction mode, pill budgets, excluded ingredients, and AI context.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon orange">&#128276;</div>
         <h4>Notifications</h4>
-        <p>Configure reminders for supplement timing, therapy sessions, and cycle alerts.</p>
+        <p>Configure reminder windows, quiet hours, streak/refill/interaction alerts, and send a real test push.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-icon purple">&#128275;</div>
-        <h4>Account</h4>
-        <p>Update your name, email, and password. Sign out or manage your session.</p>
+        <div class="feature-icon green">&#128200;</div>
+        <h4>Progress &amp; Review</h4>
+        <p>Open Goal Progress, Adherence Stats, Weekly Digest, and Health Journal from one place.</p>
+      </div>
+    </div>
+    <div class="feature-row">
+      <div class="feature-card">
+        <div class="feature-icon blue">&#128229;</div>
+        <h4>Data Management</h4>
+        <p>Export your current stack, adherence history, and journal history as CSV files.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon purple">&#128274;</div>
+        <h4>Security</h4>
+        <p>Change your password, log out, or permanently delete your account when needed.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon pink">&#128137;</div>
+        <h4>Safety Check</h4>
+        <p>Run an interaction scan against your active stack from the dedicated safety screen.</p>
       </div>
     </div>
   </div>
@@ -1109,27 +1150,37 @@
         <tr><td>Create a protocol stack</td><td>Protocols tab &rarr; Stacks section &rarr; <strong>+ New Stack</strong></td></tr>
         <tr><td>Mark an item as done</td><td>Today tab &rarr; tap the checkbox next to the item</td></tr>
         <tr><td>Check my adherence</td><td>Today tab &rarr; scroll to <strong>Tracking Summary</strong> card</td></tr>
+        <tr><td>Review weekly progress</td><td>Today tab &rarr; <strong>Weekly Digest</strong> card or Profile tab &rarr; <strong>Weekly Digest</strong> to compare this week vs last week and month to date vs the previous month</td></tr>
+        <tr><td>Search across the whole stack</td><td>Protocols tab &rarr; use the global search box for stacks, items, exercises, plans, and templates</td></tr>
+        <tr><td>Review goal support</td><td>Today tab &rarr; <strong>Goal Progress</strong> card or Profile tab &rarr; <strong>Goal Progress</strong></td></tr>
+        <tr><td>Log how I feel today</td><td>Today tab &rarr; <strong>Journal</strong> card or Profile tab &rarr; <strong>Health Journal</strong></td></tr>
         <tr><td>Set up a nutrition plan</td><td>Nutrition tab &rarr; <strong>+ New Plan</strong></td></tr>
         <tr><td>Check UV / sunscreen need</td><td>Today tab &rarr; <strong>Skincare Guidance</strong> card (requires location)</td></tr>
         <tr><td>Pause a supplement</td><td>Tap item &rarr; toggle <strong>Active</strong> off (keeps your schedule saved)</td></tr>
         <tr><td>Flag item as out of stock</td><td>Tap supplement &rarr; toggle <strong>Out of Stock</strong></td></tr>
-        <tr><td>See interaction warnings</td><td>Today tab &rarr; <strong>Interaction Warnings</strong> card (auto-generated)</td></tr>
+        <tr><td>See interaction warnings</td><td>Today tab &rarr; <strong>Interaction Warnings</strong> card &rarr; tap through to <strong>Safety Check</strong></td></tr>
         <tr><td>Review a past day</td><td>Today tab &rarr; tap date header &rarr; navigate to desired date</td></tr>
         <tr><td>Start a workout</td><td>Exercise tab &rarr; tap today's routine &rarr; <strong>Start Session</strong></td></tr>
         <tr><td>Create a workout routine</td><td>Exercise tab &rarr; Routines &rarr; <strong>+ New Routine</strong></td></tr>
         <tr><td>Set up a weekly regime</td><td>Exercise tab &rarr; Regimes &rarr; <strong>+ New Regime</strong> &rarr; assign routines to days</td></tr>
         <tr><td>Log a set during workout</td><td>Active session &rarr; tap exercise &rarr; enter weight, reps, RPE</td></tr>
         <tr><td>Check exercise progress</td><td>Exercise tab &rarr; <strong>Stats</strong> &rarr; view volume, max weight, muscle distribution</td></tr>
-        <tr><td>Save a gym location</td><td>Profile tab &rarr; <strong>Gym Locations</strong> &rarr; <strong>+ Add Gym</strong></td></tr>
-        <tr><td>Get AI recommendations</td><td>Profile tab &rarr; Preferences &rarr; <strong>Get Recommendations</strong></td></tr>
-        <tr><td>Run the guided wizard</td><td>Profile tab &rarr; Preferences &rarr; <strong>Start Guided Wizard</strong></td></tr>
-        <tr><td>Check my stack score</td><td>Today tab &rarr; <strong>Stack Score</strong> card</td></tr>
-        <tr><td>Run a safety check</td><td>Today tab &rarr; <strong>Safety Check</strong> card</td></tr>
+        <tr><td>Save a gym location</td><td>Exercise tab &rarr; <strong>Gym Locations</strong> &rarr; <strong>Add Gym Location</strong></td></tr>
+        <tr><td>Get AI recommendations</td><td>Protocols tab &rarr; <strong>Recommendations</strong></td></tr>
+        <tr><td>Run the guided wizard</td><td>Protocols tab &rarr; <strong>Guided Wizard</strong></td></tr>
+        <tr><td>Browse curated templates</td><td>Protocols tab &rarr; <strong>Protocol Library</strong> or onboarding &rarr; <strong>Protocol Library</strong></td></tr>
+        <tr><td>Check my stack score</td><td>Protocols tab &rarr; <strong>Stack Score</strong> card</td></tr>
+        <tr><td>Run a safety check</td><td>Profile tab &rarr; <strong>Safety Check</strong></td></tr>
+        <tr><td>Preview conflicts before adding an item</td><td>Open any item schedule screen and review the interaction preview card before saving</td></tr>
         <tr><td>Add a peptide</td><td>Protocols tab &rarr; Peptides &rarr; tap item &rarr; <strong>Add to My Stack</strong></td></tr>
         <tr><td>Skip an item with a reason</td><td>Today tab &rarr; tap item &rarr; <strong>Skip</strong> &rarr; select reason</td></tr>
         <tr><td>Mark all items in a window</td><td>Today tab &rarr; time window header &rarr; <strong>Mark All</strong></td></tr>
         <tr><td>Generate a refill list</td><td>Any supplement &rarr; mark <strong>Out of Stock</strong> &rarr; Protocols tab &rarr; <strong>Refill Request</strong></td></tr>
         <tr><td>Resume a paused workout</td><td>Exercise tab &rarr; <strong>In Progress</strong> session &rarr; <strong>Resume</strong></td></tr>
+        <tr><td>Send a test push notification</td><td>Profile tab &rarr; <strong>Notifications</strong> &rarr; <strong>Send Test Push</strong></td></tr>
+        <tr><td>Export my data</td><td>Profile tab &rarr; <strong>Data Management</strong> &rarr; choose a CSV export</td></tr>
+        <tr><td>Change my password</td><td>Profile tab &rarr; <strong>Change Password</strong></td></tr>
+        <tr><td>Delete my account</td><td>Profile tab &rarr; <strong>Delete Account</strong></td></tr>
       </tbody>
     </table>
   </div>

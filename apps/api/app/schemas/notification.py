@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel, Field
-
 
 # ─── Notification Preferences ────────────────────────────────────
 
@@ -73,3 +73,14 @@ class ReminderScheduleResponse(BaseModel):
     reminders: list[ReminderScheduleItem]
     quiet_start: str | None
     quiet_end: str | None
+
+
+class NotificationDeliveryResponse(BaseModel):
+    status: Literal["sent", "skipped"]
+    target_date: str
+    reminder_count: int
+    active_tokens: int
+    sent_count: int
+    title: str | None
+    body: str | None
+    message: str

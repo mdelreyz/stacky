@@ -39,7 +39,7 @@ docker-compose.override.yml
 # Runtime
 .api-port
 
-# Noomix
-.noomix/
-.serena/
 *.db
+
+!.noomix/
+!.noomix/decisions.db

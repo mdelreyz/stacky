@@ -6,6 +6,7 @@ import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { colors } from "@/constants/Colors";
 import { DoseScheduleForm, type DoseScheduleState } from "@/components/SupplementScheduleForm";
+import { InteractionPreviewCard } from "@/components/InteractionPreviewCard";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
 import { medications as medicationsApi, userMedications as userMedicationsApi } from "@/lib/api";
 import { showError } from "@/lib/errors";
@@ -114,6 +115,7 @@ export default function ScheduleMedicationScreen() {
       <AmbientBackdrop canvasStyle={styles.backdrop} />
       <FadeInView>
         <FlowScreenHeader title="Start Medication" subtitle={medication.name} />
+        <InteractionPreviewCard catalogId={medication.id} itemType="medication" />
 
         <DoseScheduleForm
           state={formState}

@@ -17,7 +17,7 @@ export function CatalogSearchInput({
       </View>
       <TextInput
         style={styles.searchInput}
-        placeholder="Search catalogs, compounds, or modalities"
+        placeholder="Search stacks, catalogs, exercises, or plans"
         placeholderTextColor={colors.textPlaceholder}
         value={value}
         onChangeText={onChangeText}

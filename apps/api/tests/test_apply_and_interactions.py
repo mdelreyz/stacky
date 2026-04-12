@@ -4,8 +4,8 @@ from sqlalchemy import select
 
 from app.database import async_session_factory
 from app.models.enums import TakeWindow
-from app.models.supplement import Supplement, SupplementCategory
 from app.models.medication import Medication, MedicationCategory
+from app.models.supplement import Supplement, SupplementCategory
 from app.models.user_medication import UserMedication
 from app.models.user_supplement import UserSupplement
 
@@ -365,3 +365,66 @@ def test_interaction_checker_returns_empty_for_safe_stack(client):
     assert body["total_warnings"] == 0
     assert body["has_critical"] is False
     assert body["has_major"] is False
+
+
+def test_interaction_preview_detects_candidate_conflicts_with_active_stack(client):
+    headers, _ = signup(client)
+    ids = seed_catalog()
+
+    client.post(
+        "/api/v1/users/me/preferences/recommendations/apply",
+        json={"items": [{"catalog_id": ids["omega_id"], "item_type": "supplement"}]},
+        headers=headers,
+    )
+
+    response = client.post(
+        "/api/v1/users/me/preferences/interactions/preview",
+        json={"items": [{"catalog_id": ids["warfarin_id"], "item_type": "medication"}]},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_warnings"] == 1
+    assert body["has_major"] is True
+    assert body["warnings"][0]["severity"] == "major"
+    assert {"Omega-3 Fish Oil", "Warfarin"} == {body["warnings"][0]["item_a"], body["warnings"][0]["item_b"]}
+
+
+def test_interaction_preview_filters_out_unrelated_existing_warnings(client):
+    headers, _ = signup(client)
+    ids = seed_catalog()
+
+    client.post(
+        "/api/v1/users/me/preferences/recommendations/apply",
+        json={
+            "items": [
+                {"catalog_id": ids["mag_id"], "item_type": "supplement"},
+                {"catalog_id": ids["iron_id"], "item_type": "supplement"},
+            ]
+        },
+        headers=headers,
+    )
+
+    response = client.post(
+        "/api/v1/users/me/preferences/interactions/preview",
+        json={"items": [{"catalog_id": ids["d3_id"], "item_type": "supplement"}]},
+        headers=headers,
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["total_warnings"] == 0
+
+
+def test_interaction_preview_returns_404_for_missing_catalog_item(client):
+    headers, _ = signup(client)
+
+    response = client.post(
+        "/api/v1/users/me/preferences/interactions/preview",
+        json={"items": [{"catalog_id": "00000000-0000-0000-0000-000000000000", "item_type": "supplement"}]},
+        headers=headers,
+    )
+
+    assert response.status_code == 404
+    assert response.json()["detail"] == "Supplement not found"

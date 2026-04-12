@@ -51,6 +51,7 @@ async function _discoverApiPort(): Promise<void> {
 }
 
 let token: string | null = null;
+let unauthorizedHandler: (() => void | Promise<void>) | null = null;
 
 function formatErrorDetail(detail: unknown): string | null {
   if (typeof detail === "string" && detail.trim()) {
@@ -131,6 +132,10 @@ export function getToken(): string | null {
   return token;
 }
 
+export function setUnauthorizedHandler(handler: (() => void | Promise<void>) | null) {
+  unauthorizedHandler = handler;
+}
+
 export class APIError extends Error {
   status: number;
 
@@ -185,6 +190,9 @@ export async function request<T>(path: string, options: RequestInit = {}): Promi
     const error = await response
       .json()
       .catch(() => ({ detail: "Request failed" }));
+    if ((response.status === 401 || response.status === 403) && token && unauthorizedHandler) {
+      await unauthorizedHandler();
+    }
     throw new APIError(response.status, formatErrorPayload(error));
   }
 

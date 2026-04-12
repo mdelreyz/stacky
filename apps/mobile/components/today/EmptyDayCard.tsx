@@ -37,6 +37,17 @@ export function EmptyDayCard() {
           </Pressable>
         </Link>
 
+        <Link href="/protocol-templates" asChild>
+          <Pressable
+            style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}
+            accessibilityRole="button"
+            accessibilityLabel="Browse protocol library"
+          >
+            <FontAwesome name="book" size={13} color={colors.primaryDark} />
+            <Text style={styles.secondaryActionText}>Protocol Library</Text>
+          </Pressable>
+        </Link>
+
         <Link href="/supplement/add" asChild>
           <Pressable
             style={({ pressed }) => [styles.secondaryAction, pressed && styles.pressed]}

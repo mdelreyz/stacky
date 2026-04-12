@@ -55,6 +55,7 @@ export type {
   ApplyRecommendationsResponse,
   HealthGoal,
   InteractionCheckResponse,
+  InteractionPreviewItem,
   InteractionMode,
   InteractionSeverity,
   InteractionType,
@@ -79,6 +80,7 @@ export type {
   TemplateItemBlueprint,
 } from "./protocol-template";
 export type {
+  NotificationDelivery,
   NotificationPreferences,
   NotificationPreferencesUpdate,
   PushToken,
@@ -104,7 +106,10 @@ export type {
   DigestAdherence,
   DigestExercise,
   DigestJournal,
+  DigestMetricDelta,
+  MonthlyDigestComparison,
   WeeklyDigest,
+  WeeklyDigestComparison,
 } from "./weekly-digest";
 export type {
   Exercise,

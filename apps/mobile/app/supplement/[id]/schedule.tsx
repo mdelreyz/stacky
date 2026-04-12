@@ -11,6 +11,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { AmbientBackdrop } from "@/components/ui/AmbientBackdrop";
 import { FadeInView } from "@/components/ui/FadeInView";
 import { FlowScreenHeader } from "@/components/FlowScreenHeader";
+import { InteractionPreviewCard } from "@/components/InteractionPreviewCard";
 import {
   SupplementScheduleForm,
   SupplementScheduleState,
@@ -122,6 +123,7 @@ export default function ScheduleSupplementScreen() {
           title="Start Taking"
           subtitle={supplement.name}
         />
+        <InteractionPreviewCard catalogId={supplement.id} itemType="supplement" />
 
         <SupplementScheduleForm
           state={formState}

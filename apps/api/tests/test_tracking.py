@@ -3,10 +3,10 @@ from datetime import date, datetime, timezone
 
 from app.database import async_session_factory
 from app.models.adherence import AdherenceLog
+from app.models.enums import TakeWindow
 from app.models.medication import Medication, MedicationCategory
 from app.models.supplement import Supplement, SupplementCategory
 from app.models.user_medication import UserMedication
-from app.models.enums import TakeWindow
 from app.models.user_supplement import UserSupplement
 
 
@@ -177,6 +177,20 @@ def test_tracking_overview_counts_pending_scheduled_items(client):
     assert body["suggestions"][0]["item_type"] in {"overall", "supplement"}
 
 
+def test_tracking_overview_adds_item_suggestion_for_repeated_pending_item(client):
+    headers, user_id = signup(client)
+    magnesium_id = create_supplement("Magnesium")
+    create_user_supplement(user_id, magnesium_id)
+
+    response = client.get("/api/v1/users/me/tracking/overview?days=3&end_date=2026-04-08", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    suggestion = next(item for item in body["suggestions"] if item["item_type"] == "supplement")
+    assert suggestion["item_name"] == "Magnesium"
+    assert "left pending" in suggestion["headline"].lower()
+
+
 def test_tracking_overview_can_filter_by_item_type(client):
     headers, user_id = signup(client)
     magnesium_id = create_supplement("Magnesium")
@@ -218,3 +232,47 @@ def test_tracking_recent_events_use_snapshots_when_live_context_changes(client):
     assert body["recent_events"][0]["item_name"] == "Archived Magnesium"
     assert body["recent_events"][0]["take_window"] == "evening"
     assert body["recent_events"][0]["regimes"] == ["Vacation Stack"]
+
+
+def test_tracking_overview_adds_overall_suggestion_for_dense_low_completion_plan(client):
+    headers, user_id = signup(client)
+    magnesium_id = create_supplement("Magnesium")
+    create_user_supplement(user_id, magnesium_id)
+
+    response = client.get("/api/v1/users/me/tracking/overview?days=7&end_date=2026-04-08", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["scheduled_count"] == 7
+    assert body["completion_rate"] == 0
+    assert body["suggestions"][0]["item_type"] == "overall"
+    assert "dense" in body["suggestions"][0]["headline"].lower()
+
+
+def test_tracking_overview_adds_item_suggestion_for_frequently_skipped_item(client):
+    headers, user_id = signup(client)
+    magnesium_id = create_supplement("Magnesium")
+    user_supplement_id = create_user_supplement(user_id, magnesium_id)
+
+    for scheduled_at in [
+        datetime(2026, 4, 6, 8, 0, tzinfo=timezone.utc),
+        datetime(2026, 4, 7, 8, 0, tzinfo=timezone.utc),
+        datetime(2026, 4, 8, 8, 0, tzinfo=timezone.utc),
+    ]:
+        create_log(user_id, user_supplement_id, scheduled_at=scheduled_at, skipped=True)
+
+    response = client.get("/api/v1/users/me/tracking/overview?days=3&end_date=2026-04-08", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    suggestion = next(item for item in body["suggestions"] if item["item_type"] == "supplement")
+    assert suggestion["item_name"] == "Magnesium"
+    assert "frequently skipped" in suggestion["headline"].lower()
+
+
+def test_tracking_overview_rejects_days_above_limit(client):
+    headers, _ = signup(client)
+
+    response = client.get("/api/v1/users/me/tracking/overview?days=91", headers=headers)
+
+    assert response.status_code == 422

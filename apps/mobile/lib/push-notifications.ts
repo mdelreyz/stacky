@@ -7,6 +7,17 @@ import { notifications as notificationsApi } from "@/lib/api";
 
 let _registered = false;
 
+async function ensurePushChannel(Notifications: any): Promise<void> {
+  if (Platform.OS !== "android" || !Notifications?.setNotificationChannelAsync) {
+    return;
+  }
+
+  await Notifications.setNotificationChannelAsync("default", {
+    name: "Protocol reminders",
+    importance: Notifications.AndroidImportance?.HIGH ?? 4,
+  });
+}
+
 export async function registerPushToken(): Promise<string | null> {
   if (_registered) return null;
 
@@ -15,6 +26,7 @@ export async function registerPushToken(): Promise<string | null> {
     // @ts-ignore — expo-notifications may not be installed
     const Notifications = await import("expo-notifications").catch(() => null) as any;
     if (!Notifications) return null;
+    await ensurePushChannel(Notifications);
 
     // Request permission
     const { status: existingStatus } = await Notifications.getPermissionsAsync();
